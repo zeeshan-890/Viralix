@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { authAPI } from '../lib/api';
-import { getStoredToken, getStoredUser, setStoredToken, setStoredUser, removeStoredToken, removeStoredUser } from '../lib/auth';
+import { getStoredToken, getStoredUser, setStoredUser, removeStoredUser } from '../lib/auth';
+import { log } from 'console';
 
 // Shape
 // state: { user: object|null, loading: boolean }
@@ -11,41 +12,43 @@ export const useAuthStore = create((set, get) => ({
     loading: true,
 
     init: async () => {
-        const token = getStoredToken();
         const storedUser = getStoredUser();
-        if (token && storedUser) {
+        if (storedUser) {
             set({ user: storedUser });
-            try {
-                const response = await authAPI.me();
-                set({ user: response.data });
-                setStoredUser(response.data);
-            } catch (err) {
-                removeStoredToken();
-                removeStoredUser();
-                set({ user: null });
-            }
+        }
+        try {
+            const response = await authAPI.me();
+            set({ user: response.data });
+            setStoredUser(response.data);
+        } catch (err) {
+            removeStoredUser();
+            set({ user: null });
         }
         set({ loading: false });
     },
 
     login: async (email, password) => {
         const response = await authAPI.login(email, password);
-        const { token, user } = response.data;
-        setStoredToken(token);
-        setStoredUser(user);
-        set({ user });
+        const { user, requiresVerification } = response.data;
+        if (!requiresVerification && user) {
+            setStoredUser(user);
+            set({ user });
+        }
+        return response.data;
     },
 
     signup: async (name, email, password) => {
         const response = await authAPI.signup(name, email, password);
-        const { token, user } = response.data;
-        setStoredToken(token);
-        setStoredUser(user);
-        set({ user });
+        const { user, requiresVerification } = response.data;
+        if (!requiresVerification && user) {
+            setStoredUser(user);
+            set({ user });
+        }
+        return response.data;
     },
 
-    logout: () => {
-        removeStoredToken();
+    logout: async () => {
+        try { await authAPI.logout(); } catch { }
         removeStoredUser();
         set({ user: null });
         if (typeof window !== 'undefined') {
