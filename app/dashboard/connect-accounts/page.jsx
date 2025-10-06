@@ -38,7 +38,7 @@ export default function ConnectAccountsPage() {
         const w = 600, h = 700;
         const y = window.top.outerHeight / 2 + window.top.screenY - (h / 2);
         const x = window.top.outerWidth / 2 + window.top.screenX - (w / 2);
-        const base = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+        const base = process.env.NEXT_PUBLIC_API_URL || 'https://viralix-b3ff86cb412f.herokuapp.com/api';
         window.open(`${base}/facebook/oauth/start`, 'fbconnect', `popup=yes,width=${w},height=${h},top=${y},left=${x}`);
     };
 
