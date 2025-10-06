@@ -19,28 +19,38 @@ function normalizePages(pages = []) {
     }));
 }
 
-// In-memory state store instead of cookie (localStorage auth mode prevents sending token on popup navigation)
-// Map state -> { userId, expiresAt }
-const oauthStateStore = new Map();
-function createState(userId) {
-    const state = crypto.randomBytes(16).toString('hex');
-    oauthStateStore.set(state, { userId, expiresAt: Date.now() + 10 * 60 * 1000 }); // 10 min TTL
-    return state;
+// Stateless signed OAuth state (avoids in-memory storage & multi-dyno issues)
+// Format (before base64url): userId.timestamp.nonce.signature
+// signature = HMAC_SHA256(userId.timestamp.nonce, FB_STATE_SECRET || JWT_SECRET)
+const STATE_TTL_MS = 10 * 60 * 1000; // 10 minutes
+const STATE_SECRET = process.env.FB_STATE_SECRET || process.env.JWT_SECRET || 'change_me_state_secret';
+function signState(userId) {
+    const ts = Date.now();
+    const nonce = crypto.randomBytes(8).toString('hex');
+    const payload = `${userId}.${ts}.${nonce}`;
+    const sig = crypto.createHmac('sha256', STATE_SECRET).update(payload).digest('hex');
+    return Buffer.from(`${payload}.${sig}`).toString('base64url');
 }
-function consumeState(state) {
-    const entry = oauthStateStore.get(state);
-    if (!entry) return null;
-    if (entry.expiresAt < Date.now()) {
-        oauthStateStore.delete(state);
+function verifyState(state) {
+    try {
+        const raw = Buffer.from(state, 'base64url').toString('utf8');
+        const parts = raw.split('.');
+        if (parts.length !== 4) return null;
+        const [userId, tsStr, nonce, sig] = parts;
+        const payload = `${userId}.${tsStr}.${nonce}`;
+        const expected = crypto.createHmac('sha256', STATE_SECRET).update(payload).digest('hex');
+        if (sig !== expected) return null;
+        const ts = parseInt(tsStr, 10);
+        if (!ts || (Date.now() - ts) > STATE_TTL_MS) return null; // expired
+        return userId;
+    } catch (_) {
         return null;
     }
-    oauthStateStore.delete(state);
-    return entry.userId;
 }
 
 // New: return the FB OAuth dialog URL instead of redirecting (Option A)
 router.get('/oauth/start-url', auth, async (req, res) => {
-    const state = createState(req.user.id);
+    const state = signState(req.user.id);
     const url = buildAuthUrl(state);
     console.log('[FB] oauth/start-url issued', { userId: req.user.id });
     res.json({ url });
@@ -48,7 +58,7 @@ router.get('/oauth/start-url', auth, async (req, res) => {
 
 // Legacy direct redirect endpoint (still works if authorized via header)
 router.get('/oauth/start', auth, async (req, res) => {
-    const state = createState(req.user.id);
+    const state = signState(req.user.id);
     const url = buildAuthUrl(state);
     console.log('[FB] oauth/start redirect', { userId: req.user.id });
     return res.redirect(url);
@@ -77,7 +87,7 @@ router.get('/oauth/callback', async (req, res) => {
         `);
         }
         if (!state) return res.status(400).send('Missing state');
-        const userId = consumeState(state);
+        const userId = verifyState(state);
         if (!userId) return res.status(400).send('Invalid or expired state');
 
         const short = await exchangeCodeForToken(code);
