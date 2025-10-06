@@ -1,5 +1,5 @@
 import axios from 'axios';
-let API_BASE_URL =  'https://viralix-b3ff86cb412f.herokuapp.com/api';
+let API_BASE_URL = 'https://viralix-b3ff86cb412f.herokuapp.com/api';
 // Derive backend URL from current host in browser if not set, falling back to localhost
 if (!API_BASE_URL && typeof window !== 'undefined') {
     try {
@@ -67,7 +67,7 @@ export const authAPI = {
     resetPassword: (token, password) => api.post('/auth/reset-password', { token, password }),
     me: () => api.get('/auth/me'),
     logout: async () => {
-        try { await api.post('/auth/logout'); } catch (_) {}
+        try { await api.post('/auth/logout'); } catch (_) { }
         if (typeof window !== 'undefined') localStorage.removeItem('auth_token');
         return { data: { message: 'Logged out' } };
     },
