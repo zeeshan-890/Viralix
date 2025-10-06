@@ -33,13 +33,20 @@ export default function ConnectAccountsPage() {
         return () => window.removeEventListener('message', onMessage);
     }, [load]);
 
-    const connectFacebook = () => {
+    const connectFacebook = async () => {
         setConnecting(true);
-        const w = 600, h = 700;
-        const y = window.top.outerHeight / 2 + window.top.screenY - (h / 2);
-        const x = window.top.outerWidth / 2 + window.top.screenX - (w / 2);
-        const base = process.env.NEXT_PUBLIC_API_URL || 'https://viralix-b3ff86cb412f.herokuapp.com/api';
-        window.open(`${base}/facebook/oauth/start`, 'fbconnect', `popup=yes,width=${w},height=${h},top=${y},left=${x}`);
+        try {
+            const { data } = await facebookAPI.startUrl();
+            const authUrl = data?.url;
+            if (!authUrl) throw new Error('No URL received');
+            const w = 600, h = 700;
+            const y = window.top.outerHeight / 2 + window.top.screenY - (h / 2);
+            const x = window.top.outerWidth / 2 + window.top.screenX - (w / 2);
+            window.open(authUrl, 'fbconnect', `popup=yes,width=${w},height=${h},top=${y},left=${x}`);
+        } catch (e) {
+            console.error('Failed to start Facebook OAuth', e);
+            setConnecting(false);
+        }
     };
 
     const disconnectFacebook = async () => {

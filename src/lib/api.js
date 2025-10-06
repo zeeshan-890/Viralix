@@ -112,6 +112,7 @@ export const platformsAPI = {
 };
 export const facebookAPI = {
     status: () => api.get('/facebook/status'),
+    startUrl: () => api.get('/facebook/oauth/start-url'),
     disconnect: () => api.delete('/facebook/disconnect'),
     refresh: () => api.post('/facebook/refresh'),
     setDefaultPage: (pageId) => api.post('/facebook/default-page', { pageId }),
