@@ -1,5 +1,5 @@
 import axios from 'axios';
-let API_BASE_URL =  'https://viralix-b3ff86cb412f.herokuapp.com/api';
+let API_BASE_URL = 'https://viralix-b3ff86cb412f.herokuapp.com/api';
 // Derive backend URL from current host in browser if not set, falling back to localhost
 if (!API_BASE_URL && typeof window !== 'undefined') {
     try {
@@ -13,13 +13,20 @@ if (!API_BASE_URL) {
     API_BASE_URL = 'https://viralix-b3ff86cb412f.herokuapp.com/api';
 }
 
-// Use cookie-based auth; always send credentials (cookies) with requests
+// Token (localStorage) auth mode
 const api = axios.create({
     baseURL: API_BASE_URL,
-    withCredentials: true,
-    headers: {
-        'Content-Type': 'application/json',
-    },
+    withCredentials: false,
+    headers: { 'Content-Type': 'application/json' },
+});
+
+// Attach token if present
+api.interceptors.request.use((config) => {
+    if (typeof window !== 'undefined') {
+        const token = localStorage.getItem('auth_token');
+        if (token) config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
 });
 
 // Response interceptor for auth errors
@@ -42,14 +49,28 @@ api.interceptors.response.use(
 export default api;
 // API helper functions
 export const authAPI = {
-    login: (email, password) => api.post('/auth/login', { email, password }),
+    login: async (email, password) => {
+        const res = await api.post('/auth/login', { email, password });
+        const token = res?.data?.token;
+        if (token && typeof window !== 'undefined') localStorage.setItem('auth_token', token);
+        return res;
+    },
     signup: (name, email, password) => api.post('/auth/signup', { name, email, password }),
-    verifyOtp: (email, code) => api.post('/auth/verify-otp', { email, code }),
+    verifyOtp: async (email, code) => {
+        const res = await api.post('/auth/verify-otp', { email, code });
+        const token = res?.data?.token;
+        if (token && typeof window !== 'undefined') localStorage.setItem('auth_token', token);
+        return res;
+    },
     resendOtp: (email) => api.post('/auth/resend-otp', { email }),
     forgotPassword: (email) => api.post('/auth/forgot-password', { email }),
     resetPassword: (token, password) => api.post('/auth/reset-password', { token, password }),
     me: () => api.get('/auth/me'),
-    logout: () => api.post('/auth/logout'),
+    logout: async () => {
+        try { await api.post('/auth/logout'); } catch (_) { }
+        if (typeof window !== 'undefined') localStorage.removeItem('auth_token');
+        return { data: { message: 'Logged out' } };
+    },
 };
 // Posts (scheduling) API
 export const postsAPI = {
