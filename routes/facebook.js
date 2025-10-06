@@ -19,36 +19,43 @@ function normalizePages(pages = []) {
     }));
 }
 
-function setStateCookie(res, value) {
-    const prod = process.env.NODE_ENV === 'production';
-    res.cookie('fb_oauth_state', value, {
-        httpOnly: true,
-        sameSite: prod ? 'none' : 'lax',
-        secure: prod, // required for SameSite=None
-        path: '/',
-        maxAge: 10 * 60 * 1000,
-    });
+// In-memory state store instead of cookie (localStorage auth mode prevents sending token on popup navigation)
+// Map state -> { userId, expiresAt }
+const oauthStateStore = new Map();
+function createState(userId) {
+    const state = crypto.randomBytes(16).toString('hex');
+    oauthStateStore.set(state, { userId, expiresAt: Date.now() + 10 * 60 * 1000 }); // 10 min TTL
+    return state;
+}
+function consumeState(state) {
+    const entry = oauthStateStore.get(state);
+    if (!entry) return null;
+    if (entry.expiresAt < Date.now()) {
+        oauthStateStore.delete(state);
+        return null;
+    }
+    oauthStateStore.delete(state);
+    return entry.userId;
 }
 
 // New: return the FB OAuth dialog URL instead of redirecting (Option A)
 router.get('/oauth/start-url', auth, async (req, res) => {
-    const state = crypto.randomBytes(16).toString('hex');
-    setStateCookie(res, state);
+    const state = createState(req.user.id);
     const url = buildAuthUrl(state);
-    console.log('[FB] oauth/start-url issued');
+    console.log('[FB] oauth/start-url issued', { userId: req.user.id });
     res.json({ url });
 });
 
 // Legacy direct redirect endpoint (still works if authorized via header)
 router.get('/oauth/start', auth, async (req, res) => {
-    const state = crypto.randomBytes(16).toString('hex');
-    setStateCookie(res, state);
+    const state = createState(req.user.id);
     const url = buildAuthUrl(state);
-    console.log('[FB] oauth/start redirect');
+    console.log('[FB] oauth/start redirect', { userId: req.user.id });
     return res.redirect(url);
 });
 
-router.get('/oauth/callback', auth, async (req, res) => {
+// Callback cannot rely on Authorization header (popup navigation), so it is PUBLIC and uses state lookup.
+router.get('/oauth/callback', async (req, res) => {
     try {
         const { code, state, error, error_code, error_message } = req.query;
         if (error || error_code) {
@@ -69,11 +76,9 @@ router.get('/oauth/callback', auth, async (req, res) => {
             </body></html>
         `);
         }
-        const cookieState = req.cookies['fb_oauth_state'];
-        if (!state || !cookieState || state !== cookieState) {
-            return res.status(400).send('Invalid state');
-        }
-        res.clearCookie('fb_oauth_state');
+        if (!state) return res.status(400).send('Missing state');
+        const userId = consumeState(state);
+        if (!userId) return res.status(400).send('Invalid or expired state');
 
         const short = await exchangeCodeForToken(code);
         const long = await exchangeForLongLivedToken(short.access_token);
@@ -90,7 +95,7 @@ router.get('/oauth/callback', auth, async (req, res) => {
             console.log('[FB] sample page:', { id: pages[0].id, name: pages[0].name, category: pages[0].category });
         }
 
-        const user = await User.findById(req.user.id);
+        const user = await User.findById(userId);
         if (!user) return res.status(401).send('Unauthorized');
 
         // Upsert into socialAccounts for platform 'facebook' (one record per FB user)
@@ -118,17 +123,17 @@ router.get('/oauth/callback', auth, async (req, res) => {
         user.markModified('settings');
         await user.save();
         // Confirm saved
-        const saved = await User.findById(req.user.id).lean();
+        const saved = await User.findById(userId).lean();
         console.log('[FB] saved pages count:', saved?.settings?.facebookPages?.length || 0);
 
         const origin = process.env.CLIENT_URL || 'http://localhost:3000';
         return res.send(`
       <html><body>
       <script>
-        window.opener && window.opener.postMessage(
-          { provider: 'facebook', status: 'success' },
-          '${origin}'
-        );
+                window.opener && window.opener.postMessage(
+                    { provider: 'facebook', status: 'success' },
+                    '${origin}'
+                );
         window.close();
       </script>
       Connected. You can close this window.
