@@ -2,7 +2,7 @@ const { GoogleGenerativeAI } = require('@google/generative-ai');
 const fetch = require('node-fetch');
 
 function getClient() {
-    const apiKey = process.env.GEMINI_API_KEY || "AIzaSyCm_MGQqzOpnqnI8I2T-IctyksK52WQkH8";
+    const apiKey = process.env.GEMINI_API_KEY;
     if (!apiKey) throw new Error('GEMINI_API_KEY not configured');
     const genAI = new GoogleGenerativeAI(apiKey, { fetch });
     return genAI;
