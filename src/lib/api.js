@@ -1,10 +1,10 @@
 import axios from 'axios';
-let API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
+let API_BASE_URL =  'https://viralix-b3ff86cb412f.herokuapp.com/api';
 // Derive backend URL from current host in browser if not set, falling back to localhost
 if (!API_BASE_URL && typeof window !== 'undefined') {
     try {
         const { protocol, hostname } = window.location;
-        API_BASE_URL = `${protocol}//${hostname}:5000/api`;
+        API_BASE_URL = `${protocol}//${hostname}/api`;
     } catch {
         // ignore
     }
