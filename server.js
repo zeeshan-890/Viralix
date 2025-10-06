@@ -35,6 +35,16 @@ app.use(cookieParser());
 app.use(morgan('combined'));
 
 // Routes
+// Per-route logger for analytics endpoints
+app.use('/api/analytics', (req, res, next) => {
+    const start = Date.now();
+    const { method, originalUrl } = req;
+    console.log('[REQ] analytics', { method, originalUrl, origin: req.headers?.origin, hasCookie: !!req.headers?.cookie });
+    res.on('finish', () => {
+        console.log('[RES] analytics', { method, originalUrl, status: res.statusCode, ms: Date.now() - start });
+    });
+    next();
+});
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api/users', require('./routes/users'));
 app.use('/api/facebook', require('./routes/facebook'));
@@ -46,6 +56,7 @@ try {
 }
 app.use('/api/posts', require('./routes/posts'));
 app.use('/api/analytics', require('./routes/analytics'));
+app.use('/api/ai', require('./routes/ai'));
 // app.use('/api/social', require('./routes/social'));
 // app.use('/api/analytics', require('./routes/analytics'));
 // app.use('/api/engagement', require('./routes/engagement'));

@@ -9,7 +9,20 @@ const router = express.Router();
 
 // GET /api/analytics/overview - Dashboard overview stats
 router.get('/overview', auth, async (req, res) => {
+    const _t0 = Date.now();
+    // Debug: incoming request context
     try {
+        console.log('[ANALYTICS] /overview start', {
+            method: req.method,
+            path: req.originalUrl,
+            userId: req.user?.id,
+            origin: req.headers?.origin,
+            referer: req.headers?.referer,
+            hasCookie: !!req.headers?.cookie,
+            clientUrlEnv: process.env.CLIENT_URL,
+            nodeEnv: process.env.NODE_ENV,
+            time: new Date().toISOString(),
+        });
         const startDate = req.query.startDate ? new Date(req.query.startDate) : new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
         const endDate = req.query.endDate ? new Date(req.query.endDate) : new Date();
 
@@ -98,7 +111,7 @@ router.get('/overview', auth, async (req, res) => {
             });
         });
 
-        res.json({
+        const payload = {
             overview: {
                 totalPosts,
                 publishedPosts,
@@ -115,16 +128,38 @@ router.get('/overview', auth, async (req, res) => {
             },
             platformBreakdown,
             dateRange: { startDate, endDate }
+        };
+        console.log('[ANALYTICS] /overview done', {
+            userId: req.user?.id,
+            totals: payload.overview,
+            platforms: Object.keys(platformBreakdown || {}),
+            ms: Date.now() - _t0,
         });
+        res.json(payload);
     } catch (error) {
-        console.error(error.message);
+        console.error('[ANALYTICS] /overview error', {
+            message: error?.message,
+            stack: error?.stack,
+            userId: req.user?.id,
+            method: req.method,
+            path: req.originalUrl,
+            origin: req.headers?.origin,
+        });
         res.status(500).json({ message: 'Server error' });
     }
 });
 
 // POST /api/analytics/refresh - Fetch latest metrics from platforms and update stored engagement
 router.post('/refresh', auth, async (req, res) => {
+    const _t0 = Date.now();
     try {
+        console.log('[ANALYTICS] /refresh start', {
+            method: req.method,
+            path: req.originalUrl,
+            userId: req.user?.id,
+            origin: req.headers?.origin,
+            time: new Date().toISOString(),
+        });
         const user = await User.findById(req.user.id).lean();
         if (!user) return res.status(401).json({ message: 'Unauthorized' });
 
@@ -216,9 +251,11 @@ router.post('/refresh', auth, async (req, res) => {
             }
         }
 
-        return res.json({ ok: true, updated: updatedCount });
+        const resp = { ok: true, updated: updatedCount };
+        console.log('[ANALYTICS] /refresh done', { userId: req.user?.id, scanned: posts.length, updated: updatedCount, ms: Date.now() - _t0 });
+        return res.json(resp);
     } catch (e) {
-        console.error('Analytics refresh error:', e.message);
+        console.error('Analytics refresh error:', e.message, { userId: req.user?.id, path: req.originalUrl });
         return res.status(500).json({ message: 'Failed to refresh analytics' });
     }
 });
