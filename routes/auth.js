@@ -118,15 +118,9 @@ router.post('/login', [
         await user.save();
 
         const token = sign({ id: user.id });
-        const baseOpts = req.app.get('cookieOptions') ? req.app.get('cookieOptions')() : {
-            httpOnly: true,
-            secure: process.env.NODE_ENV === 'production',
-            sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
-            path: '/',
-            maxAge: 7 * 24 * 60 * 60 * 1000,
-        };
-        res.cookie('token', token, baseOpts);
-        console.log('[AUTH] Login set cookie', { sameSite: baseOpts.sameSite, secure: baseOpts.secure, origin: req.headers.origin });
+        // Cookie-based auth removed (switching to client localStorage strategy)
+        // Client should store this token and send it via Authorization Bearer header.
+        console.log('[AUTH] Login issued token (no cookie mode)', { userId: user.id, origin: req.headers.origin });
 
         const safeUser = user.toObject();
         delete safeUser.password;
@@ -142,8 +136,8 @@ router.post('/login', [
 // @desc    Clear auth cookie
 // @access  Public
 router.post('/logout', (req, res) => {
-    res.clearCookie('token', { path: '/' });
-    return res.json({ message: 'Logged out' });
+    // In localStorage mode, client simply discards token. No server state.
+    return res.json({ message: 'Logged out (stateless)' });
 });
 
 // @route   POST /api/auth/verify-otp
@@ -180,15 +174,7 @@ router.post('/verify-otp', [
         await user.save();
 
         const token = sign({ id: user.id });
-        const baseOpts = req.app.get('cookieOptions') ? req.app.get('cookieOptions')() : {
-            httpOnly: true,
-            secure: process.env.NODE_ENV === 'production',
-            sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
-            path: '/',
-            maxAge: 7 * 24 * 60 * 60 * 1000,
-        };
-        res.cookie('token', token, baseOpts);
-        console.log('[AUTH] Verify OTP set cookie', { sameSite: baseOpts.sameSite, secure: baseOpts.secure, origin: req.headers.origin });
+        console.log('[AUTH] Verify OTP issued token (no cookie mode)', { userId: user.id });
         const safeUser = user.toObject();
         delete safeUser.password;
         return res.json({ user: safeUser, token });

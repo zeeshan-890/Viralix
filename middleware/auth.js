@@ -1,10 +1,10 @@
 const { verify } = require('../services/jwt');
 
 module.exports = (req, res, next) => {
-    // Prefer token from HttpOnly cookie
-    const cookieToken = req.cookies && req.cookies['token'];
+    // LocalStorage mode: token expected via Authorization Bearer header
     const headerToken = req.header('Authorization')?.replace('Bearer ', '') || req.header('x-auth-token');
-    const token = cookieToken || headerToken;
+    const cookieToken = req.cookies && req.cookies['token']; // legacy fallback
+    const token = headerToken || cookieToken;
 
     if (!token) {
         // Debug auth failure context
