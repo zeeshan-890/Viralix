@@ -78,6 +78,11 @@ export const analyticsAPI = {
     getPerformance: (params) => api.get('/analytics/performance', { params }),
     refresh: () => api.post('/analytics/refresh'),
 };
+export const aiAPI = {
+    caption: ({ topic, tone, platform }) => api.post('/ai/caption', { topic, tone, platform }),
+    hashtags: ({ topic, platform, count }) => api.post('/ai/hashtags', { topic, platform, count }),
+    rewrite: ({ text, tone, platform }) => api.post('/ai/rewrite', { text, tone, platform }),
+};
 export const platformsAPI = {
     getConnected: () => api.get('/platforms/connected'),
     connect: (platform, authCode) => api.post('/platforms/connect', { platform, authCode }),

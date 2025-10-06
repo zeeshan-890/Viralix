@@ -1,5 +1,6 @@
 'use client';
 import { useState, useEffect } from 'react';
+import { aiAPI } from '@/lib/api';
 
 export default function HashtagEditor({ hashtags = [], onChange }) {
     const [tags, setTags] = useState(hashtags);
@@ -48,6 +49,28 @@ export default function HashtagEditor({ hashtags = [], onChange }) {
         }
     };
 
+    const [aiLoading, setAiLoading] = useState(false);
+
+    const generateAiHashtags = async () => {
+        setAiLoading(true);
+        try {
+            const topic = tags.join(' ');
+            const res = await aiAPI.hashtags({ topic: topic || 'general content', platform: 'instagram', count: 10 });
+            const list = res?.data?.hashtags || [];
+            // Merge unique up to 30
+            const merged = [...tags];
+            for (const t of list) {
+                if (merged.length >= 30) break;
+                if (!merged.includes(t)) merged.push(t);
+            }
+            updateTags(merged);
+        } catch (e) {
+            // noop
+        } finally {
+            setAiLoading(false);
+        }
+    };
+
     return (
         <div className="bg-white rounded-lg border border-gray-200 p-6">
             <h3 className="text-lg font-semibold mb-4">Hashtag Editor</h3>
@@ -89,8 +112,8 @@ export default function HashtagEditor({ hashtags = [], onChange }) {
                     <label className="text-sm font-medium text-gray-700">
                         AI Suggested Hashtags
                     </label>
-                    <button className="text-xs text-blue-600 hover:text-blue-800">
-                        ✨ Generate More
+                    <button onClick={generateAiHashtags} disabled={aiLoading} className="text-xs text-blue-600 hover:text-blue-800 disabled:opacity-60">
+                        {aiLoading ? 'Generating…' : '✨ Generate with AI'}
                     </button>
                 </div>
                 <div className="grid grid-cols-2 gap-2">

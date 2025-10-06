@@ -190,7 +190,7 @@ export default function PreviewPage() {
                                             </Link>
                                             {post.status === 'draft' && (
                                                 <Link
-                                                    href={`/dashboard/schedule?edit=${post._id}`}
+                                                    href={`/dashboard/preview/${post._id}`}
                                                     className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors text-sm"
                                                 >
                                                     Edit

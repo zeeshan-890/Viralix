@@ -4,8 +4,9 @@ import { postsAPI, analyticsAPI } from '@/lib/api';
 import { useRouter } from 'next/navigation';
 import PlatformTabs from './components/PlatformTabs';
 import CaptionEditor from './components/CaptionEditor';
-import HashtagEditor from './components/HashtagEditor';
 import TimePicker from './components/TimePicker';
+import MediaEditor from './components/MediaEditor';
+import PlatformSelector from './components/PlatformSelector';
 
 export default function PreviewPage({ params }) {
     const router = useRouter();
@@ -168,6 +169,29 @@ export default function PreviewPage({ params }) {
 
                 {/* Editing Panel */}
                 <div className="space-y-6">
+                    {/* Media Editor for drafts or unpublished */}
+                    {!allPublished && (
+                        <MediaEditor
+                            post={post}
+                            onChange={(media) => updatePost({ media })}
+                        />
+                    )}
+
+                    {/* Platform selection (only affects unpublished platforms) */}
+                    {!allPublished && (
+                        <PlatformSelector
+                            value={(post.platforms || []).filter(p => p.status !== 'published').map(p => ({ name: p.name, accountId: p.accountId }))}
+                            onChange={(list) => {
+                                // Merge: keep published as-is; replace remaining with new selection
+                                const published = (post.platforms || []).filter(p => p.status === 'published');
+                                const next = [
+                                    ...published,
+                                    ...list.map(p => ({ name: p.name, accountId: p.accountId, status: 'draft' })),
+                                ];
+                                updatePost({ platforms: next });
+                            }}
+                        />
+                    )}
                     {/* Platform Status & Diagnostics */}
                     {post.platforms && post.platforms.length > 0 && (
                         <div className="bg-white rounded-lg border border-gray-200 p-6">
@@ -230,19 +254,13 @@ export default function PreviewPage({ params }) {
                         </div>
                     </div>
 
-                    {/* Caption Editor (disabled if all published) */}
+                    {/* Caption Editor (now includes hashtag controls; disabled if all published) */}
                     {!allPublished && (
                         <CaptionEditor
                             content={post.content || ''}
+                            topic={post.title || post.content || ''}
                             onChange={(content) => updatePost({ content })}
-                        />
-                    )}
-
-                    {/* Hashtag Editor (disabled if all published) */}
-                    {!allPublished && (
-                        <HashtagEditor
-                            hashtags={post.hashtags || []}
-                            onChange={(hashtags) => updatePost({ hashtags })}
+                            onHashtags={(hashtags) => updatePost({ hashtags })}
                         />
                     )}
 
