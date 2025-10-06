@@ -20,21 +20,31 @@ function normalizePages(pages = []) {
 }
 
 function setStateCookie(res, value) {
+    const prod = process.env.NODE_ENV === 'production';
     res.cookie('fb_oauth_state', value, {
         httpOnly: true,
-        sameSite: 'lax',
-        secure: false, // set true in prod
+        sameSite: prod ? 'none' : 'lax',
+        secure: prod, // required for SameSite=None
+        path: '/',
         maxAge: 10 * 60 * 1000,
     });
 }
 
+// New: return the FB OAuth dialog URL instead of redirecting (Option A)
+router.get('/oauth/start-url', auth, async (req, res) => {
+    const state = crypto.randomBytes(16).toString('hex');
+    setStateCookie(res, state);
+    const url = buildAuthUrl(state);
+    console.log('[FB] oauth/start-url issued');
+    res.json({ url });
+});
+
+// Legacy direct redirect endpoint (still works if authorized via header)
 router.get('/oauth/start', auth, async (req, res) => {
     const state = crypto.randomBytes(16).toString('hex');
     setStateCookie(res, state);
     const url = buildAuthUrl(state);
-    // Debug: log params we are sending so you can match them in Facebook settings
-    console.log('[FB] oauth/start appId:', process.env.FACEBOOK_APP_ID);
-    console.log('[FB] oauth/start redirectUri:', process.env.FACEBOOK_REDIRECT_URI);
+    console.log('[FB] oauth/start redirect');
     return res.redirect(url);
 });
 
