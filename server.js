@@ -28,11 +28,18 @@ app.use(limiter);
 // the exact Origin. SameSite=None cookies are required for cross-site.
 // ---------------------------------------------------------------------------
 const CLIENT_URL = process.env.CLIENT_URL || 'http://localhost:3000';
-const ALLOWED = (process.env.CORS_ALLOWED_ORIGINS || CLIENT_URL)
+let ALLOWED = (process.env.CORS_ALLOWED_ORIGINS || CLIENT_URL)
     .split(',')
     .map(o => o.trim())
     .filter(Boolean)
     .map(o => o.replace(/\/$/, ''));
+
+// In production, optionally also allow local development origins for testing
+if (process.env.ALLOW_LOCAL_DEV !== '0') {
+    ['http://localhost:3000', 'http://127.0.0.1:3000'].forEach(dev => {
+        if (!ALLOWED.includes(dev)) ALLOWED.push(dev);
+    });
+}
 
 console.log('🌐 CORS Allowed Origins:', ALLOWED);
 
