@@ -118,14 +118,15 @@ router.post('/login', [
         await user.save();
 
         const token = sign({ id: user.id });
-        // Simple HttpOnly cookie valid for 7 days
-        res.cookie('token', token, {
+        const baseOpts = req.app.get('cookieOptions') ? req.app.get('cookieOptions')() : {
             httpOnly: true,
             secure: process.env.NODE_ENV === 'production',
-            sameSite: process.env.NODE_ENV === 'production' ? 'strict' : 'lax',
+            sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
             path: '/',
             maxAge: 7 * 24 * 60 * 60 * 1000,
-        });
+        };
+        res.cookie('token', token, baseOpts);
+        console.log('[AUTH] Login set cookie', { sameSite: baseOpts.sameSite, secure: baseOpts.secure, origin: req.headers.origin });
 
         const safeUser = user.toObject();
         delete safeUser.password;
@@ -179,13 +180,15 @@ router.post('/verify-otp', [
         await user.save();
 
         const token = sign({ id: user.id });
-        res.cookie('token', token, {
+        const baseOpts = req.app.get('cookieOptions') ? req.app.get('cookieOptions')() : {
             httpOnly: true,
             secure: process.env.NODE_ENV === 'production',
-            sameSite: process.env.NODE_ENV === 'production' ? 'strict' : 'lax',
+            sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
             path: '/',
             maxAge: 7 * 24 * 60 * 60 * 1000,
-        });
+        };
+        res.cookie('token', token, baseOpts);
+        console.log('[AUTH] Verify OTP set cookie', { sameSite: baseOpts.sameSite, secure: baseOpts.secure, origin: req.headers.origin });
         const safeUser = user.toObject();
         delete safeUser.password;
         return res.json({ user: safeUser, token });

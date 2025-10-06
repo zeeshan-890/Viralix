@@ -4,6 +4,7 @@ const helmet = require('helmet');
 const cookieParser = require('cookie-parser');
 const morgan = require('morgan');
 const rateLimit = require('express-rate-limit');
+const { URL } = require('url');
 require('dotenv').config();
 
 const app = express();
@@ -20,11 +21,66 @@ const limiter = rateLimit({
 });
 app.use(limiter);
 
-// CORS configuration
+// ---------------------------------------------------------------------------
+// CORS configuration (supports multiple origins & trailing-slash normalization)
+// For production with a different frontend domain (e.g., www.viralix.dev) and
+// backend domain (e.g., *.herokuapp.com), we must allow credentials and echo
+// the exact Origin. SameSite=None cookies are required for cross-site.
+// ---------------------------------------------------------------------------
+const CLIENT_URL = process.env.CLIENT_URL || 'http://localhost:3000';
+const ALLOWED = (process.env.CORS_ALLOWED_ORIGINS || CLIENT_URL)
+    .split(',')
+    .map(o => o.trim())
+    .filter(Boolean)
+    .map(o => o.replace(/\/$/, ''));
+
+console.log('🌐 CORS Allowed Origins:', ALLOWED);
+
 app.use(cors({
-    origin: process.env.CLIENT_URL || 'http://localhost:3000',
-    credentials: true
+    origin: (origin, cb) => {
+        if (!origin) return cb(null, true); // Non-browser / same-origin
+        const normalized = origin.replace(/\/$/, '');
+        if (ALLOWED.includes(normalized)) return cb(null, true);
+        console.warn('[CORS] Blocked origin', origin);
+        return cb(new Error('CORS: Origin not allowed'));
+    },
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'x-auth-token']
 }));
+
+// Manual OPTIONS fallback (some hosts need explicit 204)
+app.options('*', (req, res) => {
+    const origin = req.headers.origin && req.headers.origin.replace(/\/$/, '');
+    if (origin && ALLOWED.includes(origin)) {
+        res.header('Access-Control-Allow-Origin', origin);
+        res.header('Access-Control-Allow-Credentials', 'true');
+        res.header('Access-Control-Allow-Methods', 'GET,POST,PUT,PATCH,DELETE,OPTIONS');
+        res.header('Access-Control-Allow-Headers', 'Content-Type,Authorization,x-auth-token');
+    }
+    return res.sendStatus(204);
+});
+
+// Helper to expose cookie option logic (used by auth routes via require cache)
+const isProd = process.env.NODE_ENV === 'production';
+let clientHost = 'localhost';
+try { clientHost = new URL(CLIENT_URL).hostname; } catch (_) { }
+// If backend host differs from client host, we must use SameSite=None
+function computeCookieOptions() {
+    // Heroku dynamic host; derive from request later if needed
+    const sameSite = isProd && process.env.ENFORCE_SAMESITE_STRICT !== '1'
+        ? 'none' // safer for cross-site
+        : (isProd ? 'strict' : 'lax');
+    return {
+        httpOnly: true,
+        secure: isProd, // must be true for SameSite=None
+        sameSite,
+        path: '/',
+        maxAge: 7 * 24 * 60 * 60 * 1000,
+    };
+}
+// Make available to routes (require('./server').cookieOptions()) if desired
+app.set('cookieOptions', computeCookieOptions);
 
 // Body parsing middleware
 app.use(express.json({ limit: '10mb' }));
