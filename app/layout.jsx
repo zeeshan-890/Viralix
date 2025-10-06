@@ -15,11 +15,16 @@ export const metadata = {
   description: "Automate your social media content across TikTok, YouTube, Instagram, and LinkedIn with AI-powered optimization.",
 };
 export default function RootLayout({ children, }) {
-  return (<html lang="en">
-    <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
-      <ThemeInit />
-      <AuthInit />
-      {children}
-    </body>
-  </html>);
+  return (
+    <html lang="en">
+      <head>
+        <meta name="facebook-domain-verification" content="mtzxn07hoticb1c3uls3fp23wo23o6" />
+      </head>
+      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+        <ThemeInit />
+        <AuthInit />
+        {children}
+      </body>
+    </html>
+  );
 }
