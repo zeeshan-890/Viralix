@@ -10,7 +10,7 @@ if (!API_BASE_URL && typeof window !== 'undefined') {
     }
 }
 if (!API_BASE_URL) {
-    API_BASE_URL = 'http://localhost:5000/api';
+    API_BASE_URL = 'https://viralix-b3ff86cb412f.herokuapp.com/api';
 }
 
 // Use cookie-based auth; always send credentials (cookies) with requests
