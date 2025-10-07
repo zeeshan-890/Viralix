@@ -37,8 +37,9 @@ api.interceptors.response.use(
         if (status === 401 && typeof window !== 'undefined') {
             const path = window.location?.pathname || '';
             const isAuthRoute = path.startsWith('/auth');
-            // Only redirect to login if we're not already on an auth route
-            if (!isAuthRoute) {
+            const isPublicRoot = path === '/' || path === '';
+            // Only redirect to login if not on auth pages or the public landing page
+            if (!isAuthRoute && !isPublicRoot) {
                 window.location.href = '/auth/login';
             }
         }
