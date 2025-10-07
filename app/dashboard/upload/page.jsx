@@ -290,8 +290,8 @@ export default function UploadPage() {
                                                         <div className="relative aspect-video bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
                                                             {file.type === 'image' ? (
                                                                 <>
-                                                                    <img 
-                                                                        src={file.url} 
+                                                                    <img
+                                                                        src={file.url}
                                                                         alt={file.filename}
                                                                         className="w-full h-full object-cover"
                                                                     />
@@ -315,7 +315,7 @@ export default function UploadPage() {
                                                                 <CheckCircle2 className="w-4 h-4" />
                                                             </div>
                                                         </div>
-                                                        
+
                                                         {/* File Details */}
                                                         <div className="p-3 bg-gray-50">
                                                             <p className="text-sm font-medium text-gray-900 truncate mb-1" title={file.filename}>
