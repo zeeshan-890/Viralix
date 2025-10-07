@@ -43,7 +43,7 @@ async function validateInstagramToken(accountId, token) {
 async function refreshInstagramTokenIfNeeded(user, account) {
     // Check both possible field names (tokenExpires is the correct schema field)
     const expiryDate = account.tokenExpires || account.tokenExpiry;
-    
+
     if (!expiryDate) {
         console.log(`[Publisher] No token expiry date found, skipping refresh check`);
         return; // Skip if no expiry date
