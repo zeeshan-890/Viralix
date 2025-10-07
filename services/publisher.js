@@ -19,8 +19,22 @@ async function resolveAuthForPlatform(user, platform) {
         return { kind: 'facebook', pageId: page.id, token: page.accessToken };
     }
     if (platform.name === 'instagram') {
+        // Check for direct OAuth Instagram account first
+        const directAccount = (user.socialAccounts || []).find(
+            acc => acc.platform === 'instagram' &&
+                acc.accountId === platform.accountId &&
+                acc.isActive
+        );
+
+        if (directAccount && directAccount.accessToken) {
+            return { kind: 'instagram', igUserId: platform.accountId, token: directAccount.accessToken };
+        }
+
+        // Fall back to Facebook-linked Instagram account
         const page = (user.settings?.facebookPages || []).find(p => p.instagramId === platform.accountId);
-        if (!page || !page.accessToken) throw new Error('Instagram auth not found (via linked FB Page token)');
+        if (!page || !page.accessToken) {
+            throw new Error('Instagram auth not found. Please reconnect your Instagram account.');
+        }
         return { kind: 'instagram', igUserId: platform.accountId, token: page.accessToken };
     }
     throw new Error(`Unsupported platform: ${platform.name}`);
