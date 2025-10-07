@@ -62,12 +62,12 @@ router.get('/overview', auth, async (req, res) => {
         let totalFollowers = 0;
         try {
             const user = await User.findById(req.user.id).lean();
-            
+
             // Direct Instagram OAuth accounts
             const directInstagramAccounts = user?.socialAccounts?.filter(
                 acc => acc.platform === 'instagram' && acc.isActive && acc.accessToken
             ) || [];
-            
+
             for (const igAccount of directInstagramAccounts) {
                 try {
                     const axios = require('axios');
@@ -80,7 +80,7 @@ router.get('/overview', auth, async (req, res) => {
                     totalFollowers += response.data?.followers_count || 0;
                 } catch (_) { /* ignore */ }
             }
-            
+
             // Facebook-linked accounts
             const pages = user?.settings?.facebookPages || [];
             // Facebook: page fans via getPageInsights('page_fans') latest value
@@ -212,12 +212,12 @@ router.post('/refresh', auth, async (req, res) => {
                 } else if (p.name === 'instagram') {
                     // Instagram: Check for direct OAuth account first, then fall back to Facebook-linked
                     let token = null;
-                    
+
                     // Try direct OAuth account
                     const directAccount = user?.socialAccounts?.find(
                         acc => acc.platform === 'instagram' && acc.accountId === p.accountId && acc.isActive && acc.accessToken
                     );
-                    
+
                     if (directAccount) {
                         token = directAccount.accessToken;
                     } else {
@@ -225,7 +225,7 @@ router.post('/refresh', auth, async (req, res) => {
                         const page = user?.settings?.facebookPages?.find(pg => pg.instagramId === p.accountId);
                         token = page?.accessToken || page?.access_token;
                     }
-                    
+
                     if (token && p.accountId) {
                         try {
                             let media = null;
@@ -260,7 +260,7 @@ router.post('/refresh', auth, async (req, res) => {
                                 try {
                                     const productType = media.media_product_type || media.media_type;
                                     let requestedMetrics = 'views,reach';
-                                    
+
                                     const axios = require('axios');
                                     const insightsResponse = await axios.get(`https://graph.instagram.com/${media.id}/insights`, {
                                         params: {
@@ -269,19 +269,19 @@ router.post('/refresh', auth, async (req, res) => {
                                         }
                                     });
                                     const insights = insightsResponse.data?.data || [];
-                                    
+
                                     console.log('[IG] Insights for media', media.id, {
                                         productType,
                                         requestedMetrics,
                                         metrics: insights.map(m => ({ name: m.name, value: m.values?.[0]?.value }))
                                     });
-                                    
+
                                     for (const m of insights) {
                                         const val = m.values?.[0]?.value || 0;
                                         if (m.name === 'views') views = Math.max(views, val);
                                         if (m.name === 'reach') views = Math.max(views, val, views);
                                     }
-                                    
+
                                     console.log('[IG] Computed views', { mediaId: media.id, productType, views });
                                 } catch (e) {
                                     // ignore insights errors
@@ -389,7 +389,7 @@ router.get('/platform/:platform', auth, async (req, res) => {
             const directAccount = user.socialAccounts?.find(
                 acc => acc.platform === 'instagram' && acc.isActive && acc.accessToken
             );
-            
+
             if (directAccount) {
                 try {
                     const axios = require('axios');

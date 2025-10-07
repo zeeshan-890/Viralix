@@ -25,7 +25,7 @@ function findPageByIg(pages, igUserId) {
 
 // Get direct Instagram OAuth accounts (new method)
 function getDirectInstagramAccounts(user) {
-    return (user.socialAccounts || []).filter(acc => 
+    return (user.socialAccounts || []).filter(acc =>
         acc.platform === 'instagram' && acc.isActive && acc.accessToken
     );
 }
@@ -100,11 +100,11 @@ router.get('/status', auth, async (req, res) => {
 router.get('/accounts/:igUserId/profile', auth, async (req, res) => {
     try {
         const user = await User.findById(req.user.id).lean();
-        
+
         // Check if it's a direct OAuth account first
-        const directAccount = (user.socialAccounts || []).find(acc => 
-            acc.platform === 'instagram' && 
-            acc.accountId === req.params.igUserId && 
+        const directAccount = (user.socialAccounts || []).find(acc =>
+            acc.platform === 'instagram' &&
+            acc.accountId === req.params.igUserId &&
             acc.isActive
         );
 
@@ -120,8 +120,8 @@ router.get('/accounts/:igUserId/profile', auth, async (req, res) => {
                 return res.json({ profile: profileResponse.data });
             } catch (err) {
                 console.error('Instagram direct profile fetch error:', err.response?.data || err.message);
-                return res.status(err.response?.status || 500).json({ 
-                    message: err.response?.data?.error?.message || err.message 
+                return res.status(err.response?.status || 500).json({
+                    message: err.response?.data?.error?.message || err.message
                 });
             }
         }
@@ -142,11 +142,11 @@ router.get('/accounts/:igUserId/feed', auth, async (req, res) => {
     try {
         const user = await User.findById(req.user.id).lean();
         const limit = Math.min(parseInt(req.query.limit || '12', 10), 50);
-        
+
         // Check if it's a direct OAuth account first
-        const directAccount = (user.socialAccounts || []).find(acc => 
-            acc.platform === 'instagram' && 
-            acc.accountId === req.params.igUserId && 
+        const directAccount = (user.socialAccounts || []).find(acc =>
+            acc.platform === 'instagram' &&
+            acc.accountId === req.params.igUserId &&
             acc.isActive
         );
 
@@ -163,8 +163,8 @@ router.get('/accounts/:igUserId/feed', auth, async (req, res) => {
                 return res.json({ feed: feedResponse.data.data || [] });
             } catch (err) {
                 console.error('Instagram direct feed fetch error:', err.response?.data || err.message);
-                return res.status(err.response?.status || 500).json({ 
-                    message: err.response?.data?.error?.message || err.message 
+                return res.status(err.response?.status || 500).json({
+                    message: err.response?.data?.error?.message || err.message
                 });
             }
         }
@@ -184,11 +184,11 @@ router.get('/accounts/:igUserId/feed', auth, async (req, res) => {
 router.get('/accounts/:igUserId/insights', auth, async (req, res) => {
     try {
         const user = await User.findById(req.user.id).lean();
-        
+
         // Check if it's a direct OAuth account first
-        const directAccount = (user.socialAccounts || []).find(acc => 
-            acc.platform === 'instagram' && 
-            acc.accountId === req.params.igUserId && 
+        const directAccount = (user.socialAccounts || []).find(acc =>
+            acc.platform === 'instagram' &&
+            acc.accountId === req.params.igUserId &&
             acc.isActive
         );
 
@@ -205,8 +205,8 @@ router.get('/accounts/:igUserId/insights', auth, async (req, res) => {
                 return res.json({ insights: insightsResponse.data.data || [] });
             } catch (err) {
                 console.error('Instagram direct insights fetch error:', err.response?.data || err.message);
-                return res.status(err.response?.status || 500).json({ 
-                    message: err.response?.data?.error?.message || err.message 
+                return res.status(err.response?.status || 500).json({
+                    message: err.response?.data?.error?.message || err.message
                 });
             }
         }
@@ -230,11 +230,11 @@ router.post('/accounts/:igUserId/publish-by-url', auth, async (req, res) => {
         if (!url || !mediaType) return res.status(400).json({ message: 'mediaType and url required' });
 
         const user = await User.findById(req.user.id).lean();
-        
+
         // Check if it's a direct OAuth account first
-        const directAccount = (user.socialAccounts || []).find(acc => 
-            acc.platform === 'instagram' && 
-            acc.accountId === req.params.igUserId && 
+        const directAccount = (user.socialAccounts || []).find(acc =>
+            acc.platform === 'instagram' &&
+            acc.accountId === req.params.igUserId &&
             acc.isActive
         );
 
@@ -242,8 +242,8 @@ router.post('/accounts/:igUserId/publish-by-url', auth, async (req, res) => {
             // Use direct Instagram Graph API for publishing
             try {
                 // Step 1: Create media container
-                const containerPayload = mediaType === 'VIDEO' 
-                    ? { media_type: 'REELS', video_url: url, caption } 
+                const containerPayload = mediaType === 'VIDEO'
+                    ? { media_type: 'REELS', video_url: url, caption }
                     : { image_url: url, caption };
 
                 const createResponse = await axios.post(
@@ -298,8 +298,8 @@ router.post('/accounts/:igUserId/publish-by-url', auth, async (req, res) => {
 
             } catch (err) {
                 console.error('Instagram direct publish error:', err.response?.data || err.message);
-                return res.status(err.response?.status || 500).json({ 
-                    message: err.response?.data?.error?.message || err.message 
+                return res.status(err.response?.status || 500).json({
+                    message: err.response?.data?.error?.message || err.message
                 });
             }
         }
