@@ -136,6 +136,16 @@ app.get('/api/health', (req, res) => {
     });
 });
 
+// CORS debug endpoint (DO NOT expose in production unless needed)
+app.get('/api/cors/debug', (req, res) => {
+    res.json({
+        requested_origin: req.headers.origin || null,
+        allowed_origins: ALLOWED,
+        client_url_env: CLIENT_URL,
+        note: 'To add production domain set CORS_ALLOWED_ORIGINS env (comma separated) or CLIENT_URL. Restart server after changes.'
+    });
+});
+
 // 404 handler
 app.use('*', (req, res) => {
     res.status(404).json({
