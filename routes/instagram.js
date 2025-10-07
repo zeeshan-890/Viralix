@@ -42,6 +42,7 @@ router.get('/status', auth, async (req, res) => {
             accounts.push({
                 igUserId: acc.accountId,
                 username: acc.accountName || acc.username,
+                pageName: acc.accountName || acc.username, // For frontend compatibility
                 method: 'direct_oauth',
                 accountType: acc.accountType || 'BUSINESS',
                 connectedAt: acc.connectedAt
@@ -55,6 +56,7 @@ router.get('/status', auth, async (req, res) => {
             igUserId: p.instagramId,
             pageId: p.id,
             pageName: p.name,
+            username: p.name, // For consistency with direct OAuth
             method: 'facebook_linked'
         }));
 
@@ -79,6 +81,7 @@ router.get('/status', auth, async (req, res) => {
                     igUserId: p.instagramId,
                     pageId: p.id,
                     pageName: p.name,
+                    username: p.name, // For consistency with direct OAuth
                     method: 'facebook_linked'
                 }));
                 accounts.push(...refreshedAccounts);
