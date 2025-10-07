@@ -312,18 +312,20 @@ router.get('/callback', async (req, res) => {
         const instagramAccountData = {
             platform: 'instagram',
             accountId: igUserId,
+            accountName: profile.username || String(igUserId), // Required by User schema
+            accessToken: longLivedToken,
+            tokenExpires: tokenExpiry, // Match schema field name
+            isActive: true,
+            connectedAt: new Date(),
+            // Extra fields (not in base schema but stored in MongoDB)
             username: profile.username || String(igUserId),
             name: profile.name || profile.username || null,
             profilePicture: profile.profile_picture_url || null,
             accountType: profile.account_type || 'BUSINESS',
-            accessToken: longLivedToken,
-            tokenExpiry: tokenExpiry,
             followersCount: profile.followers_count || null,
             followsCount: profile.follows_count || null,
             mediaCount: profile.media_count || null,
-            permissions: permissions,
-            connected: true,
-            connectedAt: new Date()
+            permissions: permissions
         };
 
         if (existingIndex >= 0) {
@@ -452,18 +454,20 @@ router.post('/exchange-code', auth, async (req, res) => {
         const instagramAccountData = {
             platform: 'instagram',
             accountId: igUserId,
+            accountName: profile.username || String(igUserId), // Required by User schema
+            accessToken: longLivedToken,
+            tokenExpires: tokenExpiry, // Match schema field name
+            isActive: true,
+            connectedAt: new Date(),
+            // Extra fields (not in base schema but stored in MongoDB)
             username: profile.username || String(igUserId),
             name: profile.name || profile.username || null,
             profilePicture: profile.profile_picture_url || null,
             accountType: profile.account_type || 'BUSINESS',
-            accessToken: longLivedToken,
-            tokenExpiry: tokenExpiry,
             followersCount: profile.followers_count || null,
             followsCount: profile.follows_count || null,
             mediaCount: profile.media_count || null,
-            permissions: permissions,
-            connected: true,
-            connectedAt: new Date()
+            permissions: permissions
         };
 
         if (existingIndex >= 0) {
