@@ -14,6 +14,31 @@ const {
 
 const INSTAGRAM_GRAPH_URL = 'https://graph.instagram.com';
 
+// Helper: Validate Instagram token by making a simple API call
+async function validateInstagramToken(accountId, token) {
+    try {
+        // Try to fetch basic account info to validate token
+        await axios.get(`${INSTAGRAM_GRAPH_URL}/${accountId}`, {
+            params: {
+                fields: 'id,username',
+                access_token: token
+            }
+        });
+        return true;
+    } catch (error) {
+        const errorMsg = error.response?.data?.error?.message || error.message;
+        console.error(`[Publisher] Token validation failed:`, errorMsg);
+        
+        if (errorMsg.includes('Cannot parse access token') || 
+            errorMsg.includes('Invalid OAuth access token') ||
+            errorMsg.includes('Malformed access token')) {
+            throw new Error('Instagram token is corrupted. Please disconnect and reconnect your Instagram account to get a fresh token.');
+        }
+        
+        throw new Error(`Instagram token validation failed: ${errorMsg}`);
+    }
+}
+
 // Helper: Refresh Instagram token if needed
 async function refreshInstagramTokenIfNeeded(user, account) {
     if (!account.tokenExpiry) {
@@ -44,20 +69,18 @@ async function refreshInstagramTokenIfNeeded(user, account) {
         } catch (refreshError) {
             const errorMsg = refreshError.response?.data?.error?.message || refreshError.message;
             console.error(`[Publisher] ✗ Token refresh failed:`, errorMsg);
-
+            
             // Check for specific "Cannot parse" error
             if (errorMsg.includes('Cannot parse access token') || errorMsg.includes('Invalid OAuth access token')) {
                 throw new Error('Instagram token is corrupted and cannot be refreshed. Please disconnect and reconnect your Instagram account.');
             }
-
+            
             throw new Error(`Instagram token refresh failed: ${errorMsg}. Please reconnect your account.`);
         }
     } else {
         console.log(`[Publisher] Token still valid, no refresh needed`);
     }
-}
-
-// Helper: find page token for a user's connected account
+}// Helper: find page token for a user's connected account
 async function resolveAuthForPlatform(user, platform) {
     if (platform.name === 'facebook') {
         const page = (user.settings?.facebookPages || []).find(p => p.id === platform.accountId);
@@ -79,23 +102,26 @@ async function resolveAuthForPlatform(user, platform) {
             console.log(`[Publisher] Found direct OAuth account: ${directAccount.accountId}`);
             console.log(`[Publisher] Token present: ${!!directAccount.accessToken}, Token preview: ${directAccount.accessToken?.substring(0, 20)}...`);
             console.log(`[Publisher] Token expiry: ${directAccount.tokenExpiry}`);
-
+            
             if (!directAccount.accessToken) {
                 throw new Error('Instagram account found but token is missing. Please reconnect your account.');
             }
-
+            
             try {
-                // Refresh token if needed before publishing
+                // First, validate the token
+                console.log(`[Publisher] Validating token...`);
+                await validateInstagramToken(directAccount.accountId, directAccount.accessToken);
+                console.log(`[Publisher] ✓ Token is valid`);
+                
+                // Then refresh if needed
                 await refreshInstagramTokenIfNeeded(user, directAccount);
-                console.log(`[Publisher] Using refreshed/valid token for publishing`);
+                console.log(`[Publisher] Using validated token for publishing`);
                 return { kind: 'instagram', igUserId: platform.accountId, token: directAccount.accessToken };
-            } catch (refreshError) {
-                console.error(`[Publisher] Token refresh/validation failed:`, refreshError.message);
-                throw new Error('Instagram token is invalid. Please disconnect and reconnect your Instagram account to get a fresh token.');
+            } catch (validationError) {
+                console.error(`[Publisher] Token validation/refresh failed:`, validationError.message);
+                throw validationError; // Throw the specific error with instructions
             }
-        }
-
-        console.log(`[Publisher] No direct OAuth account found, checking Facebook-linked...`);
+        }        console.log(`[Publisher] No direct OAuth account found, checking Facebook-linked...`);
 
         // Fall back to Facebook-linked Instagram account
         const page = (user.settings?.facebookPages || []).find(p => p.instagramId === platform.accountId);
