@@ -5,7 +5,7 @@ import Link from "next/link";
 import { Facebook, Instagram, CheckCircle2, ExternalLink, Loader2, AlertCircle } from "lucide-react";
 import axios from "axios";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+const API_URL = 'https://viralix-b3ff86cb412f.herokuapp.com';
 
 export default function ConnectAccountsPage() {
     const [fbStatus, setFbStatus] = useState({ connected: false, account: null, pages: [] });
