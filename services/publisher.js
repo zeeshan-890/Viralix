@@ -44,12 +44,12 @@ async function refreshInstagramTokenIfNeeded(user, account) {
         } catch (refreshError) {
             const errorMsg = refreshError.response?.data?.error?.message || refreshError.message;
             console.error(`[Publisher] ✗ Token refresh failed:`, errorMsg);
-            
+
             // Check for specific "Cannot parse" error
             if (errorMsg.includes('Cannot parse access token') || errorMsg.includes('Invalid OAuth access token')) {
                 throw new Error('Instagram token is corrupted and cannot be refreshed. Please disconnect and reconnect your Instagram account.');
             }
-            
+
             throw new Error(`Instagram token refresh failed: ${errorMsg}. Please reconnect your account.`);
         }
     } else {
@@ -67,7 +67,7 @@ async function resolveAuthForPlatform(user, platform) {
     if (platform.name === 'instagram') {
         console.log(`[Publisher] Looking for Instagram account: ${platform.accountId}`);
         console.log(`[Publisher] User has ${user.socialAccounts?.length || 0} social accounts`);
-        
+
         // Check for direct OAuth Instagram account first
         const directAccount = (user.socialAccounts || []).find(
             acc => acc.platform === 'instagram' &&
@@ -79,11 +79,11 @@ async function resolveAuthForPlatform(user, platform) {
             console.log(`[Publisher] Found direct OAuth account: ${directAccount.accountId}`);
             console.log(`[Publisher] Token present: ${!!directAccount.accessToken}, Token preview: ${directAccount.accessToken?.substring(0, 20)}...`);
             console.log(`[Publisher] Token expiry: ${directAccount.tokenExpiry}`);
-            
+
             if (!directAccount.accessToken) {
                 throw new Error('Instagram account found but token is missing. Please reconnect your account.');
             }
-            
+
             try {
                 // Refresh token if needed before publishing
                 await refreshInstagramTokenIfNeeded(user, directAccount);
@@ -96,7 +96,7 @@ async function resolveAuthForPlatform(user, platform) {
         }
 
         console.log(`[Publisher] No direct OAuth account found, checking Facebook-linked...`);
-        
+
         // Fall back to Facebook-linked Instagram account
         const page = (user.settings?.facebookPages || []).find(p => p.instagramId === platform.accountId);
         if (!page || !page.accessToken) {
