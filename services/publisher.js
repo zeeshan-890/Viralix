@@ -294,12 +294,13 @@ async function publishPostById(userId, postId) {
     const user = await User.findById(userId);
     if (!user) throw new Error('User not found');
 
-    // Only attempt platforms that are scheduled or draft
+    // Attempt platforms that are scheduled, draft, or failed (allow retries)
     const nextPlatforms = await Promise.all(post.platforms.map(async (p) => {
-        if (['scheduled', 'draft'].includes(p.status)) {
-            console.log(`[Publisher] Publishing to platform: ${p.name} (${p.accountId})`);
+        if (['scheduled', 'draft', 'failed'].includes(p.status)) {
+            console.log(`[Publisher] Publishing to platform: ${p.name} (${p.accountId}), current status: ${p.status}`);
             return await publishPlatform(user, p, post);
         }
+        console.log(`[Publisher] Skipping platform ${p.name} with status: ${p.status}`);
         return p;
     }));
 
