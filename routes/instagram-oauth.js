@@ -507,7 +507,7 @@ router.post('/exchange-code', auth, async (req, res) => {
 router.get('/status', auth, async (req, res) => {
     try {
         const user = await User.findById(req.user.id);
-        const igAccounts = (user.socialAccounts || []).filter(acc => 
+        const igAccounts = (user.socialAccounts || []).filter(acc =>
             acc.platform === 'instagram' && acc.isActive !== false
         );
 
