@@ -507,16 +507,22 @@ router.post('/exchange-code', auth, async (req, res) => {
 router.get('/status', auth, async (req, res) => {
     try {
         const user = await User.findById(req.user.id);
-        const igAccounts = (user.socialAccounts || []).filter(acc => acc.platform === 'instagram' && acc.connected);
+        const igAccounts = (user.socialAccounts || []).filter(acc => 
+            acc.platform === 'instagram' && acc.isActive !== false
+        );
+
+        console.log('[IG Status] Found', igAccounts.length, 'Instagram accounts for user:', user.email);
 
         res.json({
             connected: igAccounts.length > 0,
             accounts: igAccounts.map(acc => ({
                 accountId: acc.accountId,
-                username: acc.username,
-                accountType: acc.accountType,
+                username: acc.accountName || acc.username, // accountName is schema field, username is extra
+                accountType: acc.accountType || 'BUSINESS',
                 connectedAt: acc.connectedAt,
-                tokenExpiry: acc.tokenExpiry
+                tokenExpiry: acc.tokenExpires, // Match schema field name
+                profilePicture: acc.profilePicture,
+                name: acc.name
             }))
         });
     } catch (error) {
