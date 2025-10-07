@@ -17,9 +17,9 @@ const INSTAGRAM_GRAPH_URL = 'https://graph.instagram.com';
 // Helper: Refresh Instagram token if needed
 async function refreshInstagramTokenIfNeeded(user, account) {
     if (!account.tokenExpiry) return; // Skip if no expiry date
-    
+
     const daysUntilExpiry = (new Date(account.tokenExpiry) - Date.now()) / (1000 * 60 * 60 * 24);
-    
+
     // Refresh if token expires within 7 days
     if (daysUntilExpiry < 7) {
         try {
@@ -34,7 +34,7 @@ async function refreshInstagramTokenIfNeeded(user, account) {
             account.tokenExpiry = new Date(Date.now() + refreshResponse.data.expires_in * 1000);
             user.markModified('socialAccounts');
             await user.save();
-            
+
             console.log(`Instagram token refreshed for account ${account.accountId}`);
         } catch (refreshError) {
             console.error('Token refresh failed:', refreshError.response?.data || refreshError.message);
