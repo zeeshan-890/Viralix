@@ -187,6 +187,14 @@ router.get('/authorize/check', async (req, res) => {
 router.get('/callback', async (req, res) => {
     const { code, state, error, error_reason, error_description } = req.query;
 
+    // Log callback for debugging
+    console.log('[IG Business Login] Callback received:', {
+        hasCode: !!code,
+        hasState: !!state,
+        error: error || 'none',
+        timestamp: new Date().toISOString()
+    });
+
     // Handle OAuth errors
     if (error) {
         console.error('Instagram Business Login error:', error, error_reason, error_description);
@@ -194,6 +202,7 @@ router.get('/callback', async (req, res) => {
     }
 
     if (!code || !state) {
+        console.error('[IG Business Login] Missing code or state');
         return res.redirect(`${process.env.CLIENT_URL || 'http://localhost:3000'}/dashboard/connect-accounts?error=missing_code_or_state`);
     }
 
@@ -202,10 +211,11 @@ router.get('/callback', async (req, res) => {
         const userId = verifyState(state);
         const user = await User.findById(userId);
         if (!user) {
+            console.error('[IG Business Login] User not found:', userId);
             return res.redirect(`${process.env.CLIENT_URL || 'http://localhost:3000'}/dashboard/connect-accounts?error=user_not_found`);
         }
 
-        console.log('[IG Business Login] Exchanging code for access token...');
+        console.log('[IG Business Login] Exchanging code for access token for user:', user.email);
 
         // Step 2: Exchange authorization code for short-lived access token
         if (!IG_APP_SECRET) {
@@ -335,6 +345,154 @@ router.get('/callback', async (req, res) => {
         console.error('Instagram Business Login callback error:', error.response?.data || error.message);
         const errorMsg = error.response?.data?.error_message || error.response?.data?.error?.message || error.message;
         res.redirect(`${process.env.CLIENT_URL || 'http://localhost:3000'}/dashboard/connect-accounts?error=${encodeURIComponent(errorMsg)}`);
+    }
+});
+
+/**
+ * Manual token exchange (recovery endpoint for when callback was blocked)
+ * POST /api/instagram-oauth/exchange-code
+ * Body: { code, state }
+ */
+router.post('/exchange-code', auth, async (req, res) => {
+    const { code } = req.body;
+
+    if (!code) {
+        return res.status(400).json({ message: 'Authorization code is required' });
+    }
+
+    try {
+        const user = await User.findById(req.user.id);
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        console.log('[IG Business Login][Manual] Exchanging code for user:', user.email);
+
+        if (!IG_APP_SECRET) {
+            throw new Error('Server missing INSTAGRAM_APP_SECRET');
+        }
+
+        const formData = new URLSearchParams({
+            client_id: IG_APP_ID,
+            client_secret: IG_APP_SECRET,
+            grant_type: 'authorization_code',
+            redirect_uri: IG_REDIRECT_URI,
+            code: code
+        });
+
+        let tokenResponse;
+        try {
+            tokenResponse = await axios.post(INSTAGRAM_TOKEN_URL, formData, {
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+            });
+        } catch (tokenErr) {
+            const raw = tokenErr.response?.data || tokenErr.message;
+            console.error('[IG Business Login][Manual] Token exchange failed:', raw);
+            return res.status(400).json({ message: 'Token exchange failed', error: raw });
+        }
+
+        console.log('[IG Business Login][Manual] Token response:', tokenResponse.data);
+
+        let shortLivedToken = tokenResponse.data.access_token;
+        let igUserId = tokenResponse.data.user_id;
+        let permissions = tokenResponse.data.permissions;
+
+        if (!shortLivedToken && Array.isArray(tokenResponse.data.data) && tokenResponse.data.data.length) {
+            const first = tokenResponse.data.data[0];
+            shortLivedToken = first.access_token;
+            igUserId = first.user_id;
+            permissions = first.permissions;
+        }
+
+        if (!shortLivedToken || !igUserId) {
+            throw new Error('Failed to parse short-lived token or user id from response');
+        }
+
+        console.log('[IG Business Login][Manual] Exchanging for long-lived token...');
+
+        let longLivedResponse;
+        try {
+            longLivedResponse = await axios.get(`${INSTAGRAM_GRAPH_URL}/access_token`, {
+                params: {
+                    grant_type: 'ig_exchange_token',
+                    client_secret: IG_APP_SECRET,
+                    access_token: shortLivedToken
+                }
+            });
+        } catch (llErr) {
+            console.error('[IG Business Login][Manual] Long-lived token exchange failed:', llErr.response?.data || llErr.message);
+            return res.status(400).json({ message: 'Long-lived token exchange failed', error: llErr.response?.data });
+        }
+
+        const { access_token: longLivedToken, expires_in } = longLivedResponse.data;
+        const tokenExpiry = new Date(Date.now() + expires_in * 1000);
+
+        console.log('[IG Business Login][Manual] Fetching profile...');
+        let profileResponse;
+        try {
+            profileResponse = await axios.get(`${INSTAGRAM_GRAPH_URL}/${igUserId}`, {
+                params: {
+                    fields: 'id,username,account_type,media_count,followers_count,follows_count,profile_picture_url,name',
+                    access_token: longLivedToken
+                }
+            });
+        } catch (pErr) {
+            console.error('[IG Business Login][Manual] Profile fetch failed:', pErr.response?.data || pErr.message);
+            profileResponse = { data: { id: igUserId, username: igUserId, account_type: 'BUSINESS' } };
+        }
+
+        const profile = profileResponse.data;
+
+        user.socialAccounts = user.socialAccounts || [];
+
+        const existingIndex = user.socialAccounts.findIndex(acc =>
+            acc.platform === 'instagram' && acc.accountId === igUserId
+        );
+
+        const instagramAccountData = {
+            platform: 'instagram',
+            accountId: igUserId,
+            username: profile.username || String(igUserId),
+            name: profile.name || profile.username || null,
+            profilePicture: profile.profile_picture_url || null,
+            accountType: profile.account_type || 'BUSINESS',
+            accessToken: longLivedToken,
+            tokenExpiry: tokenExpiry,
+            followersCount: profile.followers_count || null,
+            followsCount: profile.follows_count || null,
+            mediaCount: profile.media_count || null,
+            permissions: permissions,
+            connected: true,
+            connectedAt: new Date()
+        };
+
+        if (existingIndex >= 0) {
+            user.socialAccounts[existingIndex] = instagramAccountData;
+            console.log('[IG Business Login][Manual] Updated existing account');
+        } else {
+            user.socialAccounts.push(instagramAccountData);
+            console.log('[IG Business Login][Manual] Added new account');
+        }
+
+        user.markModified('socialAccounts');
+        await user.save();
+
+        console.log('[IG Business Login][Manual] Account saved successfully');
+
+        res.json({
+            success: true,
+            message: 'Instagram account connected successfully',
+            account: {
+                username: profile.username,
+                accountType: profile.account_type,
+                connectedAt: instagramAccountData.connectedAt
+            }
+        });
+    } catch (error) {
+        console.error('[IG Business Login][Manual] Error:', error.response?.data || error.message);
+        res.status(500).json({
+            message: error.response?.data?.error_message || error.response?.data?.error?.message || error.message
+        });
     }
 });
 

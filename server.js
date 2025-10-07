@@ -10,8 +10,19 @@ require('dotenv').config();
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// Security middleware
-app.use(helmet());
+// Security middleware with enhanced configuration
+app.use(helmet({
+    contentSecurityPolicy: false, // Disable default CSP for OAuth redirects
+    hsts: {
+        maxAge: 31536000,
+        includeSubDomains: true,
+        preload: true
+    },
+    referrerPolicy: { policy: 'strict-origin-when-cross-origin' },
+    noSniff: true,
+    xssFilter: true,
+    frameguard: { action: 'deny' }
+}));
 
 // Rate limiting
 const limiter = rateLimit({
