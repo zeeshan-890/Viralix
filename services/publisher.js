@@ -228,14 +228,16 @@ async function publishToInstagram(auth, content, mediaList) {
 
     let creationId;
     try {
-        console.log(`[Publisher] Attempting to create container (first try)...`);
+        console.log(`[Publisher] Attempting to create container...`);
         creationId = await createAndAwait(payload);
     } catch (err) {
-        console.log(`[Publisher] First attempt failed:`, err.message);
-        // Fallback for video: try VIDEO if REELS failed to create
-        if (isVideo) {
+        console.log(`[Publisher] Container creation/processing failed:`, err.message);
+
+        // For Direct OAuth, VIDEO fallback is not supported (deprecated)
+        // Only try fallback for Facebook-linked accounts
+        if (isVideo && !auth.isDirect) {
             try {
-                console.log(`[Publisher] Attempting fallback VIDEO format...`);
+                console.log(`[Publisher] Attempting fallback VIDEO format (Facebook-linked only)...`);
                 const fallback = { ...base, media_type: 'VIDEO', video_url: primary.url };
                 creationId = await createAndAwait(fallback);
             } catch (err2) {
@@ -246,8 +248,10 @@ async function publishToInstagram(auth, content, mediaList) {
                 throw new Error(`${msg} | ${msg2}`);
             }
         } else {
-            // Not a video, rethrow
-            throw err;
+            // Not a video or direct OAuth (no VIDEO fallback), rethrow original error
+            const detailedMsg = err?.response?.data?.error?.message || err.message;
+            console.error(`[Publisher] Publishing failed:`, detailedMsg);
+            throw new Error(detailedMsg);
         }
     }
 

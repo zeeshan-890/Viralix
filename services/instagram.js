@@ -25,9 +25,15 @@ async function createDirectOAuthMediaContainer(igUserId, token, payload) {
 async function getDirectOAuthContainerStatus(creationId, token) {
     try {
         const { data } = await axios.get(`${IG_API}/${creationId}`, {
-            params: { fields: 'status_code', access_token: token },
+            params: { fields: 'status_code,status', access_token: token },
         });
-        console.log(`[IG Direct] Container ${creationId} status:`, data.status_code);
+        console.log(`[IG Direct] Container ${creationId} status:`, data.status_code, data.status || '');
+
+        // If there's an error, log the full response
+        if (data.status_code === 'ERROR') {
+            console.error(`[IG Direct] Container ERROR details:`, JSON.stringify(data, null, 2));
+        }
+
         return data.status_code;
     } catch (error) {
         console.error(`[IG Direct] Get status failed:`, error.response?.data || error.message);
