@@ -41,12 +41,15 @@ async function validateInstagramToken(accountId, token) {
 
 // Helper: Refresh Instagram token if needed
 async function refreshInstagramTokenIfNeeded(user, account) {
-    if (!account.tokenExpiry) {
+    // Check both possible field names (tokenExpires is the correct schema field)
+    const expiryDate = account.tokenExpires || account.tokenExpiry;
+    
+    if (!expiryDate) {
         console.log(`[Publisher] No token expiry date found, skipping refresh check`);
         return; // Skip if no expiry date
     }
 
-    const daysUntilExpiry = (new Date(account.tokenExpiry) - Date.now()) / (1000 * 60 * 60 * 24);
+    const daysUntilExpiry = (new Date(expiryDate) - Date.now()) / (1000 * 60 * 60 * 24);
     console.log(`[Publisher] Token expires in ${daysUntilExpiry.toFixed(1)} days`);
 
     // Refresh if token expires within 7 days
@@ -61,7 +64,7 @@ async function refreshInstagramTokenIfNeeded(user, account) {
             });
 
             account.accessToken = refreshResponse.data.access_token;
-            account.tokenExpiry = new Date(Date.now() + refreshResponse.data.expires_in * 1000);
+            account.tokenExpires = new Date(Date.now() + refreshResponse.data.expires_in * 1000);
             user.markModified('socialAccounts');
             await user.save();
 
@@ -101,7 +104,7 @@ async function resolveAuthForPlatform(user, platform) {
         if (directAccount) {
             console.log(`[Publisher] Found direct OAuth account: ${directAccount.accountId}`);
             console.log(`[Publisher] Token present: ${!!directAccount.accessToken}, Token preview: ${directAccount.accessToken?.substring(0, 20)}...`);
-            console.log(`[Publisher] Token expiry: ${directAccount.tokenExpiry}`);
+            console.log(`[Publisher] Token expiry: ${directAccount.tokenExpires || directAccount.tokenExpiry || 'not set'}`);
 
             if (!directAccount.accessToken) {
                 throw new Error('Instagram account found but token is missing. Please reconnect your account.');
