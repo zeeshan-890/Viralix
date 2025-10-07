@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import FileUpload from './components/FileUpload';
 import TagsInput from './components/TagsInput';
 import MediaLibrary from './components/MediaLibrary';
+import { Upload, Image, Video, Calendar, Clock, Send, Save, Eye, Sparkles, CheckCircle2, AlertCircle } from 'lucide-react';
 
 export default function UploadPage() {
     const router = useRouter();
@@ -144,8 +145,11 @@ export default function UploadPage() {
                 isScheduled: false,
             };
             const res = await postsAPI.create(payload);
-            // Stay on page and show a light confirmation
-            setActionError('');
+            const postId = res.data?._id;
+            if (postId) {
+                // Navigate to preview page after saving draft
+                router.push(`/dashboard/preview/${postId}`);
+            }
         } catch (e) {
             setActionError(e?.response?.data?.message || 'Failed to save draft');
         } finally {
@@ -202,71 +206,207 @@ export default function UploadPage() {
     };
 
     return (
-        <div className="max-w-6xl mx-auto">
-            <div className="mb-8">
-                <h1 className="text-2xl font-bold text-gray-900">Content Management</h1>
-                <p className="text-gray-600">Upload new content or manage your existing media library.</p>
-            </div>
-
-            {/* Tab Navigation */}
-            <div className="flex space-x-1 bg-gray-100 p-1 rounded-lg mb-8">
-                <button
-                    onClick={() => setActiveTab('upload')}
-                    className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${activeTab === 'upload'
-                        ? 'bg-white text-gray-900 shadow-sm'
-                        : 'text-gray-600 hover:text-gray-900'
-                        }`}
-                >
-                    📤 Upload New Content
-                </button>
-                <button
-                    onClick={() => setActiveTab('library')}
-                    className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${activeTab === 'library'
-                        ? 'bg-white text-gray-900 shadow-sm'
-                        : 'text-gray-600 hover:text-gray-900'
-                        }`}
-                >
-                    📚 Media Library
-                </button>
-            </div>
-
-            {error && (
-                <div className="mb-6 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
-                    {error}
+        <div className="min-h-screen bg-gradient-to-br from-[#F7FAF8] to-white">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                {/* Header */}
+                <div className="mb-8">
+                    <h1 className="text-3xl md:text-4xl font-bold mb-2" style={{ color: '#354F52' }}>
+                        Create Content
+                    </h1>
+                    <p className="text-gray-600 text-lg">
+                        Upload, design, and schedule your social media posts with ease
+                    </p>
                 </div>
-            )}
 
-            {/* Upload Tab */}
-            {activeTab === 'upload' && (
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                    {/* File Upload */}
-                    <div className="space-y-6 lg:col-span-1">
-                        <FileUpload
-                            onUploadComplete={handleUploadComplete}
-                            onDeleteUploaded={(publicId) => {
-                                setUploadedFiles(prev => prev.filter(m => m.publicId !== publicId));
-                            }}
-                        />
+                {/* Tab Navigation */}
+                <div className="flex space-x-2 mb-8">
+                    <button
+                        onClick={() => setActiveTab('upload')}
+                        className={`flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-medium transition-all ${activeTab === 'upload'
+                            ? 'text-white shadow-lg'
+                            : 'bg-white text-gray-600 hover:bg-gray-50 border border-gray-200'
+                            }`}
+                        style={activeTab === 'upload' ? { backgroundColor: '#84A98C' } : {}}
+                    >
+                        <Upload className="w-4 h-4" />
+                        Upload New Content
+                    </button>
+                    <button
+                        onClick={() => setActiveTab('library')}
+                        className={`flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-medium transition-all ${activeTab === 'library'
+                            ? 'text-white shadow-lg'
+                            : 'bg-white text-gray-600 hover:bg-gray-50 border border-gray-200'
+                            }`}
+                        style={activeTab === 'library' ? { backgroundColor: '#84A98C' } : {}}
+                    >
+                        <Image className="w-4 h-4" />
+                        Media Library
+                    </button>
+                </div>
+
+                {error && (
+                    <div className="mb-6 bg-red-50 border-l-4 border-red-500 text-red-700 px-6 py-4 rounded-lg flex items-start gap-3">
+                        <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />
+                        <div>{error}</div>
                     </div>
+                )}
 
-                    {/* Content Details */}
-                    <div className="space-y-6 lg:col-span-2">
-                        <div className="bg-white rounded-lg border border-gray-200 p-6">
-                            <h3 className="text-lg font-semibold mb-4">Content Details</h3>
-
-                            <div className="space-y-4">
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">Title</label>
-                                    <input type="text" value={contentForm.title} onChange={(e) => handleFormChange('title', e.target.value)} placeholder="Enter content title..." className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
+                {/* Upload Tab */}
+                {activeTab === 'upload' && (
+                    <div className="space-y-6">
+                        {/* Step 1: Upload Media Section */}
+                        <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 md:p-8">
+                            <div className="flex items-center gap-3 mb-6">
+                                <div className="w-12 h-12 rounded-xl flex items-center justify-center" style={{ backgroundColor: '#CAD2C5' }}>
+                                    <Upload className="w-6 h-6" style={{ color: '#52796F' }} />
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">Description</label>
-                                    <textarea rows={4} value={contentForm.description} onChange={(e) => handleFormChange('description', e.target.value)} placeholder="Enter content description..." className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
+                                    <h3 className="text-xl font-semibold" style={{ color: '#354F52' }}>Step 1: Upload Media</h3>
+                                    <p className="text-sm text-gray-600">Upload photos or videos for your post</p>
                                 </div>
-                                <TagsInput tags={contentForm.tags} onChange={(tags) => handleFormChange('tags', tags)} />
+                            </div>
+
+                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">Category</label>
-                                    <select value={contentForm.category} onChange={(e) => handleFormChange('category', e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                    <FileUpload
+                                        onUploadComplete={handleUploadComplete}
+                                        onDeleteUploaded={(publicId) => {
+                                            setUploadedFiles(prev => prev.filter(m => m.publicId !== publicId));
+                                        }}
+                                    />
+                                </div>
+
+                                {/* Uploaded Files Preview */}
+                                <div>
+                                    {uploadedFiles.length > 0 ? (
+                                        <div className="space-y-3">
+                                            <p className="text-sm font-medium mb-3" style={{ color: '#354F52' }}>
+                                                Uploaded Files ({uploadedFiles.length})
+                                            </p>
+                                            <div className="grid grid-cols-2 gap-3 max-h-96 overflow-y-auto pr-2">
+                                                {uploadedFiles.map((file, idx) => (
+                                                    <div key={idx} className="bg-white rounded-xl border-2 border-gray-200 overflow-hidden hover:border-[#84A98C] transition-all group">
+                                                        {/* Thumbnail */}
+                                                        <div className="relative aspect-video bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
+                                                            {file.type === 'image' ? (
+                                                                <>
+                                                                    <img 
+                                                                        src={file.url} 
+                                                                        alt={file.filename}
+                                                                        className="w-full h-full object-cover"
+                                                                    />
+                                                                    <div className="absolute top-2 right-2 bg-blue-500 text-white text-xs px-2 py-1 rounded-md flex items-center gap-1">
+                                                                        <Image className="w-3 h-3" />
+                                                                        Image
+                                                                    </div>
+                                                                </>
+                                                            ) : (
+                                                                <>
+                                                                    <div className="absolute inset-0 bg-gradient-to-br from-purple-100 to-purple-200" />
+                                                                    <Video className="w-12 h-12 text-purple-600 relative z-10" />
+                                                                    <div className="absolute top-2 right-2 bg-purple-500 text-white text-xs px-2 py-1 rounded-md flex items-center gap-1">
+                                                                        <Video className="w-3 h-3" />
+                                                                        Video
+                                                                    </div>
+                                                                </>
+                                                            )}
+                                                            {/* Success Badge */}
+                                                            <div className="absolute bottom-2 right-2 bg-green-500 text-white rounded-full p-1">
+                                                                <CheckCircle2 className="w-4 h-4" />
+                                                            </div>
+                                                        </div>
+                                                        
+                                                        {/* File Details */}
+                                                        <div className="p-3 bg-gray-50">
+                                                            <p className="text-sm font-medium text-gray-900 truncate mb-1" title={file.filename}>
+                                                                {file.filename}
+                                                            </p>
+                                                            <div className="flex items-center justify-between text-xs text-gray-600">
+                                                                <span>{(file.size / 1024 / 1024).toFixed(2)} MB</span>
+                                                                <span className="text-green-600 font-medium">✓ Uploaded</span>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    ) : (
+                                        <div className="h-full min-h-[300px] flex items-center justify-center p-8 bg-gray-50 rounded-xl border-2 border-dashed border-gray-300">
+                                            <div className="text-center">
+                                                <div className="w-16 h-16 mx-auto mb-3 rounded-full bg-gray-200 flex items-center justify-center">
+                                                    <Image className="w-8 h-8 text-gray-400" />
+                                                </div>
+                                                <p className="text-sm font-medium text-gray-600 mb-1">No files uploaded yet</p>
+                                                <p className="text-xs text-gray-500">Upload photos or videos to see them here</p>
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Step 2: Content Details Section */}
+                        <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 md:p-8">
+                            <div className="flex items-center gap-3 mb-6">
+                                <div className="w-12 h-12 rounded-xl flex items-center justify-center" style={{ backgroundColor: '#CAD2C5' }}>
+                                    <Sparkles className="w-6 h-6" style={{ color: '#52796F' }} />
+                                </div>
+                                <div>
+                                    <h3 className="text-xl font-semibold" style={{ color: '#354F52' }}>Step 2: Content Details</h3>
+                                    <p className="text-sm text-gray-600">Write your post title and description</p>
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                                {/* Title */}
+                                <div className="lg:col-span-2">
+                                    <label className="block text-sm font-medium mb-2" style={{ color: '#354F52' }}>
+                                        Title *
+                                    </label>
+                                    <input
+                                        type="text"
+                                        value={contentForm.title}
+                                        onChange={(e) => handleFormChange('title', e.target.value)}
+                                        placeholder="Enter an engaging title..."
+                                        className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:border-transparent transition-all"
+                                        onFocus={(e) => e.target.style.borderColor = '#84A98C'}
+                                        onBlur={(e) => e.target.style.borderColor = '#d1d5db'}
+                                    />
+                                </div>
+
+                                {/* Description */}
+                                <div className="lg:col-span-2">
+                                    <label className="block text-sm font-medium mb-2" style={{ color: '#354F52' }}>
+                                        Description *
+                                    </label>
+                                    <textarea
+                                        rows={5}
+                                        value={contentForm.description}
+                                        onChange={(e) => handleFormChange('description', e.target.value)}
+                                        placeholder="Write your post content here..."
+                                        className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:border-transparent transition-all resize-none"
+                                        onFocus={(e) => e.target.style.borderColor = '#84A98C'}
+                                        onBlur={(e) => e.target.style.borderColor = '#d1d5db'}
+                                    />
+                                </div>
+
+                                {/* Tags */}
+                                <div className="lg:col-span-2">
+                                    <TagsInput tags={contentForm.tags} onChange={(tags) => handleFormChange('tags', tags)} />
+                                </div>
+
+                                {/* Category */}
+                                <div>
+                                    <label className="block text-sm font-medium mb-2" style={{ color: '#354F52' }}>
+                                        Category
+                                    </label>
+                                    <select
+                                        value={contentForm.category}
+                                        onChange={(e) => handleFormChange('category', e.target.value)}
+                                        className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:border-transparent transition-all"
+                                        onFocus={(e) => e.target.style.borderColor = '#84A98C'}
+                                        onBlur={(e) => e.target.style.borderColor = '#d1d5db'}
+                                    >
                                         <option value="">Select category...</option>
                                         <option value="education">Education</option>
                                         <option value="entertainment">Entertainment</option>
@@ -275,82 +415,199 @@ export default function UploadPage() {
                                         <option value="business">Business</option>
                                     </select>
                                 </div>
+                            </div>
+                        </div>
 
-                                {/* Platform Selection */}
-                                <div className="mt-8">
-                                    <h4 className="text-md font-semibold mb-2">Select Platforms</h4>
-                                    {connectedTargets.length === 0 ? (
-                                        <div className="text-sm text-gray-500">No connected Facebook pages or Instagram accounts. Connect accounts in Settings.</div>
-                                    ) : (
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                                            {connectedTargets.map(t => {
-                                                const selected = selectedPlatforms.some(p => p.name === t.name && p.accountId === t.accountId);
-                                                return (
-                                                    <button key={t.key} onClick={() => toggleTarget(t)} className={`flex items-center justify-between p-3 rounded-lg border transition-colors ${selected ? 'border-blue-500 bg-blue-50 text-blue-700' : 'border-gray-300 hover:bg-gray-50'}`}>
-                                                        <div className="flex items-center space-x-2">
-                                                            <span>{t.icon}</span>
-                                                            <span className="text-sm font-medium">{t.label}</span>
-                                                        </div>
-                                                        {selected && <span className="text-xs">Selected</span>}
-                                                    </button>
-                                                );
-                                            })}
+                        {/* Step 3: Select Platforms Section */}
+                        <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 md:p-8">
+                            <div className="flex items-center gap-3 mb-6">
+                                <div className="w-12 h-12 rounded-xl flex items-center justify-center" style={{ backgroundColor: '#CAD2C5' }}>
+                                    <Send className="w-6 h-6" style={{ color: '#52796F' }} />
+                                </div>
+                                <div>
+                                    <h3 className="text-xl font-semibold" style={{ color: '#354F52' }}>Step 3: Select Platforms</h3>
+                                    <p className="text-sm text-gray-600">Choose where to publish your content</p>
+                                </div>
+                            </div>
+
+                            {connectedTargets.length === 0 ? (
+                                <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded-lg">
+                                    <p className="text-sm text-yellow-800">
+                                        No connected accounts. Connect your Facebook pages or Instagram accounts in Settings.
+                                    </p>
+                                </div>
+                            ) : (
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                    {connectedTargets.map(t => {
+                                        const selected = selectedPlatforms.some(p => p.name === t.name && p.accountId === t.accountId);
+                                        return (
+                                            <button
+                                                key={t.key}
+                                                onClick={() => toggleTarget(t)}
+                                                className={`flex items-center gap-3 p-4 rounded-xl border-2 transition-all ${selected
+                                                    ? 'border-[#84A98C] bg-[#F7FAF8] shadow-md'
+                                                    : 'border-gray-200 hover:border-gray-300 bg-white hover:shadow-sm'
+                                                    }`}
+                                            >
+                                                <span className="text-3xl">{t.icon}</span>
+                                                <div className="flex-1 text-left">
+                                                    <p className="text-sm font-medium text-gray-900">{t.label}</p>
+                                                    <p className="text-xs text-gray-500">{t.name}</p>
+                                                </div>
+                                                {selected && (
+                                                    <CheckCircle2 className="w-6 h-6 flex-shrink-0" style={{ color: '#84A98C' }} />
+                                                )}
+                                            </button>
+                                        );
+                                    })}
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Step 4: Schedule Section */}
+                        <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 md:p-8">
+                            <div className="flex items-center gap-3 mb-6">
+                                <div className="w-12 h-12 rounded-xl flex items-center justify-center" style={{ backgroundColor: '#CAD2C5' }}>
+                                    <Calendar className="w-6 h-6" style={{ color: '#52796F' }} />
+                                </div>
+                                <div>
+                                    <h3 className="text-xl font-semibold" style={{ color: '#354F52' }}>Step 4: Schedule Your Post</h3>
+                                    <p className="text-sm text-gray-600">Choose when to publish</p>
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <div className="space-y-2">
+                                    <label className="block text-sm font-medium" style={{ color: '#354F52' }}>
+                                        Timing
+                                    </label>
+                                    <select
+                                        value={scheduleType}
+                                        onChange={(e) => setScheduleType(e.target.value)}
+                                        className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:border-transparent transition-all"
+                                        onFocus={(e) => e.target.style.borderColor = '#84A98C'}
+                                        onBlur={(e) => e.target.style.borderColor = '#d1d5db'}
+                                    >
+                                        <option value="now">Post Now</option>
+                                        <option value="later">Schedule for Later</option>
+                                        <option value="optimal">AI Optimal Time (soon)</option>
+                                    </select>
+                                </div>
+                                {scheduleType === 'later' && (
+                                    <>
+                                        <div className="space-y-2">
+                                            <label className="block text-sm font-medium" style={{ color: '#354F52' }}>
+                                                Date
+                                            </label>
+                                            <input
+                                                type="date"
+                                                value={date}
+                                                min={new Date().toISOString().split('T')[0]}
+                                                onChange={(e) => setDate(e.target.value)}
+                                                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:border-transparent transition-all"
+                                                onFocus={(e) => e.target.style.borderColor = '#84A98C'}
+                                                onBlur={(e) => e.target.style.borderColor = '#d1d5db'}
+                                            />
                                         </div>
-                                    )}
-                                </div>
-
-                                {/* Schedule Controls */}
-                                <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-4">
-                                    <div className="space-y-2">
-                                        <label className="block text-sm font-medium text-gray-700">When to Post</label>
-                                        <select value={scheduleType} onChange={(e) => setScheduleType(e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                                            <option value="now">Post Now</option>
-                                            <option value="later">Schedule for Later</option>
-                                            <option value="optimal">AI Optimal Time (coming soon)</option>
-                                        </select>
-                                    </div>
-                                    {scheduleType === 'later' && (
-                                        <>
-                                            <div className="space-y-2">
-                                                <label className="block text-sm font-medium text-gray-700">Date</label>
-                                                <input type="date" value={date} min={new Date().toISOString().split('T')[0]} onChange={(e) => setDate(e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
-                                            </div>
-                                            <div className="space-y-2">
-                                                <label className="block text-sm font-medium text-gray-700">Time</label>
-                                                <input type="time" value={time} onChange={(e) => setTime(e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
-                                            </div>
-                                        </>
-                                    )}
-                                </div>
-
-                                {actionError && (
-                                    <div className="mt-4 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">{actionError}</div>
+                                        <div className="space-y-2">
+                                            <label className="block text-sm font-medium" style={{ color: '#354F52' }}>
+                                                Time
+                                            </label>
+                                            <input
+                                                type="time"
+                                                value={time}
+                                                onChange={(e) => setTime(e.target.value)}
+                                                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:border-transparent transition-all"
+                                                onFocus={(e) => e.target.style.borderColor = '#84A98C'}
+                                                onBlur={(e) => e.target.style.borderColor = '#d1d5db'}
+                                            />
+                                        </div>
+                                    </>
                                 )}
-                                {!actionError && hasIG && uploadedFiles.length === 0 && selectedPlatforms.length > 0 && (
-                                    <div className="mt-4 bg-yellow-50 border border-yellow-200 text-yellow-800 px-4 py-3 rounded-lg">
+                            </div>
+
+                            {/* Error Messages */}
+                            {actionError && (
+                                <div className="mt-6 bg-red-50 border-l-4 border-red-500 text-red-700 px-4 py-3 rounded-lg flex items-start gap-3">
+                                    <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />
+                                    <div>{actionError}</div>
+                                </div>
+                            )}
+
+                            {!actionError && hasIG && uploadedFiles.length === 0 && selectedPlatforms.length > 0 && (
+                                <div className="mt-6 bg-yellow-50 border-l-4 border-yellow-400 text-yellow-800 px-4 py-3 rounded-lg flex items-start gap-3">
+                                    <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />
+                                    <div className="text-sm">
                                         Instagram requires a photo or video. Add media, or deselect Instagram to post text-only to Facebook.
                                     </div>
-                                )}
-
-                                <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-3">
-                                    <button onClick={handleSaveDraft} disabled={actionLoading || selectedPlatforms.length === 0 || !contentForm.title || !contentForm.description} className="px-4 py-2 bg-gray-800 text-white rounded-lg hover:bg-gray-900 transition-colors disabled:bg-gray-400">{actionLoading ? 'Saving...' : 'Save Draft'}</button>
-                                    <button onClick={handlePublishNow} disabled={actionLoading || !canSubmit || scheduleType !== 'now'} className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:bg-gray-400">{actionLoading ? 'Publishing...' : 'Publish Now'}</button>
-                                    <button onClick={handleSchedule} disabled={actionLoading || !canSubmit || scheduleType !== 'later'} className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:bg-gray-400">{actionLoading ? 'Scheduling...' : 'Schedule Post'}</button>
                                 </div>
+                            )}
+
+                            {/* Action Buttons */}
+                            <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <button
+                                    onClick={handleSaveDraft}
+                                    disabled={actionLoading || selectedPlatforms.length === 0 || !contentForm.title || !contentForm.description}
+                                    className="flex items-center justify-center gap-2 px-6 py-4 rounded-xl text-sm font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed border-2"
+                                    style={{
+                                        borderColor: '#354F52',
+                                        color: '#354F52',
+                                        backgroundColor: 'white'
+                                    }}
+                                    onMouseEnter={(e) => {
+                                        if (!e.currentTarget.disabled) {
+                                            e.currentTarget.style.backgroundColor = '#F7FAF8';
+                                        }
+                                    }}
+                                    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'white'}
+                                >
+                                    <Save className="w-5 h-5" />
+                                    {actionLoading ? 'Saving...' : 'Save Draft'}
+                                </button>
+
+                                <button
+                                    onClick={handlePublishNow}
+                                    disabled={actionLoading || !canSubmit || scheduleType !== 'now'}
+                                    className="flex items-center justify-center gap-2 px-6 py-4 text-white rounded-xl text-sm font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-md hover:shadow-lg"
+                                    style={{ backgroundColor: '#52796F' }}
+                                    onMouseEnter={(e) => {
+                                        if (!e.currentTarget.disabled) {
+                                            e.currentTarget.style.backgroundColor = '#354F52';
+                                        }
+                                    }}
+                                    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#52796F'}
+                                >
+                                    <Send className="w-5 h-5" />
+                                    {actionLoading ? 'Publishing...' : 'Publish Now'}
+                                </button>
+
+                                <button
+                                    onClick={handleSchedule}
+                                    disabled={actionLoading || !canSubmit || scheduleType !== 'later'}
+                                    className="flex items-center justify-center gap-2 px-6 py-4 text-white rounded-xl text-sm font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-md hover:shadow-lg"
+                                    style={{ backgroundColor: '#84A98C' }}
+                                    onMouseEnter={(e) => {
+                                        if (!e.currentTarget.disabled) {
+                                            e.currentTarget.style.backgroundColor = '#52796F';
+                                        }
+                                    }}
+                                    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#84A98C'}
+                                >
+                                    <Calendar className="w-5 h-5" />
+                                    {actionLoading ? 'Scheduling...' : 'Schedule Post'}
+                                </button>
                             </div>
                         </div>
                     </div>
-                </div>
-            )}
-
-            {/* Media Library Tab */}
-            {activeTab === 'library' && (
-                <MediaLibrary
-                    files={mediaLibrary}
-                    loading={loading}
-                    onRefresh={loadMediaLibrary}
-                />
-            )}
+                )}                {/* Media Library Tab */}
+                {activeTab === 'library' && (
+                    <MediaLibrary
+                        files={mediaLibrary}
+                        loading={loading}
+                        onRefresh={loadMediaLibrary}
+                    />
+                )}
+            </div>
         </div>
     );
 }
