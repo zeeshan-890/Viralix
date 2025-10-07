@@ -2,12 +2,15 @@
 import { useState, useEffect } from 'react';
 import { postsAPI } from '@/lib/api';
 import Link from 'next/link';
+import { Eye, Upload, Calendar, FileText, RefreshCw, BarChart3, Settings, Plus, Search, Filter } from 'lucide-react';
 
 export default function PreviewPage() {
     const [posts, setPosts] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
     const [connectedPlatforms, setConnectedPlatforms] = useState([]);
+    const [searchQuery, setSearchQuery] = useState('');
+    const [statusFilter, setStatusFilter] = useState('all');
 
     useEffect(() => {
         loadPosts();
@@ -75,127 +78,262 @@ export default function PreviewPage() {
         return 'Just now';
     };
 
+    const filteredPosts = posts.filter(post => {
+        const matchesSearch = !searchQuery ||
+            post.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            post.content?.toLowerCase().includes(searchQuery.toLowerCase());
+        const matchesStatus = statusFilter === 'all' || post.status === statusFilter;
+        return matchesSearch && matchesStatus;
+    });
+
+    const stats = {
+        total: posts.length,
+        published: posts.filter(p => p.status === 'published').length,
+        scheduled: posts.filter(p => p.status === 'scheduled').length,
+        draft: posts.filter(p => p.status === 'draft').length,
+    };
+
     if (loading) {
         return (
-            <div>
-                <div className="mb-8">
-                    <h1 className="text-2xl font-bold text-gray-900">Content Preview</h1>
-                    <p className="text-gray-600">Preview your content before publishing across platforms.</p>
+            <div className="space-y-6">
+                <div className="flex items-center justify-between">
+                    <div>
+                        <h1 className="text-3xl font-bold" style={{ color: '#2a3e2e' }}>Content Preview</h1>
+                        <p className="text-gray-600 mt-1">Preview and manage your content</p>
+                    </div>
                 </div>
-                <div className="bg-white rounded-lg border border-gray-200 p-6">
-                    <div className="text-center py-8 text-gray-500">Loading posts...</div>
+                <div className="bg-white/80 backdrop-blur-sm rounded-2xl border border-gray-200 p-12 text-center">
+                    <RefreshCw className="w-12 h-12 mx-auto mb-4 animate-spin" style={{ color: '#84A98C' }} />
+                    <p className="text-gray-600">Loading your content...</p>
                 </div>
             </div>
         );
     }
 
     return (
-        <div>
-            <div className="mb-8">
-                <h1 className="text-2xl font-bold text-gray-900">Content Preview</h1>
-                <p className="text-gray-600">Preview your content before publishing across platforms.</p>
+        <div className="space-y-6">
+            {/* Header */}
+            <div className="flex items-center justify-between">
+                <div>
+                    <h1 className="text-3xl font-bold" style={{ color: '#2a3e2e' }}>Content Preview</h1>
+                    <p className="text-gray-600 mt-1">Preview and manage your content across platforms</p>
+                </div>
+                <Link
+                    href="/dashboard/schedule"
+                    className="flex items-center gap-2 px-6 py-3 text-white rounded-xl shadow-lg hover:shadow-xl transition-all transform hover:scale-105"
+                    style={{ background: 'linear-gradient(135deg, #84A98C 0%, #52796F 100%)' }}
+                >
+                    <Plus className="w-5 h-5" />
+                    Create Post
+                </Link>
+            </div>
+
+            {/* Stats Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                {/* Total Posts */}
+                <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
+                    <div className="flex items-center justify-between mb-4">
+                        <div className="w-12 h-12 rounded-xl flex items-center justify-center"
+                            style={{ background: 'linear-gradient(135deg, #84A98C 0%, #52796F 100%)' }}>
+                            <Eye className="w-6 h-6 text-white" />
+                        </div>
+                        <span className="text-2xl font-bold" style={{ color: '#2a3e2e' }}>{stats.total}</span>
+                    </div>
+                    <h3 className="text-sm font-semibold text-gray-600">Total Posts</h3>
+                </div>
+
+                {/* Published */}
+                <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
+                    <div className="flex items-center justify-between mb-4">
+                        <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-green-400 to-green-600 flex items-center justify-center">
+                            <BarChart3 className="w-6 h-6 text-white" />
+                        </div>
+                        <span className="text-2xl font-bold text-green-600">{stats.published}</span>
+                    </div>
+                    <h3 className="text-sm font-semibold text-gray-600">Published</h3>
+                </div>
+
+                {/* Scheduled */}
+                <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
+                    <div className="flex items-center justify-between mb-4">
+                        <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-yellow-400 to-yellow-600 flex items-center justify-center">
+                            <Calendar className="w-6 h-6 text-white" />
+                        </div>
+                        <span className="text-2xl font-bold text-yellow-600">{stats.scheduled}</span>
+                    </div>
+                    <h3 className="text-sm font-semibold text-gray-600">Scheduled</h3>
+                </div>
+
+                {/* Drafts */}
+                <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
+                    <div className="flex items-center justify-between mb-4">
+                        <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-gray-400 to-gray-600 flex items-center justify-center">
+                            <FileText className="w-6 h-6 text-white" />
+                        </div>
+                        <span className="text-2xl font-bold text-gray-600">{stats.draft}</span>
+                    </div>
+                    <h3 className="text-sm font-semibold text-gray-600">Drafts</h3>
+                </div>
             </div>
 
             {error && (
-                <div className="mb-6 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
-                    {error}
+                <div className="bg-red-50 border-l-4 border-red-500 text-red-700 p-4 rounded-xl flex items-start gap-3">
+                    <div className="flex-shrink-0 mt-0.5">⚠️</div>
+                    <div>{error}</div>
                 </div>
             )}
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                {/* Recent Content */}
-                <div className="lg:col-span-2">
-                    <div className="bg-white rounded-lg border border-gray-200 p-6">
-                        <div className="flex items-center justify-between mb-4">
-                            <h3 className="text-lg font-semibold">Recent Content</h3>
+                {/* Main Content Area */}
+                <div className="lg:col-span-2 space-y-6">
+                    {/* Search and Filter */}
+                    <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 border border-gray-200 shadow-sm">
+                        <div className="flex flex-col sm:flex-row gap-4">
+                            {/* Search */}
+                            <div className="flex-1 relative">
+                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                                <input
+                                    type="text"
+                                    placeholder="Search posts..."
+                                    value={searchQuery}
+                                    onChange={(e) => setSearchQuery(e.target.value)}
+                                    className="w-full h-12 pl-11 pr-4 border-2 border-gray-200 rounded-xl focus:outline-none transition-colors"
+                                    style={{ borderColor: searchQuery ? '#84A98C' : '' }}
+                                />
+                            </div>
+                            {/* Filter */}
+                            <div className="relative">
+                                <Filter className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                                <select
+                                    value={statusFilter}
+                                    onChange={(e) => setStatusFilter(e.target.value)}
+                                    className="h-12 pl-11 pr-8 border-2 border-gray-200 rounded-xl focus:outline-none transition-colors appearance-none bg-white"
+                                    style={{ borderColor: statusFilter !== 'all' ? '#84A98C' : '' }}
+                                >
+                                    <option value="all">All Status</option>
+                                    <option value="draft">Draft</option>
+                                    <option value="scheduled">Scheduled</option>
+                                    <option value="published">Published</option>
+                                    <option value="failed">Failed</option>
+                                </select>
+                            </div>
+                            {/* Refresh Button */}
                             <button
                                 onClick={loadPosts}
-                                className="text-gray-600 hover:text-gray-900 transition-colors"
+                                className="h-12 px-6 rounded-xl border-2 border-gray-200 hover:border-[#84A98C] transition-colors flex items-center gap-2"
                             >
-                                🔄 Refresh
+                                <RefreshCw className="w-5 h-5" style={{ color: '#52796F' }} />
+                                <span className="hidden sm:inline">Refresh</span>
                             </button>
                         </div>
+                    </div>
 
-                        {posts.length === 0 ? (
-                            <div className="text-center py-12 text-gray-500">
-                                <div className="text-4xl mb-4">📝</div>
-                                <h3 className="text-lg font-medium mb-2">No content yet</h3>
-                                <p>Create your first post to see it here</p>
-                                <Link
-                                    href="/dashboard/schedule"
-                                    className="inline-block mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-                                >
-                                    Create Post
-                                </Link>
+                    {/* Posts List */}
+                    <div className="bg-white/80 backdrop-blur-sm rounded-2xl border border-gray-200 shadow-sm">
+                        {filteredPosts.length === 0 ? (
+                            <div className="text-center py-16 px-6">
+                                <div className="w-20 h-20 mx-auto mb-6 rounded-2xl flex items-center justify-center"
+                                    style={{ background: 'linear-gradient(135deg, #84A98C 0%, #52796F 100%)' }}>
+                                    <FileText className="w-10 h-10 text-white" />
+                                </div>
+                                <h3 className="text-xl font-bold mb-2" style={{ color: '#2a3e2e' }}>
+                                    {searchQuery || statusFilter !== 'all' ? 'No posts found' : 'No content yet'}
+                                </h3>
+                                <p className="text-gray-600 mb-6">
+                                    {searchQuery || statusFilter !== 'all'
+                                        ? 'Try adjusting your filters'
+                                        : 'Create your first post to see it here'}
+                                </p>
+                                {!searchQuery && statusFilter === 'all' && (
+                                    <Link
+                                        href="/dashboard/schedule"
+                                        className="inline-flex items-center gap-2 px-6 py-3 text-white rounded-xl shadow-lg hover:shadow-xl transition-all transform hover:scale-105"
+                                        style={{ background: 'linear-gradient(135deg, #84A98C 0%, #52796F 100%)' }}
+                                    >
+                                        <Plus className="w-5 h-5" />
+                                        Create Your First Post
+                                    </Link>
+                                )}
                             </div>
                         ) : (
-                            <div className="space-y-4">
-                                {posts.map((post) => (
+                            <div className="divide-y divide-gray-200">
+                                {filteredPosts.map((post) => (
                                     <div
                                         key={post._id}
-                                        className="flex items-center space-x-4 p-4 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors"
+                                        className="p-6 hover:bg-gray-50/50 transition-colors"
                                     >
-                                        {/* Thumbnail */}
-                                        <div className="w-16 h-16 bg-gray-100 rounded-lg flex items-center justify-center">
-                                            {post.media?.[0]?.type === 'video' ? (
-                                                <span className="text-2xl">🎬</span>
-                                            ) : post.media?.[0] ? (
-                                                <img
-                                                    src={post.media[0].url}
-                                                    alt={post.title}
-                                                    className="w-full h-full object-cover rounded-lg"
-                                                />
-                                            ) : (
-                                                <span className="text-2xl">📝</span>
-                                            )}
-                                        </div>
+                                        <div className="flex gap-4">
+                                            {/* Thumbnail */}
+                                            <div className="w-24 h-24 rounded-xl overflow-hidden flex-shrink-0 border-2 border-gray-200">
+                                                {post.media?.[0]?.type === 'video' ? (
+                                                    <div className="w-full h-full flex items-center justify-center"
+                                                        style={{ background: 'linear-gradient(135deg, #84A98C 0%, #52796F 100%)' }}>
+                                                        <span className="text-3xl">🎬</span>
+                                                    </div>
+                                                ) : post.media?.[0] ? (
+                                                    <img
+                                                        src={post.media[0].url}
+                                                        alt={post.title}
+                                                        className="w-full h-full object-cover"
+                                                    />
+                                                ) : (
+                                                    <div className="w-full h-full bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
+                                                        <FileText className="w-8 h-8 text-gray-400" />
+                                                    </div>
+                                                )}
+                                            </div>
 
-                                        {/* Content Info */}
-                                        <div className="flex-1">
-                                            <h4 className="font-medium text-gray-900">{post.title || 'Untitled Post'}</h4>
-                                            <p className="text-sm text-gray-600 line-clamp-1">{post.content}</p>
-                                            <p className="text-sm text-gray-500">
-                                                {post.status === 'scheduled' && post.scheduledAt
-                                                    ? `Scheduled for ${new Date(post.scheduledAt).toLocaleDateString()}`
-                                                    : `Created ${formatDate(post.createdAt)}`
-                                                }
-                                            </p>
-                                            <div className="flex items-center space-x-2 mt-2">
-                                                <span className={`px-2 py-1 text-xs rounded-full ${getStatusColor(post.status)}`}>
-                                                    {getStatusText(post.status)}
-                                                </span>
-                                                <span className="text-xs text-gray-500">
-                                                    {post.platforms?.length || 0} platform{post.platforms?.length !== 1 ? 's' : ''}
-                                                </span>
-                                                <div className="flex space-x-1">
-                                                    {post.platforms?.slice(0, 3).map((platform, idx) => (
-                                                        <span key={idx} className="text-xs">
-                                                            {getPlatformIcon(platform.name)}
-                                                        </span>
-                                                    ))}
-                                                    {post.platforms?.length > 3 && (
-                                                        <span className="text-xs text-gray-500">+{post.platforms.length - 3}</span>
+                                            {/* Content Info */}
+                                            <div className="flex-1 min-w-0">
+                                                <div className="flex items-start justify-between gap-4 mb-2">
+                                                    <h4 className="font-bold text-lg truncate" style={{ color: '#2a3e2e' }}>
+                                                        {post.title || 'Untitled Post'}
+                                                    </h4>
+                                                    <span className={`px-3 py-1 text-xs font-semibold rounded-full whitespace-nowrap ${getStatusColor(post.status)}`}>
+                                                        {getStatusText(post.status)}
+                                                    </span>
+                                                </div>
+                                                <p className="text-gray-600 text-sm line-clamp-2 mb-3">
+                                                    {post.content || 'No description'}
+                                                </p>
+                                                <div className="flex flex-wrap items-center gap-3 text-sm text-gray-500">
+                                                    <span className="flex items-center gap-1">
+                                                        <Calendar className="w-4 h-4" />
+                                                        {post.status === 'scheduled' && post.scheduledAt
+                                                            ? new Date(post.scheduledAt).toLocaleDateString()
+                                                            : formatDate(post.createdAt)
+                                                        }
+                                                    </span>
+                                                    <span className="flex items-center gap-1">
+                                                        {post.platforms?.slice(0, 4).map((platform, idx) => (
+                                                            <span key={idx} className="text-base">
+                                                                {getPlatformIcon(platform.name)}
+                                                            </span>
+                                                        ))}
+                                                        {post.platforms?.length > 4 && (
+                                                            <span className="text-xs">+{post.platforms.length - 4}</span>
+                                                        )}
+                                                    </span>
+                                                </div>
+                                                <div className="flex gap-2 mt-4">
+                                                    <Link
+                                                        href={`/dashboard/preview/${post._id}`}
+                                                        className="px-4 py-2 text-white rounded-lg shadow-md hover:shadow-lg transition-all text-sm font-medium"
+                                                        style={{ background: 'linear-gradient(135deg, #84A98C 0%, #52796F 100%)' }}
+                                                    >
+                                                        Preview
+                                                    </Link>
+                                                    {post.status === 'draft' && (
+                                                        <Link
+                                                            href={`/dashboard/editor?id=${post._id}`}
+                                                            className="px-4 py-2 border-2 rounded-lg hover:bg-gray-50 transition-colors text-sm font-medium"
+                                                            style={{ borderColor: '#84A98C', color: '#52796F' }}
+                                                        >
+                                                            Edit
+                                                        </Link>
                                                     )}
                                                 </div>
                                             </div>
-                                        </div>
-
-                                        {/* Actions */}
-                                        <div className="flex space-x-2">
-                                            <Link
-                                                href={`/dashboard/preview/${post._id}`}
-                                                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm"
-                                            >
-                                                Preview
-                                            </Link>
-                                            {post.status === 'draft' && (
-                                                <Link
-                                                    href={`/dashboard/preview/${post._id}`}
-                                                    className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors text-sm"
-                                                >
-                                                    Edit
-                                                </Link>
-                                            )}
                                         </div>
                                     </div>
                                 ))}
@@ -204,90 +342,108 @@ export default function PreviewPage() {
                     </div>
                 </div>
 
-                {/* Quick Actions */}
+                {/* Sidebar */}
                 <div className="space-y-6">
-                    <div className="bg-white rounded-lg border border-gray-200 p-6">
-                        <h3 className="text-lg font-semibold mb-4">Quick Actions</h3>
+                    {/* Quick Actions */}
+                    <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 border border-gray-200 shadow-sm">
+                        <h3 className="text-lg font-bold mb-4" style={{ color: '#2a3e2e' }}>Quick Actions</h3>
                         <div className="space-y-3">
                             <Link
                                 href="/dashboard/upload"
-                                className="w-full text-left p-3 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors block"
+                                className="w-full p-4 rounded-xl transition-all hover:shadow-md block group"
+                                style={{ background: 'linear-gradient(135deg, #84A98C15 0%, #52796F15 100%)' }}
                             >
-                                <div className="flex items-center">
-                                    <span className="text-xl mr-3">📤</span>
+                                <div className="flex items-center gap-3">
+                                    <div className="w-10 h-10 rounded-lg flex items-center justify-center"
+                                        style={{ background: 'linear-gradient(135deg, #84A98C 0%, #52796F 100%)' }}>
+                                        <Upload className="w-5 h-5 text-white" />
+                                    </div>
                                     <div>
-                                        <div className="font-medium text-blue-900">Upload New</div>
-                                        <div className="text-sm text-blue-700">Add content to preview</div>
+                                        <div className="font-semibold" style={{ color: '#2a3e2e' }}>Upload New</div>
+                                        <div className="text-xs text-gray-600">Add media content</div>
                                     </div>
                                 </div>
                             </Link>
                             <Link
                                 href="/dashboard/schedule"
-                                className="w-full text-left p-3 bg-green-50 rounded-lg hover:bg-green-100 transition-colors block"
+                                className="w-full p-4 rounded-xl transition-all hover:shadow-md block"
+                                style={{ background: 'linear-gradient(135deg, #10b98115 0%, #059c6915 100%)' }}
                             >
-                                <div className="flex items-center">
-                                    <span className="text-xl mr-3">📝</span>
+                                <div className="flex items-center gap-3">
+                                    <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-green-400 to-green-600 flex items-center justify-center">
+                                        <Calendar className="w-5 h-5 text-white" />
+                                    </div>
                                     <div>
-                                        <div className="font-medium text-green-900">Create Post</div>
-                                        <div className="text-sm text-green-700">Start with new content</div>
+                                        <div className="font-semibold text-green-900">Schedule Post</div>
+                                        <div className="text-xs text-green-700">Plan your content</div>
                                     </div>
                                 </div>
                             </Link>
                             <Link
                                 href="/dashboard/analytics"
-                                className="w-full text-left p-3 bg-purple-50 rounded-lg hover:bg-purple-100 transition-colors block"
+                                className="w-full p-4 rounded-xl transition-all hover:shadow-md block"
+                                style={{ background: 'linear-gradient(135deg, #a855f715 0%, #9333ea15 100%)' }}
                             >
-                                <div className="flex items-center">
-                                    <span className="text-xl mr-3">📊</span>
+                                <div className="flex items-center gap-3">
+                                    <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-purple-400 to-purple-600 flex items-center justify-center">
+                                        <BarChart3 className="w-5 h-5 text-white" />
+                                    </div>
                                     <div>
-                                        <div className="font-medium text-purple-900">View Analytics</div>
-                                        <div className="text-sm text-purple-700">Check performance</div>
+                                        <div className="font-semibold text-purple-900">Analytics</div>
+                                        <div className="text-xs text-purple-700">View insights</div>
                                     </div>
                                 </div>
                             </Link>
                         </div>
                     </div>
 
-                    <div className="bg-white rounded-lg border border-gray-200 p-6">
-                        <h3 className="text-lg font-semibold mb-4">Connected Platforms</h3>
-                        <div className="space-y-3">
-                            <div className="flex items-center justify-between">
-                                <div className="flex items-center">
-                                    <span className="mr-2">💻</span>
-                                    <span className="text-sm">Facebook</span>
+                    {/* Connected Platforms */}
+                    <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 border border-gray-200 shadow-sm">
+                        <h3 className="text-lg font-bold mb-4" style={{ color: '#2a3e2e' }}>Connected Platforms</h3>
+                        <div className="space-y-4">
+                            <div className="flex items-center justify-between p-3 rounded-lg bg-gray-50">
+                                <div className="flex items-center gap-3">
+                                    <div className="w-8 h-8 rounded-lg bg-blue-500 flex items-center justify-center">
+                                        <span className="text-white text-sm">�</span>
+                                    </div>
+                                    <span className="font-medium text-gray-900">Facebook</span>
                                 </div>
-                                <div className={`w-3 h-3 rounded-full ${connectedPlatforms.includes('facebook') ? 'bg-green-500' : 'bg-gray-300'
-                                    }`} />
+                                <div className={`w-3 h-3 rounded-full ${connectedPlatforms.includes('facebook') ? 'bg-green-500' : 'bg-gray-300'}`} />
                             </div>
-                            <div className="flex items-center justify-between">
-                                <div className="flex items-center">
-                                    <span className="mr-2">📷</span>
-                                    <span className="text-sm">Instagram</span>
+                            <div className="flex items-center justify-between p-3 rounded-lg bg-gray-50">
+                                <div className="flex items-center gap-3">
+                                    <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center">
+                                        <span className="text-white text-sm">📷</span>
+                                    </div>
+                                    <span className="font-medium text-gray-900">Instagram</span>
                                 </div>
-                                <div className={`w-3 h-3 rounded-full ${connectedPlatforms.includes('instagram') ? 'bg-green-500' : 'bg-gray-300'
-                                    }`} />
+                                <div className={`w-3 h-3 rounded-full ${connectedPlatforms.includes('instagram') ? 'bg-green-500' : 'bg-gray-300'}`} />
                             </div>
-                            <div className="flex items-center justify-between">
-                                <div className="flex items-center">
-                                    <span className="mr-2">🐦</span>
-                                    <span className="text-sm">Twitter</span>
+                            <div className="flex items-center justify-between p-3 rounded-lg bg-gray-50">
+                                <div className="flex items-center gap-3">
+                                    <div className="w-8 h-8 rounded-lg bg-sky-400 flex items-center justify-center">
+                                        <span className="text-white text-sm">🐦</span>
+                                    </div>
+                                    <span className="font-medium text-gray-900">Twitter</span>
                                 </div>
-                                <div className={`w-3 h-3 rounded-full ${connectedPlatforms.includes('twitter') ? 'bg-green-500' : 'bg-gray-300'
-                                    }`} />
+                                <div className={`w-3 h-3 rounded-full ${connectedPlatforms.includes('twitter') ? 'bg-green-500' : 'bg-gray-300'}`} />
                             </div>
-                            <div className="flex items-center justify-between">
-                                <div className="flex items-center">
-                                    <span className="mr-2">💼</span>
-                                    <span className="text-sm">LinkedIn</span>
+                            <div className="flex items-center justify-between p-3 rounded-lg bg-gray-50">
+                                <div className="flex items-center gap-3">
+                                    <div className="w-8 h-8 rounded-lg bg-blue-700 flex items-center justify-center">
+                                        <span className="text-white text-sm">💼</span>
+                                    </div>
+                                    <span className="font-medium text-gray-900">LinkedIn</span>
                                 </div>
-                                <div className={`w-3 h-3 rounded-full ${connectedPlatforms.includes('linkedin') ? 'bg-green-500' : 'bg-gray-300'
-                                    }`} />
+                                <div className={`w-3 h-3 rounded-full ${connectedPlatforms.includes('linkedin') ? 'bg-green-500' : 'bg-gray-300'}`} />
                             </div>
                         </div>
                         <Link
                             href="/dashboard/connect-accounts"
-                            className="mt-4 w-full block text-center px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors text-sm"
+                            className="mt-4 w-full flex items-center justify-center gap-2 px-4 py-3 border-2 rounded-xl hover:bg-gray-50 transition-colors text-sm font-medium"
+                            style={{ borderColor: '#84A98C', color: '#52796F' }}
                         >
+                            <Settings className="w-4 h-4" />
                             Manage Connections
                         </Link>
                     </div>
