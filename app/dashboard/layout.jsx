@@ -1,8 +1,10 @@
 import Sidebar from '../../src/components/layout/Sidebar';
 import Topbar from '../../src/components/layout/Topbar';
 import Breadcrumb from '../../src/components/layout/Breadcrumb';
-export default function DashboardLayout({ children, }) {
-    return (<div className="flex h-screen bg-gray-50">
+
+export default function DashboardLayout({ children }) {
+    return (
+        <div className="flex h-screen" style={{ backgroundColor: '#F7FAF8' }}>
             <Sidebar />
             <div className="flex-1 flex flex-col overflow-hidden">
                 <Topbar />
@@ -11,5 +13,6 @@ export default function DashboardLayout({ children, }) {
                     {children}
                 </main>
             </div>
-        </div>);
+        </div>
+    );
 }

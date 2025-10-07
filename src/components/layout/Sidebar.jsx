@@ -3,37 +3,52 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useState } from 'react';
 import { cn } from '../../lib/utils';
+import {
+    LayoutDashboard,
+    Upload,
+    Eye,
+    Calendar,
+    BarChart3,
+    Link2,
+    MessageSquare,
+    Settings,
+    Shield,
+    ChevronDown,
+    ChevronRight
+} from 'lucide-react';
+
 const navigation = [
-    { name: 'Dashboard', href: '/dashboard', icon: '📊' },
-    { name: 'Upload', href: '/dashboard/upload', icon: '📤' },
-    { name: 'Preview', href: '/dashboard/preview', icon: '👁️' },
-    { name: 'Schedule', href: '/dashboard/schedule', icon: '📅' },
-    { name: 'Analytics', href: '/dashboard/analytics', icon: '📈' },
-    { name: 'Connect Accounts', href: '/dashboard/connect-accounts', icon: '🔗' },
+    { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
+    { name: 'Upload', href: '/dashboard/upload', icon: Upload },
+    { name: 'Preview', href: '/dashboard/preview', icon: Eye },
+    { name: 'Schedule', href: '/dashboard/schedule', icon: Calendar },
+    { name: 'Analytics', href: '/dashboard/analytics', icon: BarChart3 },
+    { name: 'Connect Accounts', href: '/dashboard/connect-accounts', icon: Link2 },
     {
         name: 'Engagement',
         href: '/engagement',
-        icon: '💬',
+        icon: MessageSquare,
         subItems: [
-            { name: 'Comments', href: '/engagement/comments', icon: '💭' },
-            { name: 'Mentions', href: '/engagement/mentions', icon: '📢' },
-            { name: 'Analytics', href: '/engagement/analytics', icon: '📊' },
-            { name: 'Templates', href: '/engagement/templates', icon: '📝' },
+            { name: 'Comments', href: '/engagement/comments' },
+            { name: 'Mentions', href: '/engagement/mentions' },
+            { name: 'Analytics', href: '/engagement/analytics' },
+            { name: 'Templates', href: '/engagement/templates' },
         ]
     },
-    { name: 'Settings', href: '/dashboard/settings', icon: '⚙️' },
+    { name: 'Settings', href: '/dashboard/settings', icon: Settings },
     {
         name: 'Admin',
         href: '/admin',
-        icon: '👑',
+        icon: Shield,
         subItems: [
-            { name: 'Users', href: '/admin/users', icon: '👥' },
-            { name: 'Content', href: '/admin/content', icon: '📋' },
-            { name: 'System', href: '/admin/system', icon: '🔧' },
-            { name: 'Platforms', href: '/admin/platforms', icon: '🌐' },
+            { name: 'Users', href: '/admin/users' },
+            { name: 'Content', href: '/admin/content' },
+            { name: 'System', href: '/admin/system' },
+            { name: 'Platforms', href: '/admin/platforms' },
         ]
     },
 ];
+
 export default function Sidebar() {
     const pathname = usePathname();
     const [expandedItems, setExpandedItems] = useState([]);
@@ -42,55 +57,99 @@ export default function Sidebar() {
             ? prev.filter(name => name !== itemName)
             : [...prev, itemName]);
     };
-    return (<div className="w-64 bg-white border-r border-gray-200 flex flex-col">
-        {/* Logo */}
-        <div className="p-6 border-b border-gray-200">
-            <h1 className="text-xl font-bold text-gray-900">AutoReach AI</h1>
-        </div>
 
-        {/* Navigation */}
-        <nav className="flex-1 p-4 space-y-2">
-            {navigation.map((item) => (<div key={item.name}>
-                {item.subItems ? (<div>
-                    <button onClick={() => toggleExpanded(item.name)} className={cn('w-full flex items-center justify-between px-3 py-2 rounded-lg text-sm font-medium transition-colors', pathname.startsWith(item.href)
-                        ? 'bg-blue-50 text-blue-700'
-                        : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900')}>
-                        <div className="flex items-center">
-                            <span className="mr-3 text-lg">{item.icon}</span>
-                            {item.name}
-                        </div>
-                        <span className="text-gray-400">
-                            {expandedItems.includes(item.name) ? '▼' : '▶'}
-                        </span>
-                    </button>
-                    {expandedItems.includes(item.name) && (<div className="ml-6 mt-1 space-y-1">
-                        {item.subItems.map((subItem) => (<Link key={subItem.name} href={subItem.href} className={cn('flex items-center px-3 py-2 rounded-lg text-sm transition-colors', pathname === subItem.href
-                            ? 'bg-blue-50 text-blue-700'
-                            : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900')}>
-                            <span className="mr-2 text-base">{subItem.icon}</span>
-                            {subItem.name}
-                        </Link>))}
-                    </div>)}
-                </div>) : (<Link href={item.href} className={cn('flex items-center px-3 py-2 rounded-lg text-sm font-medium transition-colors', pathname === item.href
-                    ? 'bg-blue-50 text-blue-700'
-                    : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900')}>
-                    <span className="mr-3 text-lg">{item.icon}</span>
-                    {item.name}
-                </Link>)}
-            </div>))}
-        </nav>
-
-        {/* User Profile */}
-        <div className="p-4 border-t border-gray-200">
-            <div className="flex items-center">
-                <div className="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center">
-                    <span className="text-sm font-medium text-gray-700">U</span>
+    return (
+        <div className="w-64 flex flex-col" style={{ background: 'linear-gradient(to bottom, #2F3E46, #354F52)' }}>
+            {/* Logo */}
+            <div className="p-6 border-b" style={{ borderColor: 'rgba(255, 255, 255, 0.1)' }}>
+                <div className="flex items-center gap-3">
+                    <img src="/logo.png" className='w-10 h-10 rounded-full' alt="Viralix Logo" />
+                    <h1 className="text-xl font-bold text-white">Viralix</h1>
                 </div>
-                <div className="ml-3">
-                    <p className="text-sm font-medium text-gray-900">User Name</p>
-                    <p className="text-xs text-gray-500">Free Plan</p>
+            </div>
+
+            {/* Navigation */}
+            <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
+                {navigation.map((item) => {
+                    const Icon = item.icon;
+                    const isActive = pathname === item.href || pathname.startsWith(item.href + '/');
+                    const isExpanded = expandedItems.includes(item.name);
+
+                    return (
+                        <div key={item.name}>
+                            {item.subItems ? (
+                                <div>
+                                    <button
+                                        onClick={() => toggleExpanded(item.name)}
+                                        className={cn(
+                                            'w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm font-medium transition-all',
+                                            isActive
+                                                ? 'text-white'
+                                                : 'text-gray-300 hover:text-white hover:bg-white/10'
+                                        )}
+                                        style={isActive ? { backgroundColor: '#84A98C' } : {}}
+                                    >
+                                        <div className="flex items-center gap-3">
+                                            <Icon className="w-5 h-5" />
+                                            {item.name}
+                                        </div>
+                                        {isExpanded ? (
+                                            <ChevronDown className="w-4 h-4" />
+                                        ) : (
+                                            <ChevronRight className="w-4 h-4" />
+                                        )}
+                                    </button>
+                                    {isExpanded && (
+                                        <div className="ml-6 mt-1 space-y-1">
+                                            {item.subItems.map((subItem) => (
+                                                <Link
+                                                    key={subItem.name}
+                                                    href={subItem.href}
+                                                    className={cn(
+                                                        'flex items-center px-3 py-2 rounded-lg text-sm transition-all',
+                                                        pathname === subItem.href
+                                                            ? 'text-white bg-white/20'
+                                                            : 'text-gray-400 hover:text-white hover:bg-white/10'
+                                                    )}
+                                                >
+                                                    {subItem.name}
+                                                </Link>
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
+                            ) : (
+                                <Link
+                                    href={item.href}
+                                    className={cn(
+                                        'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all',
+                                        isActive
+                                            ? 'text-white'
+                                            : 'text-gray-300 hover:text-white hover:bg-white/10'
+                                    )}
+                                    style={isActive ? { backgroundColor: '#84A98C' } : {}}
+                                >
+                                    <Icon className="w-5 h-5" />
+                                    {item.name}
+                                </Link>
+                            )}
+                        </div>
+                    );
+                })}
+            </nav>
+
+            {/* User Profile */}
+            <div className="p-4 border-t" style={{ borderColor: 'rgba(255, 255, 255, 0.1)' }}>
+                <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full flex items-center justify-center text-white font-semibold" style={{ backgroundColor: '#84A98C' }}>
+                        U
+                    </div>
+                    <div>
+                        <p className="text-sm font-medium text-white">User Name</p>
+                        <p className="text-xs text-gray-400">Free Plan</p>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>);
+    );
 }

@@ -1,5 +1,7 @@
 import axios from 'axios';
+// let API_BASE_URL = 'https://viralix-b3ff86cb412f.herokuapp.com/api';
 let API_BASE_URL = 'https://viralix-b3ff86cb412f.herokuapp.com/api';
+
 // Derive backend URL from current host in browser if not set, falling back to localhost
 if (!API_BASE_URL && typeof window !== 'undefined') {
     try {
