@@ -1,5 +1,58 @@
 const axios = require('axios');
 const FB_API = 'https://graph.facebook.com/v19.0';
+const IG_API = 'https://graph.instagram.com'; // Direct OAuth Instagram API
+
+// ============================================
+// DIRECT OAUTH INSTAGRAM API FUNCTIONS
+// ============================================
+
+async function createDirectOAuthMediaContainer(igUserId, token, payload) {
+    console.log(`[IG Direct] Creating media container for user ${igUserId}`);
+    console.log(`[IG Direct] Payload:`, payload);
+
+    try {
+        const { data } = await axios.post(`${IG_API}/me/media`, null, {
+            params: { ...payload, access_token: token },
+        });
+        console.log(`[IG Direct] Container created:`, data);
+        return data; // { id }
+    } catch (error) {
+        console.error(`[IG Direct] Create container failed:`, error.response?.data || error.message);
+        throw error;
+    }
+}
+
+async function getDirectOAuthContainerStatus(creationId, token) {
+    try {
+        const { data } = await axios.get(`${IG_API}/${creationId}`, {
+            params: { fields: 'status_code', access_token: token },
+        });
+        console.log(`[IG Direct] Container ${creationId} status:`, data.status_code);
+        return data.status_code;
+    } catch (error) {
+        console.error(`[IG Direct] Get status failed:`, error.response?.data || error.message);
+        throw error;
+    }
+}
+
+async function publishDirectOAuthContainer(igUserId, token, creationId) {
+    console.log(`[IG Direct] Publishing container ${creationId}`);
+
+    try {
+        const { data } = await axios.post(`${IG_API}/me/media_publish`, null, {
+            params: { creation_id: creationId, access_token: token },
+        });
+        console.log(`[IG Direct] Publish result:`, data);
+        return data; // { id }
+    } catch (error) {
+        console.error(`[IG Direct] Publish failed:`, error.response?.data || error.message);
+        throw error;
+    }
+}
+
+// ============================================
+// FACEBOOK-LINKED INSTAGRAM API FUNCTIONS
+// ============================================
 
 async function getIgUser(igUserId, token) {
     const { data } = await axios.get(`${FB_API}/${igUserId}`, {
@@ -97,4 +150,8 @@ module.exports = {
     createMediaContainer,
     getContainerStatus,
     publishContainer,
+    // Direct OAuth functions
+    createDirectOAuthMediaContainer,
+    getDirectOAuthContainerStatus,
+    publishDirectOAuthContainer,
 };

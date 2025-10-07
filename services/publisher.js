@@ -10,6 +10,9 @@ const {
     createMediaContainer,
     getContainerStatus,
     publishContainer,
+    createDirectOAuthMediaContainer,
+    getDirectOAuthContainerStatus,
+    publishDirectOAuthContainer,
 } = require('./instagram');
 
 const INSTAGRAM_GRAPH_URL = 'https://graph.instagram.com';
@@ -119,7 +122,12 @@ async function resolveAuthForPlatform(user, platform) {
                 // Then refresh if needed
                 await refreshInstagramTokenIfNeeded(user, directAccount);
                 console.log(`[Publisher] Using validated token for publishing`);
-                return { kind: 'instagram', igUserId: platform.accountId, token: directAccount.accessToken };
+                return {
+                    kind: 'instagram',
+                    igUserId: platform.accountId,
+                    token: directAccount.accessToken,
+                    isDirect: true // Flag to indicate direct OAuth
+                };
             } catch (validationError) {
                 console.error(`[Publisher] Token validation/refresh failed:`, validationError.message);
                 throw validationError; // Throw the specific error with instructions
@@ -132,7 +140,12 @@ async function resolveAuthForPlatform(user, platform) {
             throw new Error('Instagram account not found. Please reconnect your Instagram account.');
         }
         console.log(`[Publisher] Found Facebook-linked Instagram account`);
-        return { kind: 'instagram', igUserId: platform.accountId, token: page.accessToken };
+        return {
+            kind: 'instagram',
+            igUserId: platform.accountId,
+            token: page.accessToken,
+            isDirect: false // Flag to indicate Facebook-linked
+        };
     }
     throw new Error(`Unsupported platform: ${platform.name}`);
 }
@@ -163,10 +176,13 @@ async function publishToFacebook(auth, content, mediaList) {
 }
 
 async function publishToInstagram(auth, content, mediaList) {
+    console.log(`[Publisher] publishToInstagram called - igUserId: ${auth.igUserId}, hasToken: ${!!auth.token}, isDirect: ${auth.isDirect}`);
     const primary = choosePrimaryMedia(mediaList);
     if (!primary) {
         throw new Error('Instagram requires media to publish. No media found.');
     }
+    console.log(`[Publisher] Primary media - type: ${primary.type}, url: ${primary.url}`);
+
     // Build container payload
     const base = { caption: content || '' };
     const isVideo = primary.type === 'video';
@@ -177,19 +193,31 @@ async function publishToInstagram(auth, content, mediaList) {
     } else {
         payload = { ...base, image_url: primary.url };
     }
+    console.log(`[Publisher] Container payload:`, JSON.stringify(payload, null, 2));
+
+    // Select the correct API functions based on auth type
+    const createContainerFn = auth.isDirect ? createDirectOAuthMediaContainer : createMediaContainer;
+    const getStatusFn = auth.isDirect ? getDirectOAuthContainerStatus : getContainerStatus;
+    const publishFn = auth.isDirect ? publishDirectOAuthContainer : publishContainer;
+
+    console.log(`[Publisher] Using ${auth.isDirect ? 'Direct OAuth' : 'Facebook-linked'} Instagram API`);
 
     // Helper to create and wait for container
     async function createAndAwait(p) {
-        const created = await createMediaContainer(auth.igUserId, auth.token, p);
+        console.log(`[Publisher] Creating media container with payload:`, p);
+        const created = await createContainerFn(auth.igUserId, auth.token, p);
+        console.log(`[Publisher] Container created:`, created);
         const creationId = created?.id;
         if (!creationId) throw new Error('Failed to create Instagram media container');
+        console.log(`[Publisher] Container ID: ${creationId}, checking status...`);
         // Poll up to ~2 minutes with backoff (2.5s)
         let status = 'IN_PROGRESS';
         const started = Date.now();
         while (status === 'IN_PROGRESS' && Date.now() - started < 120000) {
             await new Promise(r => setTimeout(r, 2500));
             try {
-                status = await getContainerStatus(creationId, auth.token);
+                status = await getStatusFn(creationId, auth.token);
+                console.log(`[Publisher] Container status: ${status}`);
             } catch (_) {
                 // keep polling even if a check fails transiently
             }
@@ -200,17 +228,21 @@ async function publishToInstagram(auth, content, mediaList) {
 
     let creationId;
     try {
+        console.log(`[Publisher] Attempting to create container (first try)...`);
         creationId = await createAndAwait(payload);
     } catch (err) {
+        console.log(`[Publisher] First attempt failed:`, err.message);
         // Fallback for video: try VIDEO if REELS failed to create
         if (isVideo) {
             try {
+                console.log(`[Publisher] Attempting fallback VIDEO format...`);
                 const fallback = { ...base, media_type: 'VIDEO', video_url: primary.url };
                 creationId = await createAndAwait(fallback);
             } catch (err2) {
                 // Propagate the original error with fallback info
                 const msg = err?.response?.data?.error?.message || err.message || 'Failed to create IG container (REELS)';
                 const msg2 = err2?.response?.data?.error?.message || err2.message || 'Fallback (VIDEO) also failed';
+                console.error(`[Publisher] Both attempts failed. REELS: ${msg}, VIDEO: ${msg2}`);
                 throw new Error(`${msg} | ${msg2}`);
             }
         } else {
@@ -219,7 +251,9 @@ async function publishToInstagram(auth, content, mediaList) {
         }
     }
 
-    const pub = await publishContainer(auth.igUserId, auth.token, creationId);
+    console.log(`[Publisher] Publishing container ${creationId}...`);
+    const pub = await publishFn(auth.igUserId, auth.token, creationId);
+    console.log(`[Publisher] Publish result:`, pub);
     return { postId: pub?.id || creationId };
 }
 
@@ -251,15 +285,19 @@ async function publishPlatform(user, platform, post) {
 }
 
 async function publishPostById(userId, postId) {
+    console.log(`[Publisher] publishPostById called - userId: ${userId}, postId: ${postId}`);
     const post = await Post.findById(postId);
     if (!post) throw new Error('Post not found');
     if (post.user.toString() !== userId.toString()) throw new Error('Not authorized');
+    console.log(`[Publisher] Post found - content length: ${post.content?.length || 0}, media count: ${post.media?.length || 0}`);
+    console.log(`[Publisher] Post platforms:`, post.platforms.map(p => ({ name: p.name, accountId: p.accountId, status: p.status })));
     const user = await User.findById(userId);
     if (!user) throw new Error('User not found');
 
     // Only attempt platforms that are scheduled or draft
     const nextPlatforms = await Promise.all(post.platforms.map(async (p) => {
         if (['scheduled', 'draft'].includes(p.status)) {
+            console.log(`[Publisher] Publishing to platform: ${p.name} (${p.accountId})`);
             return await publishPlatform(user, p, post);
         }
         return p;
