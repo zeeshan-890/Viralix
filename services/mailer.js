@@ -15,13 +15,13 @@ async function sendEmail({ to, subject, html, text }) {
         console.warn('SMTP not configured; skipping email to', to);
         return { skipped: true };
     }
-    const from = process.env.MAIL_FROM || `AutoReach AI <no-reply@autoreach.ai>`;
+    const from = process.env.MAIL_FROM || `Viralix <no-reply@viralix.ai>`;
     return transporter.sendMail({ from, to, subject, html, text });
 }
 
 function otpTemplate(code) {
     return {
-        subject: 'Your AutoReach AI verification code',
+        subject: 'Your Viralix verification code',
         text: `Your verification code is ${code}. It expires in 10 minutes.`,
         html: `<p>Your verification code is <b>${code}</b>. It expires in 10 minutes.</p>`
     };
