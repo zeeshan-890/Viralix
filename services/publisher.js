@@ -1,5 +1,6 @@
 const Post = require('../models/Post');
 const User = require('../models/User');
+const axios = require('axios');
 const {
     createPagePost,
     createPagePhoto,
@@ -10,6 +11,37 @@ const {
     getContainerStatus,
     publishContainer,
 } = require('./instagram');
+
+const INSTAGRAM_GRAPH_URL = 'https://graph.instagram.com';
+
+// Helper: Refresh Instagram token if needed
+async function refreshInstagramTokenIfNeeded(user, account) {
+    if (!account.tokenExpiry) return; // Skip if no expiry date
+    
+    const daysUntilExpiry = (new Date(account.tokenExpiry) - Date.now()) / (1000 * 60 * 60 * 24);
+    
+    // Refresh if token expires within 7 days
+    if (daysUntilExpiry < 7) {
+        try {
+            const refreshResponse = await axios.get(`${INSTAGRAM_GRAPH_URL}/refresh_access_token`, {
+                params: {
+                    grant_type: 'ig_refresh_token',
+                    access_token: account.accessToken
+                }
+            });
+
+            account.accessToken = refreshResponse.data.access_token;
+            account.tokenExpiry = new Date(Date.now() + refreshResponse.data.expires_in * 1000);
+            user.markModified('socialAccounts');
+            await user.save();
+            
+            console.log(`Instagram token refreshed for account ${account.accountId}`);
+        } catch (refreshError) {
+            console.error('Token refresh failed:', refreshError.response?.data || refreshError.message);
+            throw new Error('Instagram token expired. Please reconnect your account.');
+        }
+    }
+}
 
 // Helper: find page token for a user's connected account
 async function resolveAuthForPlatform(user, platform) {
@@ -27,6 +59,8 @@ async function resolveAuthForPlatform(user, platform) {
         );
 
         if (directAccount && directAccount.accessToken) {
+            // Refresh token if needed before publishing
+            await refreshInstagramTokenIfNeeded(user, directAccount);
             return { kind: 'instagram', igUserId: platform.accountId, token: directAccount.accessToken };
         }
 
