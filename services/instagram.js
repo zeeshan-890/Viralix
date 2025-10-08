@@ -15,21 +15,17 @@ function buildIgUrl(path) {
 async function createDirectOAuthMediaContainer(igUserId, token, payload) {
     console.log(`[IG Direct] Creating media container for user ${igUserId}`);
     console.log(`[IG Direct] Payload:`, payload);
-    // NOTE: Publishing is ONLY supported via the Instagram Graph API (graph.facebook.com)
-    // for Business or Creator accounts connected to a Facebook Page. The Instagram
-    // Basic Display API (graph.instagram.com) is read-only (GET endpoints only) and
-    // will return "Unsupported request - method type: post" when attempting to POST.
-    // We still attempt both hosts to provide the most explicit diagnostic.
-
-    const FB_GRAPH_ENDPOINT = `${FB_API}/${igUserId}/media`; // facebook domain
-    const primaryEndpoint = FB_GRAPH_ENDPOINT; // Try Graph API first
-    const secondaryEndpoint = buildIgUrl(`/${igUserId}/media`); // instagram domain (expected to fail if Basic Display)
-    const tertiaryEndpoint = buildIgUrl(`/me/media`); // legacy /me fallback
+    // NOTE: Per user request we DO NOT call graph.facebook.com for direct tokens.
+    // Direct Instagram Login tokens (Basic Display) are read-only; POST attempts
+    // to graph.instagram.com will return Unsupported request. We attempt both
+    // user and /me instagram endpoints only to confirm capability and provide
+    // specific guidance.
+    const userEndpoint = buildIgUrl(`/${igUserId}/media`);
+    const meEndpoint = buildIgUrl(`/me/media`);
 
     const attempts = [
-        { label: 'facebook-graph', url: primaryEndpoint },
-        { label: 'instagram-graph-user', url: secondaryEndpoint },
-        { label: 'instagram-graph-me', url: tertiaryEndpoint },
+        { label: 'instagram-graph-user', url: userEndpoint },
+        { label: 'instagram-graph-me', url: meEndpoint },
     ];
 
     let lastErr;
@@ -46,8 +42,7 @@ async function createDirectOAuthMediaContainer(igUserId, token, payload) {
             const code = error.response?.data?.error?.code;
             const message = error.response?.data?.error?.message || error.message;
             console.warn(`[IG Direct] Create attempt failed (${attempt.label}) (${code}): ${message}`);
-            // Permission/style errors (code 10, 200, 190) should not continue cycling hosts
-            if ([10, 190, 200].includes(code)) break;
+            if ([10, 190, 200].includes(code)) break; // fatal / permission issues
         }
     }
 
@@ -82,11 +77,10 @@ async function getDirectOAuthContainerStatus(creationId, token) {
 
 async function publishDirectOAuthContainer(igUserId, token, creationId) {
     console.log(`[IG Direct] Publishing container ${creationId}`);
-    const fbEndpoint = `${FB_API}/${igUserId}/media_publish`;
+    // Only attempt instagram domain endpoints per user instruction.
     const userEndpoint = buildIgUrl(`/${igUserId}/media_publish`);
     const meEndpoint = buildIgUrl(`/me/media_publish`);
     const attempts = [
-        { label: 'facebook-graph', url: fbEndpoint },
         { label: 'instagram-graph-user', url: userEndpoint },
         { label: 'instagram-graph-me', url: meEndpoint },
     ];
