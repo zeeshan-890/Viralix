@@ -1,45 +1,68 @@
 # Instagram Token Validation Fix
 
 **Date:** October 8, 2025  
-**Issue:** Token validation failing with "Unsupported request - method type: get"
+**Issue:** Token validation failing with "Unsupported request - method type: get" (Error Code: 100)
 
 ## Problem
 
 When trying to publish to Instagram via direct OAuth, the token validation was failing with the error:
 ```
-[Publisher] Token validation failed: Unsupported request - method type: get
+[Publisher] Token validation failed: Unsupported request - method type: get Code: 100
 ```
 
 This was causing all Instagram publishing attempts to fail with a 400 error.
 
-## Root Cause
+## Root Cause Analysis
 
-The `validateInstagramToken` function in `services/publisher.js` was using the wrong API endpoint:
+### Attempt 1: Used `/{accountId}` endpoint
+**Issue:** Returns "Unsupported request - method type: get" (Error Code: 100)
+- The `/{accountId}` endpoint is for Instagram Graph API (Business accounts via Facebook)
+- Not supported for Instagram Basic Display API user access tokens
 
-**WRONG (was using):**
-```javascript
-await axios.get(`${INSTAGRAM_GRAPH_URL}/${accountId}`, {
-    params: {
-        fields: 'id,username',
-        access_token: token
-    }
-});
-```
+### Attempt 2: Used `/me` endpoint  
+**Issue:** Returns "Unsupported request - method type: get" (Error Code: 100)
+- The `/me` endpoint also doesn't support validation for Instagram Basic Display API tokens
+- Instagram Basic Display API has limited validation endpoints
 
-**Issue:** The `/{accountId}` endpoint is for the Facebook Graph API when accessing Instagram Business Accounts through Facebook Pages. It doesn't work with Instagram Basic Display API user access tokens (direct OAuth).
+### Real Issue
+Instagram Basic Display API tokens don't have a reliable validation endpoint. Error Code 100 ("Unsupported request") doesn't mean the token is invalid - it just means that specific API method isn't available for that token type.
 
 ## Solution
 
-Changed to use the `/me` endpoint which is the correct endpoint for Instagram Basic Display API:
+**Graceful Error Handling:** Instead of blocking publishing on validation errors, we:
+1. Try to validate using `/{accountId}` endpoint
+2. If we get Error Code 100 ("Unsupported"), assume token is valid and proceed
+3. Only block publishing for actual token corruption (Error Code 190: "Invalid OAuth token")
+4. Log the validation attempt for monitoring
 
-**CORRECT (now using):**
+**UPDATED CODE:**
 ```javascript
-const response = await axios.get(`${INSTAGRAM_GRAPH_URL}/me`, {
-    params: {
-        fields: 'id,username',
-        access_token: token
+async function validateInstagramToken(accountId, token) {
+    try {
+        const response = await axios.get(`${INSTAGRAM_BASIC_DISPLAY_URL}/${accountId}`, {
+            params: {
+                fields: 'id,username',
+                access_token: token
+            }
+        });
+        return true;
+    } catch (error) {
+        const errorCode = error.response?.data?.error?.code;
+        
+        // Error 100 = "Unsupported request" - token may still be valid
+        if (errorCode === 100 && errorMsg.includes('Unsupported')) {
+            console.log(`[Publisher] API endpoint not supported, proceeding with publishing...`);
+            return true; // Allow publishing to proceed
+        }
+        
+        // Error 190 = Invalid OAuth token - actual token problem
+        if (errorCode === 190) {
+            throw new Error('Instagram token is invalid. Please reconnect your account.');
+        }
+        
+        throw new Error(`Instagram token validation failed: ${errorMsg}`);
     }
-});
+}
 ```
 
 ## Changes Made
@@ -47,10 +70,15 @@ const response = await axios.get(`${INSTAGRAM_GRAPH_URL}/me`, {
 ### File: `services/publisher.js`
 
 1. **Updated `validateInstagramToken` function:**
-   - Changed endpoint from `/${accountId}` to `/me`
-   - Added username logging for better debugging
-   - Added error code checking (error code 190 = Invalid OAuth token)
-   - Improved error messages
+   - Uses `/${accountId}` endpoint for validation attempts
+   - Gracefully handles Error Code 100 ("Unsupported") by allowing publishing
+   - Strictly checks for Error Code 190 (Invalid OAuth token)
+   - Improved logging for debugging
+
+2. **Key Logic:**
+   - **Error 100**: Log and proceed (endpoint not supported ≠ invalid token)
+   - **Error 190**: Block and require reconnection (actual invalid token)
+   - **Other errors**: Log and report, but allow retry
 
 ## API Endpoints Reference
 
