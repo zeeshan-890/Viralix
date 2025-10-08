@@ -1,5 +1,6 @@
 'use client';
 import { useEffect, useMemo, useState } from 'react';
+import { ChevronLeft, ChevronRight, Calendar, Plus, Loader2 } from 'lucide-react';
 import { postsAPI } from '@/lib/api';
 import PostEditModal from './PostEditModal';
 
@@ -126,100 +127,179 @@ export default function CalendarView() {
         };
         return colors[status] || 'bg-gray-100 text-gray-800';
     };
-    return (<div className="bg-white rounded-lg border border-gray-200">
+    return (<div className="bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden"
+        style={{ fontFamily: 'Inter, Poppins, sans-serif' }}>
         {/* Calendar Header */}
-        <div className="p-6 border-b border-gray-200">
-            <div className="flex items-center justify-between mb-4">
-                <h2 className="text-xl font-semibold text-gray-900">
-                    {formatMonth(currentDate)}
-                </h2>
-                <div className="flex items-center space-x-2">
-                    <button onClick={() => navigateMonth('prev')} className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
-                        ←
+        <div className="px-6 py-5 border-b border-gray-100"
+            style={{ background: 'linear-gradient(135deg, #84A98C 0%, #52796F 100%)' }}>
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-4">
+                <div className="flex items-center gap-3">
+                    <div className="w-12 h-12 rounded-xl bg-white bg-opacity-20 backdrop-blur-sm flex items-center justify-center shadow-lg">
+                        <Calendar className="w-6 h-6 text-white" />
+                    </div>
+                    <div>
+                        <h2 className="text-2xl font-bold text-white">
+                            {formatMonth(currentDate)}
+                        </h2>
+                        <p className="text-sm text-white text-opacity-90">Manage your content schedule</p>
+                    </div>
+                </div>
+                <div className="flex items-center gap-2">
+                    <button
+                        onClick={() => navigateMonth('prev')}
+                        className="p-2.5 rounded-xl bg-white bg-opacity-20 hover:bg-opacity-30 backdrop-blur-sm transition-all border border-white border-opacity-20 shadow-lg hover:scale-110">
+                        <ChevronLeft className="w-5 h-5 text-white" />
                     </button>
-                    <button onClick={() => setCurrentDate(new Date())} className="px-3 py-1 text-sm bg-blue-100 text-blue-800 rounded-lg hover:bg-blue-200 transition-colors">
+                    <button
+                        onClick={() => setCurrentDate(new Date())}
+                        className="px-5 py-2.5 text-sm font-bold rounded-xl bg-white text-gray-900 hover:shadow-2xl transition-all hover:scale-105">
                         Today
                     </button>
-                    <button onClick={() => navigateMonth('next')} className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
-                        →
+                    <button
+                        onClick={() => navigateMonth('next')}
+                        className="p-2.5 rounded-xl bg-white bg-opacity-20 hover:bg-opacity-30 backdrop-blur-sm transition-all border border-white border-opacity-20 shadow-lg hover:scale-110">
+                        <ChevronRight className="w-5 h-5 text-white" />
                     </button>
                 </div>
             </div>
 
             {/* View Mode Selector */}
-            <div className="flex space-x-1 bg-gray-100 rounded-lg p-1">
-                {['month', 'week', 'day'].map((mode) => (<button key={mode} onClick={() => setViewMode(mode)} className={`px-3 py-1 rounded-md text-sm font-medium transition-colors ${viewMode === mode
-                    ? 'bg-white shadow-sm text-gray-900'
-                    : 'text-gray-600 hover:text-gray-900'}`}>
+            <div className="flex gap-2 bg-white bg-opacity-20 backdrop-blur-sm rounded-xl p-1.5 shadow-lg border border-white border-opacity-20">
+                {['month', 'week', 'day'].map((mode) => (<button key={mode} onClick={() => setViewMode(mode)} className={`flex-1 px-4 py-2.5 rounded-lg text-sm font-bold transition-all ${viewMode === mode
+                    ? 'bg-white text-gray-900 shadow-lg scale-105'
+                    : 'text-white hover:bg-white hover:bg-opacity-10'}`}>
                     {mode.charAt(0).toUpperCase() + mode.slice(1)}
                 </button>))}
             </div>
         </div>
 
         {/* Calendar Grid */}
-        <div className="p-6">
+        <div className="p-6 bg-gradient-to-br from-gray-50 to-white">
             {/* Days of Week Header */}
-            <div className="grid grid-cols-7 gap-px mb-2">
-                {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day) => (<div key={day} className="p-2 text-center text-sm font-medium text-gray-600">
+            <div className="grid grid-cols-7 gap-2 mb-3">
+                {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day, idx) => (<div key={day} className="p-3 text-center text-sm font-bold rounded-xl shadow-sm"
+                    style={{
+                        background: idx === 0 || idx === 6
+                            ? 'linear-gradient(135deg, #fef3c7 0%, #fde68a 100%)'
+                            : 'linear-gradient(135deg, #f9fafb 0%, #f3f4f6 100%)',
+                        color: idx === 0 || idx === 6 ? '#92400e' : '#4b5563'
+                    }}>
                     {day}
                 </div>))}
             </div>
 
             {/* Calendar Days */}
-            <div className="grid grid-cols-7 gap-px bg-gray-200 rounded-lg overflow-hidden">
-                {getDaysInMonth(currentDate).map((day, index) => (<div key={index} className={`min-h-[120px] bg-white p-2 ${day ? 'hover:bg-gray-50 cursor-pointer' : ''}`}>
-                    {day && (<>
-                        <div className={`text-sm font-medium mb-1 ${isToday(day)
-                            ? 'bg-blue-600 text-white w-6 h-6 rounded-full flex items-center justify-center'
-                            : 'text-gray-900'}`}>
-                            {day}
-                        </div>
+            <div className="grid grid-cols-7 gap-3">
+                {getDaysInMonth(currentDate).map((day, index) => {
+                    const isWeekend = index % 7 === 0 || index % 7 === 6;
+                    return (
+                        <div
+                            key={index}
+                            className={`min-h-[140px] rounded-2xl p-3 transition-all ${day
+                                    ? 'bg-white border-2 hover:border-gray-300 hover:shadow-xl cursor-pointer transform hover:scale-105'
+                                    : 'bg-transparent border-2 border-transparent'
+                                }`}
+                            style={day ? {
+                                borderColor: isToday(day) ? '#84A98C' : isWeekend ? '#fed7aa' : '#e5e7eb',
+                                boxShadow: isToday(day) ? '0 4px 20px rgba(132, 169, 140, 0.3)' : ''
+                            } : {}}>
+                            {day && (<>
+                                <div className={`text-sm font-bold mb-2 flex items-center justify-center transition-all ${isToday(day)
+                                        ? 'w-8 h-8 rounded-full text-white shadow-lg scale-110'
+                                        : 'text-gray-900'
+                                    }`}
+                                    style={isToday(day) ? {
+                                        background: 'linear-gradient(135deg, #84A98C 0%, #52796F 100%)'
+                                    } : {}}>
+                                    {day}
+                                </div>
 
-                        {/* Posts for this day */}
-                        <div className="space-y-1">
-                            {(postsByDay.get(day) || []).map((post) => {
-                                const d = new Date(post.scheduledDate);
-                                const time = `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
-                                let agg = 'draft';
-                                const statuses = (post.platforms || []).map(p => p.status);
-                                if (statuses.includes('failed')) agg = 'failed';
-                                else if (statuses.includes('scheduled')) agg = 'scheduled';
-                                else if (statuses.includes('published')) agg = 'published';
-                                const platforms = (post.platforms || []).map(p => p.name);
-                                return (
-                                    <div
-                                        key={post._id}
-                                        className="text-xs p-1 rounded bg-blue-50 border border-blue-200 cursor-pointer hover:bg-blue-100"
-                                        onClick={() => openEditPostModal(post)}
-                                    >
-                                        <div className="flex items-center space-x-1 mb-1">
-                                            {platforms.map((platform) => (
-                                                <span key={platform} className="text-xs">
-                                                    {getPlatformIcon(platform)}
-                                                </span>
-                                            ))}
-                                            <span className="text-blue-700 font-medium">{time}</span>
+                                {/* Posts for this day */}
+                                <div className="space-y-2">
+                                    {(postsByDay.get(day) || []).slice(0, 3).map((post) => {
+                                        const d = new Date(post.scheduledDate);
+                                        const time = `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+                                        let agg = 'draft';
+                                        const statuses = (post.platforms || []).map(p => p.status);
+                                        if (statuses.includes('failed')) agg = 'failed';
+                                        else if (statuses.includes('scheduled')) agg = 'scheduled';
+                                        else if (statuses.includes('published')) agg = 'published';
+                                        const platforms = (post.platforms || []).map(p => p.name);
+
+                                        const statusColors = {
+                                            scheduled: { bg: 'linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%)', border: '#3b82f6', text: '#1e40af' },
+                                            published: { bg: 'linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%)', border: '#10b981', text: '#065f46' },
+                                            draft: { bg: 'linear-gradient(135deg, #fef3c7 0%, #fde68a 100%)', border: '#f59e0b', text: '#92400e' },
+                                            failed: { bg: 'linear-gradient(135deg, #fee2e2 0%, #fecaca 100%)', border: '#ef4444', text: '#991b1b' }
+                                        };
+                                        const colors = statusColors[agg];
+
+                                        return (
+                                            <div
+                                                key={post._id}
+                                                className="text-xs p-2.5 rounded-xl border-2 cursor-pointer hover:shadow-lg transition-all transform hover:scale-105"
+                                                style={{
+                                                    background: colors.bg,
+                                                    borderColor: colors.border
+                                                }}
+                                                onClick={() => openEditPostModal(post)}
+                                            >
+                                                <div className="flex items-center gap-1 mb-1.5 flex-wrap">
+                                                    {platforms.map((platform) => (
+                                                        <span key={platform} className="text-sm">
+                                                            {getPlatformIcon(platform)}
+                                                        </span>
+                                                    ))}
+                                                    <span className="font-bold ml-auto text-xs" style={{ color: colors.text }}>{time}</span>
+                                                </div>
+                                                <div className="text-gray-800 font-semibold truncate text-xs mb-1">{post.title}</div>
+                                                <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-xs font-bold shadow-sm"
+                                                    style={{
+                                                        background: colors.bg,
+                                                        color: colors.text,
+                                                        border: `1.5px solid ${colors.border}`
+                                                    }}>
+                                                    <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: colors.border }}></div>
+                                                    {agg}
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
+                                    {(postsByDay.get(day) || []).length > 3 && (
+                                        <div className="text-xs text-center py-1.5 px-2 bg-gray-100 rounded-lg font-semibold text-gray-600 border border-gray-200">
+                                            +{(postsByDay.get(day) || []).length - 3} more
                                         </div>
-                                        <div className="text-gray-700 truncate">{post.title}</div>
-                                        <div className={`inline-block px-1 rounded text-xs ${getStatusColor(agg)}`}>{agg}</div>
-                                    </div>
-                                );
-                            })}
+                                    )}
+                                </div>
+                            </>)}
                         </div>
-                    </>)}
-                </div>))}
+                    );
+                })}
             </div>
-            {loading && (<div className="mt-3 text-sm text-gray-500">Loading posts...</div>)}
-            {error && (<div className="mt-3 text-sm text-red-600">{error}</div>)}
+            {loading && (
+                <div className="mt-6 flex items-center justify-center gap-3 p-5 rounded-2xl shadow-lg border-2 border-gray-200"
+                    style={{ background: 'linear-gradient(135deg, #f9fafb 0%, #f3f4f6 100%)' }}>
+                    <Loader2 className="w-5 h-5 animate-spin" style={{ color: '#84A98C' }} />
+                    <span className="text-sm font-bold text-gray-700">Loading posts...</span>
+                </div>
+            )}
+            {error && (
+                <div className="mt-6 p-5 rounded-2xl border-2 border-red-300 shadow-lg"
+                    style={{ background: 'linear-gradient(135deg, #fee2e2 0%, #fecaca 100%)' }}>
+                    <span className="text-sm font-bold text-red-800">{error}</span>
+                </div>
+            )}
         </div>
 
         {/* New Post Button */}
-        <div className="p-6 border-t border-gray-200">
+        <div className="px-6 pb-6 pt-4 border-t-2 border-gray-100 bg-gradient-to-br from-gray-50 to-white">
             <button
                 onClick={openNewPostModal}
-                className="w-full bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 transition-colors font-medium"
+                className="w-full py-4 px-6 rounded-2xl font-bold text-white shadow-xl hover:shadow-2xl hover:scale-105 transition-all duration-300 flex items-center justify-center gap-3"
+                style={{ background: 'linear-gradient(135deg, #84A98C 0%, #52796F 100%)' }}
             >
-                + Create New Post
+                <Plus className="w-6 h-6" />
+                <span className="text-lg">Create New Post</span>
             </button>
         </div>
 

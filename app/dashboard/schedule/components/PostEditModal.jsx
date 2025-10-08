@@ -1,5 +1,6 @@
 'use client';
 import { useEffect, useState } from 'react';
+import { X, Upload, Trash2, Save, Send, Calendar, Loader2 } from 'lucide-react';
 import { postsAPI, facebookAPI, instagramAPI, uploadAPI } from '@/lib/api';
 
 export default function PostEditModal({ isOpen, onClose, post, onSave }) {
@@ -218,46 +219,61 @@ export default function PostEditModal({ isOpen, onClose, post, onSave }) {
 
     if (!isOpen) return null;
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4"
+            style={{ fontFamily: 'Inter, Poppins, sans-serif' }}>
             {/* Backdrop */}
-            <div className="absolute inset-0 bg-black bg-opacity-50" onClick={closeModal} />
+            <div className="absolute inset-0 bg-black bg-opacity-60 backdrop-blur-sm" onClick={closeModal} />
 
             {/* Modal */}
-            <div className="relative bg-white rounded-lg shadow-xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+            <div className="relative bg-white rounded-2xl shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto">
                 {/* Header */}
-                <div className="flex items-center justify-between p-6 border-b border-gray-200">
-                    <h2 className="text-xl font-semibold text-gray-900">
-                        {post ? 'Edit Post' : 'Create New Post'}
-                    </h2>
-                    <button onClick={closeModal} className="text-gray-400 hover:text-gray-600 transition-colors">
-                        ✕
-                    </button>
+                <div className="sticky top-0 z-10 px-6 py-5 border-b border-gray-200 bg-white rounded-t-2xl"
+                    style={{ background: 'linear-gradient(135deg, #f9fafb 0%, #f3f4f6 100%)' }}>
+                    <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-xl flex items-center justify-center shadow-md"
+                                style={{ background: 'linear-gradient(135deg, #84A98C 0%, #52796F 100%)' }}>
+                                <Calendar className="w-5 h-5 text-white" />
+                            </div>
+                            <h2 className="text-xl font-bold text-gray-900">
+                                {post ? 'Edit Post' : 'Create New Post'}
+                            </h2>
+                        </div>
+                        <button
+                            onClick={closeModal}
+                            className="text-gray-400 hover:text-gray-600 transition-colors p-2 hover:bg-gray-100 rounded-lg">
+                            <X className="w-5 h-5" />
+                        </button>
+                    </div>
                 </div>
 
                 {/* Content */}
                 <form onSubmit={handleSubmit} className="p-6 space-y-6">
                     {error && (
-                        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
-                            {error}
+                        <div className="p-4 rounded-xl border-2 border-red-200"
+                            style={{ background: 'linear-gradient(135deg, #fee2e2 0%, #fecaca 100%)' }}>
+                            <span className="text-sm font-semibold text-red-700">{error}</span>
                         </div>
                     )}
 
                     {loading && (
-                        <div className="text-center py-4">
-                            <div className="text-gray-500">Loading platforms...</div>
+                        <div className="flex items-center justify-center gap-2 py-8">
+                            <Loader2 className="w-6 h-6 animate-spin text-gray-400" />
+                            <span className="text-gray-500 font-medium">Loading platforms...</span>
                         </div>
                     )}
 
                     {/* Title */}
                     <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                            Title *
+                        <label className="block text-sm font-bold text-gray-700 mb-2">
+                            Title <span className="text-red-500">*</span>
                         </label>
                         <input
                             type="text"
                             value={formData.title}
                             onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:border-transparent transition-all"
+                            style={{ focusRing: '2px solid #84A98C' }}
                             placeholder="Enter post title"
                             required
                         />
@@ -265,14 +281,14 @@ export default function PostEditModal({ isOpen, onClose, post, onSave }) {
 
                     {/* Content */}
                     <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                            Content *
+                        <label className="block text-sm font-bold text-gray-700 mb-2">
+                            Content <span className="text-red-500">*</span>
                         </label>
                         <textarea
-                            rows={4}
+                            rows={5}
                             value={formData.content}
                             onChange={(e) => setFormData(prev => ({ ...prev, content: e.target.value }))}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:border-transparent transition-all"
                             placeholder="Write your post content..."
                             required
                         />
@@ -280,10 +296,10 @@ export default function PostEditModal({ isOpen, onClose, post, onSave }) {
 
                     {/* Media Upload */}
                     <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                        <label className="block text-sm font-bold text-gray-700 mb-2">
                             Media
                         </label>
-                        <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
+                        <div className="border-2 border-dashed border-gray-300 rounded-xl p-8 text-center bg-gradient-to-br from-gray-50 to-gray-100 hover:border-gray-400 transition-all">
                             <input
                                 type="file"
                                 multiple
@@ -294,24 +310,34 @@ export default function PostEditModal({ isOpen, onClose, post, onSave }) {
                                 disabled={uploading}
                             />
                             <label htmlFor="media-upload" className="cursor-pointer">
-                                <div className="text-gray-400 mb-2">📁</div>
-                                <div className="text-sm text-gray-600">
+                                <Upload className="w-10 h-10 mx-auto mb-3 text-gray-400" />
+                                <div className="text-sm font-semibold text-gray-700 mb-1">
                                     {uploading ? 'Uploading...' : 'Click to upload images or videos'}
+                                </div>
+                                <div className="text-xs text-gray-500">
+                                    Supports JPG, PNG, MP4, and more
                                 </div>
                             </label>
                         </div>
 
                         {/* Media Preview */}
                         {formData.media.length > 0 && (
-                            <div className="mt-3 grid grid-cols-2 gap-3">
+                            <div className="mt-4 grid grid-cols-2 gap-3">
                                 {formData.media.map((media, index) => (
-                                    <div key={index} className="relative bg-gray-50 rounded-lg p-3">
-                                        <div className="flex items-center space-x-2">
-                                            <span className="text-lg">
-                                                {media.type === 'video' ? '🎥' : '📷'}
-                                            </span>
+                                    <div key={index} className="relative bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl p-4 border-2 border-gray-200 hover:shadow-md transition-all">
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-10 h-10 rounded-lg flex items-center justify-center"
+                                                style={{
+                                                    background: media.type === 'video'
+                                                        ? 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)'
+                                                        : 'linear-gradient(135deg, #10b981 0%, #059669 100%)'
+                                                }}>
+                                                <span className="text-lg">
+                                                    {media.type === 'video' ? '🎥' : '📷'}
+                                                </span>
+                                            </div>
                                             <div className="flex-1 min-w-0">
-                                                <div className="text-sm font-medium truncate">
+                                                <div className="text-sm font-semibold text-gray-900 truncate">
                                                     {media.filename}
                                                 </div>
                                                 <div className="text-xs text-gray-500">
@@ -326,9 +352,9 @@ export default function PostEditModal({ isOpen, onClose, post, onSave }) {
                                                         media: prev.media.filter((_, i) => i !== index)
                                                     }));
                                                 }}
-                                                className="text-red-500 hover:text-red-700"
+                                                className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-all"
                                             >
-                                                ✕
+                                                <Trash2 className="w-4 h-4" />
                                             </button>
                                         </div>
                                     </div>
@@ -339,10 +365,10 @@ export default function PostEditModal({ isOpen, onClose, post, onSave }) {
 
                     {/* Platforms */}
                     <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                            Platforms * (Select at least one)
+                        <label className="block text-sm font-bold text-gray-700 mb-2">
+                            Platforms <span className="text-red-500">*</span> (Select at least one)
                         </label>
-                        <div className="grid grid-cols-1 gap-3 max-h-40 overflow-y-auto">
+                        <div className="grid grid-cols-1 gap-3 max-h-48 overflow-y-auto p-1">
                             {availablePlatforms.map((platform) => {
                                 const isSelected = formData.platforms.some(
                                     p => p.accountId === platform.accountId && p.name === platform.name
@@ -350,50 +376,57 @@ export default function PostEditModal({ isOpen, onClose, post, onSave }) {
                                 return (
                                     <label
                                         key={platform.id}
-                                        className="flex items-center space-x-3 p-3 border border-gray-200 rounded-lg cursor-pointer hover:bg-gray-50"
+                                        className={`flex items-center gap-3 p-4 border-2 rounded-xl cursor-pointer transition-all ${isSelected
+                                                ? 'border-green-400 shadow-md'
+                                                : 'border-gray-200 hover:border-gray-300 hover:shadow-sm'
+                                            }`}
+                                        style={isSelected ? {
+                                            background: 'linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%)'
+                                        } : { background: 'white' }}
                                     >
                                         <input
                                             type="checkbox"
                                             checked={isSelected}
                                             onChange={() => handlePlatformToggle(platform)}
-                                            className="rounded"
+                                            className="w-5 h-5 rounded"
                                         />
-                                        <span>{platform.icon}</span>
-                                        <span className="font-medium">{platform.displayName}</span>
+                                        <span className="text-xl">{platform.icon}</span>
+                                        <span className="font-semibold text-gray-900">{platform.displayName}</span>
                                     </label>
                                 );
                             })}
                         </div>
 
                         {availablePlatforms.length === 0 && !loading && (
-                            <div className="text-sm text-gray-500 mt-2">
-                                No connected accounts found. Please connect Facebook or Instagram accounts first.
+                            <div className="text-sm text-gray-500 mt-2 p-4 bg-yellow-50 rounded-xl border border-yellow-200">
+                                ⚠️ No connected accounts found. Please connect Facebook or Instagram accounts first.
                             </div>
                         )}
                     </div>
 
                     {/* Schedule */}
-                    <div>
-                        <label className="flex items-center space-x-2 mb-3">
+                    <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-5 border-2 border-blue-200">
+                        <label className="flex items-center gap-2 mb-4">
                             <input
                                 type="checkbox"
                                 checked={formData.isScheduled}
                                 onChange={(e) => setFormData(prev => ({ ...prev, isScheduled: e.target.checked }))}
-                                className="rounded"
+                                className="w-5 h-5 rounded"
                             />
-                            <span className="text-sm font-medium text-gray-700">Schedule for later</span>
+                            <Calendar className="w-5 h-5 text-blue-600" />
+                            <span className="text-sm font-bold text-gray-900">Schedule for later</span>
                         </label>
 
                         {formData.isScheduled && (
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                <label className="block text-sm font-semibold text-gray-700 mb-2">
                                     Schedule Date & Time
                                 </label>
                                 <input
                                     type="datetime-local"
                                     value={formData.scheduledDate}
                                     onChange={(e) => setFormData(prev => ({ ...prev, scheduledDate: e.target.value }))}
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    className="w-full px-4 py-3 border-2 border-blue-300 rounded-xl focus:ring-2 focus:border-transparent bg-white"
                                     min={new Date().toISOString().slice(0, 16)}
                                 />
                             </div>
@@ -401,24 +434,26 @@ export default function PostEditModal({ isOpen, onClose, post, onSave }) {
                     </div>
 
                     {/* Footer */}
-                    <div className="flex items-center justify-between pt-6 border-t border-gray-200">
+                    <div className="flex items-center justify-between pt-6 border-t-2 border-gray-200">
                         <button
                             type="button"
                             onClick={closeModal}
-                            className="px-4 py-2 text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                            className="px-6 py-3 text-gray-700 border-2 border-gray-300 rounded-xl hover:bg-gray-50 transition-all font-semibold"
                         >
                             Cancel
                         </button>
 
-                        <div className="flex space-x-3">
+                        <div className="flex gap-3">
                             {post && (
                                 <>
                                     <button
                                         type="button"
                                         onClick={handleDelete}
                                         disabled={saving}
-                                        className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50"
+                                        className="px-6 py-3 rounded-xl font-bold text-white shadow-lg hover:shadow-xl hover:scale-105 transition-all disabled:opacity-50 flex items-center gap-2"
+                                        style={{ background: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)' }}
                                     >
+                                        {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
                                         {saving ? 'Deleting...' : 'Delete'}
                                     </button>
 
@@ -429,8 +464,10 @@ export default function PostEditModal({ isOpen, onClose, post, onSave }) {
                                                 type="button"
                                                 onClick={handlePublishNow}
                                                 disabled={saving}
-                                                className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50"
+                                                className="px-6 py-3 rounded-xl font-bold text-white shadow-lg hover:shadow-xl hover:scale-105 transition-all disabled:opacity-50 flex items-center gap-2"
+                                                style={{ background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)' }}
                                             >
+                                                {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
                                                 {saving ? 'Publishing...' : 'Publish Now'}
                                             </button>
                                         )}
@@ -440,8 +477,10 @@ export default function PostEditModal({ isOpen, onClose, post, onSave }) {
                             <button
                                 type="submit"
                                 disabled={saving || uploading}
-                                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
+                                className="px-6 py-3 rounded-xl font-bold text-white shadow-lg hover:shadow-xl hover:scale-105 transition-all disabled:opacity-50 flex items-center gap-2"
+                                style={{ background: 'linear-gradient(135deg, #84A98C 0%, #52796F 100%)' }}
                             >
+                                {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
                                 {saving ? 'Saving...' : post ? 'Save Changes' : 'Create Post'}
                             </button>
                         </div>
