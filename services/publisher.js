@@ -20,21 +20,26 @@ const INSTAGRAM_GRAPH_URL = 'https://graph.instagram.com';
 // Helper: Validate Instagram token by making a simple API call
 async function validateInstagramToken(accountId, token) {
     try {
-        // Try to fetch basic account info to validate token
-        await axios.get(`${INSTAGRAM_GRAPH_URL}/${accountId}`, {
+        // For Instagram Basic Display API (direct OAuth), use /me endpoint
+        // This is the correct endpoint for user access tokens
+        const response = await axios.get(`${INSTAGRAM_GRAPH_URL}/me`, {
             params: {
                 fields: 'id,username',
                 access_token: token
             }
         });
+        
+        console.log(`[Publisher] Token validated successfully for user:`, response.data.username);
         return true;
     } catch (error) {
         const errorMsg = error.response?.data?.error?.message || error.message;
-        console.error(`[Publisher] Token validation failed:`, errorMsg);
+        const errorCode = error.response?.data?.error?.code;
+        console.error(`[Publisher] Token validation failed:`, errorMsg, `Code: ${errorCode}`);
 
         if (errorMsg.includes('Cannot parse access token') ||
             errorMsg.includes('Invalid OAuth access token') ||
-            errorMsg.includes('Malformed access token')) {
+            errorMsg.includes('Malformed access token') ||
+            errorCode === 190) { // Invalid OAuth token error code
             throw new Error('Instagram token is corrupted. Please disconnect and reconnect your Instagram account to get a fresh token.');
         }
 
