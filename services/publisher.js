@@ -15,91 +15,82 @@ const {
     publishDirectOAuthContainer,
 } = require('./instagram');
 
-const INSTAGRAM_GRAPH_URL = 'https://graph.instagram.com';
+const INSTAGRAM_GRAPH_URL = 'https://graph.instagram.com'; // Used for direct Instagram Login tokens (Instagram API with Instagram Login)
 const INSTAGRAM_BASIC_DISPLAY_URL = 'https://graph.instagram.com';
 
-// Helper: Validate Instagram token by making a simple API call
+// Helper: Validate Instagram token (direct Instagram Login / no FB page linkage)
+// Strategy:
+// 1. Call /me?fields=id,username on graph.instagram.com (works for Instagram API with Instagram Login tokens)
+// 2. If that fails with parse/invalid -> throw permanent reconnect error
+// 3. If unsupported endpoint -> treat token as opaque but proceed (some transitional versions return unsupported for extra fields)
 async function validateInstagramToken(accountId, token) {
     try {
-        // Try Instagram Basic Display API first (for direct OAuth tokens)
-        // Use the accountId to verify it matches
-        const response = await axios.get(`${INSTAGRAM_BASIC_DISPLAY_URL}/${accountId}`, {
-            params: {
-                fields: 'id,username',
-                access_token: token
-            }
+        const { data } = await axios.get(`${INSTAGRAM_BASIC_DISPLAY_URL}/me`, {
+            params: { fields: 'id,username', access_token: token }
         });
-
-        console.log(`[Publisher] Token validated successfully for user:`, response.data.username || response.data.id);
+        if (!data?.id) throw new Error('Missing id in token validation response');
+        if (accountId && String(accountId) !== String(data.id)) {
+            console.warn(`[Publisher] Account ID mismatch. Stored: ${accountId} Token reports: ${data.id}`);
+        }
+        console.log(`[Publisher] Token validated for IG user: ${data.username || data.id}`);
         return true;
     } catch (error) {
         const errorMsg = error.response?.data?.error?.message || error.message;
         const errorCode = error.response?.data?.error?.code;
-        console.error(`[Publisher] Token validation failed:`, errorMsg, `Code: ${errorCode}`);
+        console.error(`[Publisher] Token validation failed: ${errorMsg} Code: ${errorCode}`);
 
-        // Check for token corruption or invalidity
-        if (errorMsg.includes('Cannot parse access token') ||
-            errorMsg.includes('Invalid OAuth access token') ||
-            errorMsg.includes('Malformed access token') ||
-            errorCode === 190) { // Invalid OAuth token error code
-            throw new Error('Instagram token is invalid or corrupted. Please disconnect and reconnect your Instagram account.');
+        if (/Cannot parse access token|Invalid OAuth access token|Malformed access token/i.test(errorMsg) || errorCode === 190) {
+            throw new Error('Instagram access token is invalid or expired. Please reconnect your Instagram account.');
         }
 
-        // Check for permissions or API issues
-        if (errorCode === 100 && errorMsg.includes('Unsupported')) {
-            console.log(`[Publisher] API endpoint not supported, token may still be valid. Proceeding with publishing...`);
-            return true; // Allow publishing to proceed
+        if (errorCode === 100 && /Unsupported request/i.test(errorMsg)) {
+            console.log('[Publisher] Treating unsupported request as non-fatal (token may still work for publishing).');
+            return true;
         }
 
-        throw new Error(`Instagram token validation failed: ${errorMsg}`);
+        // Non-fatal: allow attempt but log
+        console.warn('[Publisher] Proceeding despite validation anomaly.');
+        return true;
     }
 }
 
 // Helper: Refresh Instagram token if needed
 async function refreshInstagramTokenIfNeeded(user, account) {
-    // Check both possible field names (tokenExpires is the correct schema field)
+    // Direct Instagram Login tokens (short/long-lived) only support refresh via ig_refresh_token if originally obtained with that capability.
+    // If we have no expiry, skip. If token has < 7 days, attempt refresh; if unsupported, log and continue (user can reconnect later).
     const expiryDate = account.tokenExpires || account.tokenExpiry;
-
     if (!expiryDate) {
-        console.log(`[Publisher] No token expiry date found, skipping refresh check`);
-        return; // Skip if no expiry date
+        console.log('[Publisher] No token expiry date stored for Instagram account. Skipping refresh.');
+        return;
     }
+    const msLeft = new Date(expiryDate) - Date.now();
+    const daysUntilExpiry = msLeft / 86400000;
+    console.log(`[Publisher] Token expires in ${daysUntilExpiry.toFixed(2)} days`);
+    if (daysUntilExpiry >= 7) return;
 
-    const daysUntilExpiry = (new Date(expiryDate) - Date.now()) / (1000 * 60 * 60 * 24);
-    console.log(`[Publisher] Token expires in ${daysUntilExpiry.toFixed(1)} days`);
-
-    // Refresh if token expires within 7 days
-    if (daysUntilExpiry < 7) {
-        console.log(`[Publisher] Token expiring soon, attempting refresh...`);
-        try {
-            const refreshResponse = await axios.get(`${INSTAGRAM_GRAPH_URL}/refresh_access_token`, {
-                params: {
-                    grant_type: 'ig_refresh_token',
-                    access_token: account.accessToken
-                }
-            });
-
-            account.accessToken = refreshResponse.data.access_token;
-            account.tokenExpires = new Date(Date.now() + refreshResponse.data.expires_in * 1000);
+    console.log('[Publisher] Attempting token refresh (within 7 days of expiry)...');
+    try {
+        const { data } = await axios.get(`${INSTAGRAM_GRAPH_URL}/refresh_access_token`, {
+            params: { grant_type: 'ig_refresh_token', access_token: account.accessToken }
+        });
+        if (data?.access_token) {
+            account.accessToken = data.access_token;
+            if (data.expires_in) account.tokenExpires = new Date(Date.now() + data.expires_in * 1000);
             user.markModified('socialAccounts');
             await user.save();
-
-            console.log(`[Publisher] ✓ Instagram token refreshed successfully for account ${account.accountId}`);
-        } catch (refreshError) {
-            const errorMsg = refreshError.response?.data?.error?.message || refreshError.message;
-            console.error(`[Publisher] ✗ Token refresh failed:`, errorMsg);
-
-            // Check for specific "Cannot parse" error
-            if (errorMsg.includes('Cannot parse access token') || errorMsg.includes('Invalid OAuth access token')) {
-                throw new Error('Instagram token is corrupted and cannot be refreshed. Please disconnect and reconnect your Instagram account.');
-            }
-
-            throw new Error(`Instagram token refresh failed: ${errorMsg}. Please reconnect your account.`);
+            console.log('[Publisher] ✓ Instagram token refreshed');
+        } else {
+            console.warn('[Publisher] Refresh response missing access_token');
         }
-    } else {
-        console.log(`[Publisher] Token still valid, no refresh needed`);
+    } catch (e) {
+        const msg = e.response?.data?.error?.message || e.message;
+        if (/Cannot parse access token|Invalid OAuth access token/i.test(msg)) {
+            throw new Error('Instagram token is invalid and cannot be refreshed. Please reconnect your Instagram account.');
+        }
+        console.warn('[Publisher] Non-fatal refresh failure:', msg);
     }
-}// Helper: find page token for a user's connected account
+}
+// Helper: find page token for a user's connected account
 async function resolveAuthForPlatform(user, platform) {
     if (platform.name === 'facebook') {
         const page = (user.settings?.facebookPages || []).find(p => p.id === platform.accountId);
@@ -127,24 +118,20 @@ async function resolveAuthForPlatform(user, platform) {
             }
 
             try {
-                // First, validate the token
-                console.log(`[Publisher] Validating token...`);
+                console.log('[Publisher] Validating token...');
                 await validateInstagramToken(directAccount.accountId, directAccount.accessToken);
-                console.log(`[Publisher] ✓ Token is valid`);
-
-                // Then refresh if needed
-                await refreshInstagramTokenIfNeeded(user, directAccount);
-                console.log(`[Publisher] Using validated token for publishing`);
-                return {
-                    kind: 'instagram',
-                    igUserId: platform.accountId,
-                    token: directAccount.accessToken,
-                    isDirect: true // Flag to indicate direct OAuth
-                };
             } catch (validationError) {
-                console.error(`[Publisher] Token validation/refresh failed:`, validationError.message);
-                throw validationError; // Throw the specific error with instructions
+                console.error('[Publisher] Token validation failed (direct IG login):', validationError.message);
+                throw validationError;
             }
+            await refreshInstagramTokenIfNeeded(user, directAccount);
+            console.log('[Publisher] Using direct Instagram Login token');
+            return {
+                kind: 'instagram',
+                igUserId: platform.accountId,
+                token: directAccount.accessToken,
+                isDirect: true
+            };
         } console.log(`[Publisher] No direct OAuth account found, checking Facebook-linked...`);
 
         // Fall back to Facebook-linked Instagram account
@@ -201,8 +188,10 @@ async function publishToInstagram(auth, content, mediaList) {
     const isVideo = primary.type === 'video';
     let payload = {};
     if (isVideo) {
-        // Try as REELS first
-        payload = { ...base, media_type: 'REELS', video_url: primary.url };
+        // For direct Instagram Login, REELS may not be supported without specific scopes; start with VIDEO
+        payload = auth.isDirect
+            ? { ...base, media_type: 'VIDEO', video_url: primary.url }
+            : { ...base, media_type: 'REELS', video_url: primary.url };
     } else {
         payload = { ...base, image_url: primary.url };
     }
@@ -241,30 +230,40 @@ async function publishToInstagram(auth, content, mediaList) {
 
     let creationId;
     try {
-        console.log(`[Publisher] Attempting to create container...`);
+        console.log('[Publisher] Attempting to create container...');
         creationId = await createAndAwait(payload);
     } catch (err) {
-        console.log(`[Publisher] Container creation/processing failed:`, err.message);
-
-        // For Direct OAuth, VIDEO fallback is not supported (deprecated)
-        // Only try fallback for Facebook-linked accounts
-        if (isVideo && !auth.isDirect) {
-            try {
-                console.log(`[Publisher] Attempting fallback VIDEO format (Facebook-linked only)...`);
-                const fallback = { ...base, media_type: 'VIDEO', video_url: primary.url };
-                creationId = await createAndAwait(fallback);
-            } catch (err2) {
-                // Propagate the original error with fallback info
-                const msg = err?.response?.data?.error?.message || err.message || 'Failed to create IG container (REELS)';
-                const msg2 = err2?.response?.data?.error?.message || err2.message || 'Fallback (VIDEO) also failed';
-                console.error(`[Publisher] Both attempts failed. REELS: ${msg}, VIDEO: ${msg2}`);
-                throw new Error(`${msg} | ${msg2}`);
+        const errMsg = err?.response?.data?.error?.message || err.message || 'Container creation failed';
+        console.log('[Publisher] Container creation failed:', errMsg);
+        // Fallback logic
+        if (isVideo) {
+            if (!auth.isDirect) {
+                // Facebook-linked fallback from REELS -> VIDEO
+                try {
+                    console.log('[Publisher] Fallback to VIDEO media_type...');
+                    const fallback = { ...base, media_type: 'VIDEO', video_url: primary.url };
+                    creationId = await createAndAwait(fallback);
+                } catch (err2) {
+                    const msg2 = err2?.response?.data?.error?.message || err2.message || 'Fallback (VIDEO) failed';
+                    throw new Error(`${errMsg} | ${msg2}`);
+                }
+            } else {
+                // Direct token: try degrading further if REELS rejected earlier (we started with VIDEO already)
+                if (/REELS|media_type/i.test(errMsg) && !/VIDEO/i.test(payload.media_type || '')) {
+                    try {
+                        console.log('[Publisher] Retrying with VIDEO for direct token...');
+                        const fallbackDirect = { ...base, media_type: 'VIDEO', video_url: primary.url };
+                        creationId = await createAndAwait(fallbackDirect);
+                    } catch (err3) {
+                        const msg3 = err3?.response?.data?.error?.message || err3.message;
+                        throw new Error(`${errMsg} | ${msg3}`);
+                    }
+                } else {
+                    throw new Error(errMsg);
+                }
             }
         } else {
-            // Not a video or direct OAuth (no VIDEO fallback), rethrow original error
-            const detailedMsg = err?.response?.data?.error?.message || err.message;
-            console.error(`[Publisher] Publishing failed:`, detailedMsg);
-            throw new Error(detailedMsg);
+            throw new Error(errMsg);
         }
     }
 
