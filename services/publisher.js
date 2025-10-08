@@ -28,7 +28,7 @@ async function validateInstagramToken(accountId, token) {
                 access_token: token
             }
         });
-        
+
         console.log(`[Publisher] Token validated successfully for user:`, response.data.username);
         return true;
     } catch (error) {
