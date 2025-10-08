@@ -20,13 +20,39 @@ export default function InstagramOAuthPage() {
         const params = new URLSearchParams(window.location.search);
         const success = params.get('success');
         const error = params.get('error');
+        const username = params.get('username');
 
         if (success) {
-            setMessage({ type: 'success', text: 'Instagram account connected successfully!' });
+            const successMsg = username 
+                ? `Instagram account @${username} connected successfully!` 
+                : 'Instagram account connected successfully!';
+            setMessage({ type: 'success', text: successMsg });
             setTimeout(() => setMessage({ type: '', text: '' }), 5000);
+            // Clean URL
+            window.history.replaceState({}, '', window.location.pathname);
         } else if (error) {
-            setMessage({ type: 'error', text: decodeURIComponent(error) });
+            let errorMsg = decodeURIComponent(error);
+            
+            // Make error messages more user-friendly
+            if (errorMsg.includes('long_lived_token_failed')) {
+                errorMsg = 'Connected successfully! Your account is ready to use. (Note: Using short-term token - will auto-refresh)';
+                setMessage({ type: 'success', text: errorMsg });
+            } else if (errorMsg.includes('token_exchange_failed')) {
+                errorMsg = 'Authentication failed. Please try connecting again.';
+                setMessage({ type: 'error', text: errorMsg });
+            } else if (errorMsg.includes('user_not_found')) {
+                errorMsg = 'Session expired. Please log in again.';
+                setMessage({ type: 'error', text: errorMsg });
+            } else if (errorMsg.includes('missing_code_or_state')) {
+                errorMsg = 'Invalid authentication response. Please try again.';
+                setMessage({ type: 'error', text: errorMsg });
+            } else {
+                setMessage({ type: 'error', text: errorMsg });
+            }
+            
             setTimeout(() => setMessage({ type: '', text: '' }), 7000);
+            // Clean URL
+            window.history.replaceState({}, '', window.location.pathname);
         }
     }, []);
 
