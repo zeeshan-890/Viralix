@@ -1,6 +1,12 @@
 const axios = require('axios');
-const FB_API = 'https://graph.facebook.com/v19.0';
-const IG_API = 'https://graph.instagram.com'; // Direct OAuth Instagram API
+const IG_VERSION = 'v19.0'; // Adjust if upgrading Graph version
+const FB_API = `https://graph.facebook.com/${IG_VERSION}`;
+const IG_API_BASE = 'https://graph.instagram.com'; // Direct Instagram Login host (no page linkage required)
+
+function buildIgUrl(path) {
+    // Ensure versioned path for consistency with docs: graph.instagram.com/{version}/...
+    return `${IG_API_BASE}/${IG_VERSION}${path}`;
+}
 
 // ============================================
 // DIRECT OAUTH INSTAGRAM API FUNCTIONS
@@ -9,49 +15,80 @@ const IG_API = 'https://graph.instagram.com'; // Direct OAuth Instagram API
 async function createDirectOAuthMediaContainer(igUserId, token, payload) {
     console.log(`[IG Direct] Creating media container for user ${igUserId}`);
     console.log(`[IG Direct] Payload:`, payload);
-
+    // Primary attempt: /{igUserId}/media
+    const primaryEndpoint = buildIgUrl(`/${igUserId}/media`);
+    const fallbackEndpoint = buildIgUrl(`/me/media`); // legacy/fallback
     try {
-        const { data } = await axios.post(`${IG_API}/me/media`, null, {
+        const { data } = await axios.post(primaryEndpoint, null, {
             params: { ...payload, access_token: token },
         });
-        console.log(`[IG Direct] Container created:`, data);
+        console.log(`[IG Direct] Container created (user endpoint):`, data);
         return data; // { id }
     } catch (error) {
-        console.error(`[IG Direct] Create container failed:`, error.response?.data || error.message);
+        const code = error.response?.data?.error?.code;
+        const message = error.response?.data?.error?.message || error.message;
+        console.warn(`[IG Direct] Primary create failed (${code}): ${message}`);
+        // Fallback only if unsupported request
+        if (code === 100 && /Unsupported request/i.test(message)) {
+            try {
+                const { data: fb } = await axios.post(fallbackEndpoint, null, {
+                    params: { ...payload, access_token: token },
+                });
+                console.log('[IG Direct] Container created (fallback /me):', fb);
+                return fb;
+            } catch (fallbackErr) {
+                console.error('[IG Direct] Fallback create failed:', fallbackErr.response?.data || fallbackErr.message);
+                throw fallbackErr;
+            }
+        }
+        console.error('[IG Direct] Create container failed:', error.response?.data || error.message);
         throw error;
     }
 }
 
 async function getDirectOAuthContainerStatus(creationId, token) {
     try {
-        const { data } = await axios.get(`${IG_API}/${creationId}`, {
+        const { data } = await axios.get(buildIgUrl(`/${creationId}`), {
             params: { fields: 'status_code,status', access_token: token },
         });
         console.log(`[IG Direct] Container ${creationId} status:`, data.status_code, data.status || '');
-
-        // If there's an error, log the full response
         if (data.status_code === 'ERROR') {
-            console.error(`[IG Direct] Container ERROR details:`, JSON.stringify(data, null, 2));
+            console.error('[IG Direct] Container ERROR details:', JSON.stringify(data, null, 2));
         }
-
         return data.status_code;
     } catch (error) {
-        console.error(`[IG Direct] Get status failed:`, error.response?.data || error.message);
+        console.error('[IG Direct] Get status failed:', error.response?.data || error.message);
         throw error;
     }
 }
 
 async function publishDirectOAuthContainer(igUserId, token, creationId) {
     console.log(`[IG Direct] Publishing container ${creationId}`);
-
+    const primaryEndpoint = buildIgUrl(`/${igUserId}/media_publish`);
+    const fallbackEndpoint = buildIgUrl(`/me/media_publish`);
     try {
-        const { data } = await axios.post(`${IG_API}/me/media_publish`, null, {
+        const { data } = await axios.post(primaryEndpoint, null, {
             params: { creation_id: creationId, access_token: token },
         });
-        console.log(`[IG Direct] Publish result:`, data);
-        return data; // { id }
+        console.log('[IG Direct] Publish result (user endpoint):', data);
+        return data;
     } catch (error) {
-        console.error(`[IG Direct] Publish failed:`, error.response?.data || error.message);
+        const code = error.response?.data?.error?.code;
+        const message = error.response?.data?.error?.message || error.message;
+        console.warn(`[IG Direct] Primary publish failed (${code}): ${message}`);
+        if (code === 100 && /Unsupported request/i.test(message)) {
+            try {
+                const { data: fb } = await axios.post(fallbackEndpoint, null, {
+                    params: { creation_id: creationId, access_token: token },
+                });
+                console.log('[IG Direct] Publish result (fallback /me):', fb);
+                return fb;
+            } catch (fallbackErr) {
+                console.error('[IG Direct] Fallback publish failed:', fallbackErr.response?.data || fallbackErr.message);
+                throw fallbackErr;
+            }
+        }
+        console.error('[IG Direct] Publish failed:', error.response?.data || error.message);
         throw error;
     }
 }
