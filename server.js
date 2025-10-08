@@ -10,6 +10,11 @@ require('dotenv').config();
 const app = express();
 const PORT = process.env.PORT || 5000;
 
+// Heroku / reverse proxy support so req.ip & rate limiting work correctly and
+// express-rate-limit does not throw ERR_ERL_UNEXPECTED_X_FORWARDED_FOR.
+// Trust only the first proxy hop (Heroku router) which preserves client IP in X-Forwarded-For.
+app.set('trust proxy', 1);
+
 // Security middleware with enhanced configuration
 app.use(helmet({
     contentSecurityPolicy: false, // Disable default CSP for OAuth redirects
@@ -24,11 +29,14 @@ app.use(helmet({
     frameguard: { action: 'deny' }
 }));
 
-// Rate limiting
+// Rate limiting (honors trust proxy). Use standardized RateLimit-* headers only.
 const limiter = rateLimit({
     windowMs: 15 * 60 * 1000, // 15 minutes
     max: 100, // limit each IP to 100 requests per windowMs
-    message: 'Too many requests from this IP, please try again later.'
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: 'Too many requests from this IP, please try again later.',
+    keyGenerator: (req) => req.ip, // after trust proxy this is the real client IP
 });
 app.use(limiter);
 

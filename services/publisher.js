@@ -291,11 +291,16 @@ async function publishPlatform(user, platform, post) {
             errorMessage: undefined,
         };
     } catch (err) {
+        const rawMsg = err?.response?.data?.error?.message || err.message || 'Publish failed';
+        let friendly = rawMsg;
+        if (err.code === 'IG_UNSUPPORTED_PUBLISH' || /Unsupported request - method type: post/i.test(rawMsg)) {
+            friendly = 'Instagram account/token does not support publishing. Convert to a Business or Creator account linked to a Facebook Page and reconnect with publishing permissions.';
+        }
         return {
             ...platform.toObject?.() || platform,
             status: 'failed',
             publishedAt: startedAt,
-            errorMessage: err?.response?.data?.error?.message || err.message || 'Publish failed',
+            errorMessage: friendly,
         };
     }
 }

@@ -15,35 +15,53 @@ function buildIgUrl(path) {
 async function createDirectOAuthMediaContainer(igUserId, token, payload) {
     console.log(`[IG Direct] Creating media container for user ${igUserId}`);
     console.log(`[IG Direct] Payload:`, payload);
-    // Primary attempt: /{igUserId}/media
-    const primaryEndpoint = buildIgUrl(`/${igUserId}/media`);
-    const fallbackEndpoint = buildIgUrl(`/me/media`); // legacy/fallback
-    try {
-        const { data } = await axios.post(primaryEndpoint, null, {
-            params: { ...payload, access_token: token },
-        });
-        console.log(`[IG Direct] Container created (user endpoint):`, data);
-        return data; // { id }
-    } catch (error) {
-        const code = error.response?.data?.error?.code;
-        const message = error.response?.data?.error?.message || error.message;
-        console.warn(`[IG Direct] Primary create failed (${code}): ${message}`);
-        // Fallback only if unsupported request
-        if (code === 100 && /Unsupported request/i.test(message)) {
-            try {
-                const { data: fb } = await axios.post(fallbackEndpoint, null, {
-                    params: { ...payload, access_token: token },
-                });
-                console.log('[IG Direct] Container created (fallback /me):', fb);
-                return fb;
-            } catch (fallbackErr) {
-                console.error('[IG Direct] Fallback create failed:', fallbackErr.response?.data || fallbackErr.message);
-                throw fallbackErr;
-            }
+    // NOTE: Publishing is ONLY supported via the Instagram Graph API (graph.facebook.com)
+    // for Business or Creator accounts connected to a Facebook Page. The Instagram
+    // Basic Display API (graph.instagram.com) is read-only (GET endpoints only) and
+    // will return "Unsupported request - method type: post" when attempting to POST.
+    // We still attempt both hosts to provide the most explicit diagnostic.
+
+    const FB_GRAPH_ENDPOINT = `${FB_API}/${igUserId}/media`; // facebook domain
+    const primaryEndpoint = FB_GRAPH_ENDPOINT; // Try Graph API first
+    const secondaryEndpoint = buildIgUrl(`/${igUserId}/media`); // instagram domain (expected to fail if Basic Display)
+    const tertiaryEndpoint = buildIgUrl(`/me/media`); // legacy /me fallback
+
+    const attempts = [
+        { label: 'facebook-graph', url: primaryEndpoint },
+        { label: 'instagram-graph-user', url: secondaryEndpoint },
+        { label: 'instagram-graph-me', url: tertiaryEndpoint },
+    ];
+
+    let lastErr;
+    for (const attempt of attempts) {
+        try {
+            console.log(`[IG Direct] Attempting create via ${attempt.label}: ${attempt.url}`);
+            const { data } = await axios.post(attempt.url, null, {
+                params: { ...payload, access_token: token },
+            });
+            console.log(`[IG Direct] Container created via ${attempt.label}:`, data);
+            return data;
+        } catch (error) {
+            lastErr = error;
+            const code = error.response?.data?.error?.code;
+            const message = error.response?.data?.error?.message || error.message;
+            console.warn(`[IG Direct] Create attempt failed (${attempt.label}) (${code}): ${message}`);
+            // Permission/style errors (code 10, 200, 190) should not continue cycling hosts
+            if ([10, 190, 200].includes(code)) break;
         }
-        console.error('[IG Direct] Create container failed:', error.response?.data || error.message);
-        throw error;
     }
+
+    const finalCode = lastErr?.response?.data?.error?.code;
+    const finalMessage = lastErr?.response?.data?.error?.message || lastErr?.message;
+    if (finalCode === 100 && /Unsupported request/i.test(finalMessage)) {
+        // Provide actionable guidance.
+        const guidance = 'Instagram token / account does not support publishing. Publishing requires a Business or Creator Instagram account connected to a Facebook Page, authorized with the Instagram Graph API (permissions: instagram_basic, instagram_content_publish). Convert your account to Professional, connect it to a Facebook Page, then reconnect inside the platform.';
+        const err = new Error(`${finalMessage}. ${guidance}`);
+        err.code = 'IG_UNSUPPORTED_PUBLISH';
+        throw err;
+    }
+    console.error('[IG Direct] All create attempts failed:', lastErr?.response?.data || finalMessage);
+    throw lastErr;
 }
 
 async function getDirectOAuthContainerStatus(creationId, token) {
@@ -64,33 +82,41 @@ async function getDirectOAuthContainerStatus(creationId, token) {
 
 async function publishDirectOAuthContainer(igUserId, token, creationId) {
     console.log(`[IG Direct] Publishing container ${creationId}`);
-    const primaryEndpoint = buildIgUrl(`/${igUserId}/media_publish`);
-    const fallbackEndpoint = buildIgUrl(`/me/media_publish`);
-    try {
-        const { data } = await axios.post(primaryEndpoint, null, {
-            params: { creation_id: creationId, access_token: token },
-        });
-        console.log('[IG Direct] Publish result (user endpoint):', data);
-        return data;
-    } catch (error) {
-        const code = error.response?.data?.error?.code;
-        const message = error.response?.data?.error?.message || error.message;
-        console.warn(`[IG Direct] Primary publish failed (${code}): ${message}`);
-        if (code === 100 && /Unsupported request/i.test(message)) {
-            try {
-                const { data: fb } = await axios.post(fallbackEndpoint, null, {
-                    params: { creation_id: creationId, access_token: token },
-                });
-                console.log('[IG Direct] Publish result (fallback /me):', fb);
-                return fb;
-            } catch (fallbackErr) {
-                console.error('[IG Direct] Fallback publish failed:', fallbackErr.response?.data || fallbackErr.message);
-                throw fallbackErr;
-            }
+    const fbEndpoint = `${FB_API}/${igUserId}/media_publish`;
+    const userEndpoint = buildIgUrl(`/${igUserId}/media_publish`);
+    const meEndpoint = buildIgUrl(`/me/media_publish`);
+    const attempts = [
+        { label: 'facebook-graph', url: fbEndpoint },
+        { label: 'instagram-graph-user', url: userEndpoint },
+        { label: 'instagram-graph-me', url: meEndpoint },
+    ];
+    let lastErr;
+    for (const attempt of attempts) {
+        try {
+            console.log(`[IG Direct] Attempting publish via ${attempt.label}: ${attempt.url}`);
+            const { data } = await axios.post(attempt.url, null, {
+                params: { creation_id: creationId, access_token: token },
+            });
+            console.log(`[IG Direct] Publish success via ${attempt.label}:`, data);
+            return data;
+        } catch (error) {
+            lastErr = error;
+            const code = error.response?.data?.error?.code;
+            const message = error.response?.data?.error?.message || error.message;
+            console.warn(`[IG Direct] Publish attempt failed (${attempt.label}) (${code}): ${message}`);
+            if ([10, 190, 200].includes(code)) break; // permission / token fatal
         }
-        console.error('[IG Direct] Publish failed:', error.response?.data || error.message);
-        throw error;
     }
+    const finalCode = lastErr?.response?.data?.error?.code;
+    const finalMessage = lastErr?.response?.data?.error?.message || lastErr?.message;
+    if (finalCode === 100 && /Unsupported request/i.test(finalMessage)) {
+        const guidance = 'This token cannot publish content. Please ensure the Instagram account is a Business or Creator account linked to a Facebook Page and re-authenticate with the required permissions (instagram_basic, pages_show_list, instagram_content_publish).';
+        const err = new Error(`${finalMessage}. ${guidance}`);
+        err.code = 'IG_UNSUPPORTED_PUBLISH';
+        throw err;
+    }
+    console.error('[IG Direct] All publish attempts failed:', lastErr?.response?.data || finalMessage);
+    throw lastErr;
 }
 
 // ============================================
