@@ -23,8 +23,8 @@ export default function InstagramOAuthPage() {
         const username = params.get('username');
 
         if (success) {
-            const successMsg = username 
-                ? `Instagram account @${username} connected successfully!` 
+            const successMsg = username
+                ? `Instagram account @${username} connected successfully!`
                 : 'Instagram account connected successfully!';
             setMessage({ type: 'success', text: successMsg });
             setTimeout(() => setMessage({ type: '', text: '' }), 5000);
@@ -32,7 +32,7 @@ export default function InstagramOAuthPage() {
             window.history.replaceState({}, '', window.location.pathname);
         } else if (error) {
             let errorMsg = decodeURIComponent(error);
-            
+
             // Make error messages more user-friendly
             if (errorMsg.includes('long_lived_token_failed')) {
                 errorMsg = 'Connected successfully! Your account is ready to use. (Note: Using short-term token - will auto-refresh)';
@@ -49,7 +49,7 @@ export default function InstagramOAuthPage() {
             } else {
                 setMessage({ type: 'error', text: errorMsg });
             }
-            
+
             setTimeout(() => setMessage({ type: '', text: '' }), 7000);
             // Clean URL
             window.history.replaceState({}, '', window.location.pathname);
