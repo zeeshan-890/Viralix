@@ -263,23 +263,49 @@ router.get('/callback', async (req, res) => {
 
         // Step 3: Exchange short-lived token for long-lived token (valid for 60 days)
         let longLivedResponse;
+        let longLivedToken = shortLivedToken; // Fallback to short-lived if exchange fails
+        let tokenExpiry = new Date(Date.now() + (3600 * 1000)); // Default 1 hour expiry
+        
         try {
+            // Use Instagram Graph API endpoint with proper parameters
             longLivedResponse = await axios.get(`${INSTAGRAM_GRAPH_URL}/access_token`, {
                 params: {
                     grant_type: 'ig_exchange_token',
                     client_secret: IG_APP_SECRET,
                     access_token: shortLivedToken
+                },
+                timeout: 10000 // 10 second timeout
+            });
+            
+            console.log('[IG Business Login] Long-lived token exchange successful:', {
+                hasAccessToken: !!longLivedResponse.data.access_token,
+                expiresIn: longLivedResponse.data.expires_in,
+                tokenType: longLivedResponse.data.token_type
+            });
+            
+            if (longLivedResponse.data.access_token && longLivedResponse.data.expires_in) {
+                longLivedToken = longLivedResponse.data.access_token;
+                tokenExpiry = new Date(Date.now() + longLivedResponse.data.expires_in * 1000);
+                console.log('[IG Business Login] Using long-lived token, expires:', tokenExpiry.toISOString());
+            } else {
+                console.warn('[IG Business Login] Long-lived token response missing expected fields, using short-lived token');
+            }
+        } catch (llErr) {
+            // Log detailed error but continue with short-lived token
+            console.error('[IG Business Login] Long-lived token exchange failed (continuing with short-lived):', {
+                error: llErr.response?.data || llErr.message,
+                status: llErr.response?.status,
+                headers: llErr.response?.headers,
+                params: {
+                    grant_type: 'ig_exchange_token',
+                    has_client_secret: !!IG_APP_SECRET,
+                    has_access_token: !!shortLivedToken
                 }
             });
-        } catch (llErr) {
-            console.error('[IG Business Login] Long-lived token exchange failed:', llErr.response?.data || llErr.message);
-            return res.redirect(`${process.env.CLIENT_URL || 'http://localhost:3000'}/dashboard/connect-accounts?error=${encodeURIComponent('long_lived_token_failed')}`);
+            
+            // Continue with short-lived token instead of failing
+            console.log('[IG Business Login] Continuing with short-lived token (will need refresh sooner)');
         }
-
-        console.log('[IG Business Login] Long-lived token response:', longLivedResponse.data);
-
-        const { access_token: longLivedToken, expires_in } = longLivedResponse.data;
-        const tokenExpiry = new Date(Date.now() + expires_in * 1000);
 
         // Get Instagram account details
         console.log('[IG Business Login] Fetching account details...');
@@ -412,22 +438,37 @@ router.post('/exchange-code', auth, async (req, res) => {
 
         console.log('[IG Business Login][Manual] Exchanging for long-lived token...');
 
-        let longLivedResponse;
+        let longLivedToken = shortLivedToken; // Fallback to short-lived if exchange fails
+        let tokenExpiry = new Date(Date.now() + (3600 * 1000)); // Default 1 hour expiry
+        
         try {
-            longLivedResponse = await axios.get(`${INSTAGRAM_GRAPH_URL}/access_token`, {
+            const longLivedResponse = await axios.get(`${INSTAGRAM_GRAPH_URL}/access_token`, {
                 params: {
                     grant_type: 'ig_exchange_token',
                     client_secret: IG_APP_SECRET,
                     access_token: shortLivedToken
-                }
+                },
+                timeout: 10000
             });
+            
+            console.log('[IG Business Login][Manual] Long-lived token exchange successful:', {
+                hasAccessToken: !!longLivedResponse.data.access_token,
+                expiresIn: longLivedResponse.data.expires_in
+            });
+            
+            if (longLivedResponse.data.access_token && longLivedResponse.data.expires_in) {
+                longLivedToken = longLivedResponse.data.access_token;
+                tokenExpiry = new Date(Date.now() + longLivedResponse.data.expires_in * 1000);
+                console.log('[IG Business Login][Manual] Using long-lived token, expires:', tokenExpiry.toISOString());
+            } else {
+                console.warn('[IG Business Login][Manual] Long-lived token response missing expected fields');
+            }
         } catch (llErr) {
-            console.error('[IG Business Login][Manual] Long-lived token exchange failed:', llErr.response?.data || llErr.message);
-            return res.status(400).json({ message: 'Long-lived token exchange failed', error: llErr.response?.data });
+            console.error('[IG Business Login][Manual] Long-lived token exchange failed (continuing with short-lived):', {
+                error: llErr.response?.data || llErr.message,
+                status: llErr.response?.status
+            });
         }
-
-        const { access_token: longLivedToken, expires_in } = longLivedResponse.data;
-        const tokenExpiry = new Date(Date.now() + expires_in * 1000);
 
         console.log('[IG Business Login][Manual] Fetching profile...');
         let profileResponse;
