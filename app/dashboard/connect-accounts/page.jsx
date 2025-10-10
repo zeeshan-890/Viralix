@@ -2,7 +2,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { facebookAPI } from "@/lib/api";
 import Link from "next/link";
-import { Facebook, Instagram, CheckCircle2, ExternalLink, Loader2, AlertCircle } from "lucide-react";
+import { Facebook, Instagram, CheckCircle2, ExternalLink, Loader2, AlertCircle, HelpCircle, BookOpen } from "lucide-react";
 import axios from "axios";
 
 const API_URL = 'https://viralix-b3ff86cb412f.herokuapp.com';
@@ -93,6 +93,31 @@ export default function ConnectAccountsPage() {
             <div className="mb-8">
                 <h1 className="text-3xl font-bold mb-2" style={{ color: '#354F52' }}>Connect Accounts</h1>
                 <p className="text-gray-600">Link your social media platforms to Viralix.</p>
+            </div>
+
+            {/* Instagram Publishing Requirements Banner */}
+            <div className="mb-8 p-5 rounded-xl border border-amber-200 bg-amber-50 shadow-sm flex flex-col md:flex-row md:items-start gap-4">
+                <div className="flex items-center gap-3">
+                    <div className="w-11 h-11 rounded-xl flex items-center justify-center bg-amber-100 border border-amber-200">
+                        <BookOpen className="w-5 h-5 text-amber-700" />
+                    </div>
+                    <div>
+                        <p className="text-sm text-amber-900 leading-relaxed font-medium">
+                            To enable Instagram publishing with the Meta Graph API your Instagram Business/Creator account must be linked to a Facebook Page and authorized with the correct permissions.
+                        </p>
+                        <p className="mt-2 text-xs text-amber-800">A Basic Display / direct-only token (graph.instagram.com) cannot publish and will show <code>Unsupported request</code> errors.</p>
+                    </div>
+                </div>
+                <div className="md:ml-auto flex items-center gap-3">
+                    <Link
+                        href="/guide/instagram-linking"
+                        className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold text-white shadow hover:shadow-md transition"
+                        style={{ backgroundColor: '#84A98C' }}
+                    >
+                        Open Linking Guide
+                        <ExternalLink className="w-4 h-4" />
+                    </Link>
+                </div>
             </div>
 
             {/* Success/Error Messages */}
@@ -234,7 +259,7 @@ export default function ConnectAccountsPage() {
                                             Direct OAuth
                                         </span>
                                     </div>
-                                    <p className="text-sm text-gray-600">Connect directly without Facebook page</p>
+                                    <p className="text-sm text-gray-600">Direct token connection (read capabilities). For publishing follow the guide below.</p>
                                 </div>
                             </div>
                             <Link
@@ -277,11 +302,11 @@ export default function ConnectAccountsPage() {
                             </div>
                         )}
 
-                        <div className="mt-4 p-4 rounded-lg" style={{ backgroundColor: '#F7FAF8' }}>
+                        <div className="mt-4 p-4 rounded-lg border border-amber-200 bg-amber-50">
                             <div className="flex items-start gap-2">
-                                <AlertCircle className="w-4 h-4 text-gray-600 flex-shrink-0 mt-0.5" />
-                                <p className="text-sm text-gray-600">
-                                    Requires Business or Creator Instagram account. No Facebook page linking needed.
+                                <HelpCircle className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" />
+                                <p className="text-sm text-amber-800">
+                                    This direct connection is limited. To actually publish posts/reels you must link your IG account to a Facebook Page first. <Link href="/guide/instagram-linking" className="underline font-medium">See Linking Guide</Link>.
                                 </p>
                             </div>
                         </div>

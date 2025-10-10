@@ -3,13 +3,9 @@ import SignupForm from './signup-form';
 
 export default function SignupPage() {
     return (
-        <div className="min-h-screen flex min-w-screen px-auto  py-auto" style={{ fontFamily: 'Inter, Poppins, sans-serif' }}>
-            <div className='flex w-[80%] h-[80%] mx-auto my-auto border rounded-lg drop-shadow-emerald-900' 
-            style={{ 
-                border: '1px solid rgb(22 27 19)',
-                borderRadius: '15px',
-                boxShadow: '0px 0px 35px rgb(22 27 19)'
-            }}>
+        <div className="min-h-screen flex items-center justify-center p-4 sm:p-6" style={{ fontFamily: 'Inter, Poppins, sans-serif' }}>
+            <div className='flex w-full max-w-6xl mx-auto rounded-2xl border overflow-hidden'
+                style={{ borderColor: 'rgb(22 27 19)' }}>
                 {/* Left Side - Branding */}
                 <div className="hidden lg:flex lg:w-1/2 relative overflow-hidden" style={{ background: 'linear-gradient(to right bottom, rgb(22 27 19), rgb(60 86 65))', borderRadius: '10px', borderTopRightRadius: '20px', borderBottomRightRadius: '20px' }}>
                     <div className="flex flex-col justify-center items-center w-full p-12 text-white relative z-10">
@@ -58,14 +54,14 @@ export default function SignupPage() {
                 </div>
 
                 {/* Right Side - Signup Form */}
-                <div className="flex-1 flex items-center justify-center bg-white py-6 px-4 sm:px-6 lg:px-8  " style={{ borderRadius: '20px' }}>
-                    <div className="max-w-md w-full space-y-4">
+                <div className="flex-1 flex items-center justify-center bg-white py-8 px-4 sm:px-6 lg:px-10">
+                    <div className="max-w-md w-full space-y-6">
                         <div>
                             <div className="flex items-center justify-center gap-3 lg:hidden mb-4">
                                 <img src="/logo.png" className="w-10 h-10 rounded-full" alt="Viralix Logo" />
                                 <h1 className="text-2xl font-bold" style={{ color: '#84A98C' }}>Viralix</h1>
                             </div>
-                            <h2 className="text-center text-3xl font-bold mb-2" style={{ color: '#354F52' }}>
+                            <h2 className="text-center text-2xl sm:text-3xl font-bold mb-2" style={{ color: '#354F52' }}>
                                 Create Your Account
                             </h2>
                             <p className="text-center text-sm text-gray-600">

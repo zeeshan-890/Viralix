@@ -203,7 +203,7 @@ export default function LandingPage() {
 
 
               {/* Step 1 - Top Center */}
-              <div className="absolute top-0 left-1/2 -translate-x-1/2 md:left-1/2 md:-translate-x-1/2 md:top-0 relative md:absolute z-20 mb-12 md:mb-0">
+              <div className="absolute top-0 left-1/2 -translate-x-1/2 md:top-0 z-20 mb-12 md:mb-0">
                 <div className="flex flex-col items-center">
                   <div className="w-12 h-12 rounded-full flex items-center justify-center text-white text-xl font-bold mb-4" style={{ backgroundColor: '#354F52' }}>
                     1
@@ -220,7 +220,7 @@ export default function LandingPage() {
               </div>
 
               {/* Step 2 - Bottom Left */}
-              <div className="absolute bottom-0 left-0 md:left-[10%] md:bottom-0 relative md:absolute z-20 mb-12 md:mb-0 left-1/2 -translate-x-1/2 md:translate-x-0">
+              <div className="absolute bottom-0 left-1/2 -translate-x-1/2 md:left-[10%] md:translate-x-0 md:bottom-0 z-20 mb-12 md:mb-0">
                 <div className="flex flex-col items-center">
                   <div className="w-12 h-12 rounded-full flex items-center justify-center text-white text-xl font-bold mb-4" style={{ backgroundColor: '#354F52' }}>
                     2
@@ -237,7 +237,7 @@ export default function LandingPage() {
               </div>
 
               {/* Step 3 - Bottom Right */}
-              <div className="absolute bottom-0 right-0 md:right-[10%] md:bottom-0 relative md:absolute z-20 left-1/2 -translate-x-1/2 md:translate-x-0">
+              <div className="absolute bottom-0 left-1/2 -translate-x-1/2 md:right-[10%] md:left-auto md:translate-x-0 md:bottom-0 z-20">
                 <div className="flex flex-col items-center ">
                   <div className="w-12 h-12 rounded-full flex items-center justify-center text-white text-xl font-bold mb-4" style={{ backgroundColor: '#354F52' }}>
                     3
@@ -567,11 +567,16 @@ export default function LandingPage() {
             <div>
               <h3 className="font-semibold text-white mb-4">Support</h3>
               <ul className="space-y-3">
-                {['Help Center', 'Contact', 'Status', 'Privacy Policy'].map((item) => (
-                  <li key={item}>
-                    <a href="#" className="text-gray-300 hover:text-white transition-colors">
-                      {item}
-                    </a>
+                {[
+                  { label: 'Help Center', href: '#' },
+                  { label: 'Instagram Linking Guide', href: '/guide/instagram-linking' },
+                  { label: 'Status', href: '#' },
+                  { label: 'Privacy Policy', href: '#' }
+                ].map((item) => (
+                  <li key={item.label}>
+                    <Link href={item.href} className="text-gray-300 hover:text-white transition-colors">
+                      {item.label}
+                    </Link>
                   </li>
                 ))}
               </ul>

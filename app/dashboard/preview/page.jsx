@@ -113,7 +113,7 @@ export default function PreviewPage() {
     return (
         <div className="space-y-6">
             {/* Header */}
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
                 <div>
                     <h1 className="text-3xl font-bold" style={{ color: '#2a3e2e' }}>Content Preview</h1>
                     <p className="text-gray-600 mt-1">Preview and manage your content across platforms</p>
@@ -183,7 +183,7 @@ export default function PreviewPage() {
                 </div>
             )}
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
                 {/* Main Content Area */}
                 <div className="lg:col-span-2 space-y-6">
                     {/* Search and Filter */}

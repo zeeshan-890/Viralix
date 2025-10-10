@@ -219,10 +219,10 @@ export default function UploadPage() {
                 </div>
 
                 {/* Tab Navigation */}
-                <div className="flex space-x-2 mb-8">
+                <div className="flex flex-wrap gap-2 mb-6">
                     <button
                         onClick={() => setActiveTab('upload')}
-                        className={`flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-medium transition-all ${activeTab === 'upload'
+                        className={`flex items-center gap-2 px-4 sm:px-6 py-2.5 rounded-xl text-sm font-medium transition-all ${activeTab === 'upload'
                             ? 'text-white shadow-lg'
                             : 'bg-white text-gray-600 hover:bg-gray-50 border border-gray-200'
                             }`}
@@ -233,7 +233,7 @@ export default function UploadPage() {
                     </button>
                     <button
                         onClick={() => setActiveTab('library')}
-                        className={`flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-medium transition-all ${activeTab === 'library'
+                        className={`flex items-center gap-2 px-4 sm:px-6 py-2.5 rounded-xl text-sm font-medium transition-all ${activeTab === 'library'
                             ? 'text-white shadow-lg'
                             : 'bg-white text-gray-600 hover:bg-gray-50 border border-gray-200'
                             }`}

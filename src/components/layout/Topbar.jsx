@@ -1,11 +1,11 @@
 'use client';
 import { Button } from '../ui/Button';
-import { Search, Bell, User, LogOut } from 'lucide-react';
+import { Search, Bell, User, LogOut, Menu } from 'lucide-react';
 import { useState } from 'react';
 import { useAuthStore } from '../../store/authStore';
 import { useRouter } from 'next/navigation';
 
-export default function Topbar() {
+export default function Topbar({ onToggleSidebar = () => { } }) {
     const [showUserMenu, setShowUserMenu] = useState(false);
     const logout = useAuthStore((state) => state.logout);
     const router = useRouter();
@@ -16,19 +16,22 @@ export default function Topbar() {
     };
 
     return (
-        <header className="bg-white border-b border-gray-200 px-6 py-4 shadow-sm">
+        <header className="bg-white border-b border-gray-200 px-4 sm:px-6 py-3 sm:py-4 shadow-sm sticky top-0 z-30">
             <div className="flex items-center justify-between">
-                <div className="flex items-center">
-                    <h2 className="text-lg font-semibold" style={{ color: '#354F52' }}>Dashboard</h2>
+                <div className="flex items-center gap-3">
+                    <button onClick={onToggleSidebar} className="md:hidden p-2 rounded-lg hover:bg-gray-100">
+                        <Menu className="w-5 h-5 text-gray-700" />
+                    </button>
+                    <h2 className="text-base sm:text-lg font-semibold" style={{ color: '#354F52' }}>Dashboard</h2>
                 </div>
 
                 <div className="flex items-center gap-4">
                     {/* Search */}
-                    <div className="relative">
+                    <div className="relative hidden sm:block">
                         <input
                             type="text"
                             placeholder="Search..."
-                            className="w-64 pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:border-transparent text-sm"
+                            className="w-56 md:w-64 pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:border-transparent text-sm"
                             style={{
                                 focusRing: '#84A98C',
                                 '--tw-ring-color': '#84A98C'

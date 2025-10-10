@@ -174,9 +174,9 @@ export default function CalendarView() {
         </div>
 
         {/* Calendar Grid */}
-        <div className="p-6 bg-gradient-to-br from-gray-50 to-white">
+        <div className="p-3 sm:p-6 bg-gradient-to-br from-gray-50 to-white">
             {/* Days of Week Header */}
-            <div className="grid grid-cols-7 gap-2 mb-3">
+            <div className="grid grid-cols-7 xs:grid-cols-7 gap-1 sm:gap-2 mb-3 text-[11px] sm:text-sm">
                 {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day, idx) => (<div key={day} className="p-3 text-center text-sm font-bold rounded-xl shadow-sm"
                     style={{
                         background: idx === 0 || idx === 6
@@ -189,24 +189,24 @@ export default function CalendarView() {
             </div>
 
             {/* Calendar Days */}
-            <div className="grid grid-cols-7 gap-3">
+            <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-7 gap-2 sm:gap-3">
                 {getDaysInMonth(currentDate).map((day, index) => {
                     const isWeekend = index % 7 === 0 || index % 7 === 6;
                     return (
                         <div
                             key={index}
-                            className={`min-h-[140px] rounded-2xl p-3 transition-all ${day
-                                    ? 'bg-white border-2 hover:border-gray-300 hover:shadow-xl cursor-pointer transform hover:scale-105'
-                                    : 'bg-transparent border-2 border-transparent'
+                            className={`min-h-[110px] sm:min-h-[140px] rounded-2xl p-2 sm:p-3 transition-all ${day
+                                ? 'bg-white border-2 hover:border-gray-300 hover:shadow-xl cursor-pointer transform hover:scale-105'
+                                : 'bg-transparent border-2 border-transparent'
                                 }`}
                             style={day ? {
                                 borderColor: isToday(day) ? '#84A98C' : isWeekend ? '#fed7aa' : '#e5e7eb',
                                 boxShadow: isToday(day) ? '0 4px 20px rgba(132, 169, 140, 0.3)' : ''
                             } : {}}>
                             {day && (<>
-                                <div className={`text-sm font-bold mb-2 flex items-center justify-center transition-all ${isToday(day)
-                                        ? 'w-8 h-8 rounded-full text-white shadow-lg scale-110'
-                                        : 'text-gray-900'
+                                <div className={`text-xs sm:text-sm font-bold mb-1.5 sm:mb-2 flex items-center justify-center transition-all ${isToday(day)
+                                    ? 'w-8 h-8 rounded-full text-white shadow-lg scale-110'
+                                    : 'text-gray-900'
                                     }`}
                                     style={isToday(day) ? {
                                         background: 'linear-gradient(135deg, #84A98C 0%, #52796F 100%)'
@@ -237,7 +237,7 @@ export default function CalendarView() {
                                         return (
                                             <div
                                                 key={post._id}
-                                                className="text-xs p-2.5 rounded-xl border-2 cursor-pointer hover:shadow-lg transition-all transform hover:scale-105"
+                                                className="text-[11px] sm:text-xs p-2 rounded-xl border-2 cursor-pointer hover:shadow-lg transition-all transform hover:scale-105"
                                                 style={{
                                                     background: colors.bg,
                                                     borderColor: colors.border
@@ -252,7 +252,7 @@ export default function CalendarView() {
                                                     ))}
                                                     <span className="font-bold ml-auto text-xs" style={{ color: colors.text }}>{time}</span>
                                                 </div>
-                                                <div className="text-gray-800 font-semibold truncate text-xs mb-1">{post.title}</div>
+                                                <div className="text-gray-800 font-semibold truncate text-[11px] sm:text-xs mb-1">{post.title}</div>
                                                 <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-xs font-bold shadow-sm"
                                                     style={{
                                                         background: colors.bg,
