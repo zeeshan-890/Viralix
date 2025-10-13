@@ -295,4 +295,179 @@ router.post('/reset-password', [
     }
 });
 
+// @route   GET /api/auth/google
+// @desc    Initiate Google OAuth
+// @access  Public
+router.get('/google', (req, res) => {
+    const googleAuthUrl = `https://accounts.google.com/o/oauth2/v2/auth?` +
+        `client_id=${process.env.GOOGLE_CLIENT_ID}&` +
+        `redirect_uri=${encodeURIComponent(process.env.GOOGLE_REDIRECT_URI)}&` +
+        `response_type=code&` +
+        `scope=${encodeURIComponent('openid profile email')}&` +
+        `access_type=offline&` +
+        `prompt=consent`;
+
+    res.redirect(googleAuthUrl);
+});
+
+// @route   GET /api/auth/google/callback
+// @desc    Handle Google OAuth callback
+// @access  Public
+router.get('/google/callback', async (req, res) => {
+    const { code } = req.query;
+
+    if (!code) {
+        return res.redirect(`${process.env.CLIENT_URL}/auth/login?error=oauth_failed`);
+    }
+
+    try {
+        // Exchange code for tokens
+        const axios = require('axios');
+        const tokenResponse = await axios.post('https://oauth2.googleapis.com/token', {
+            code,
+            client_id: process.env.GOOGLE_CLIENT_ID,
+            client_secret: process.env.GOOGLE_CLIENT_SECRET,
+            redirect_uri: process.env.GOOGLE_REDIRECT_URI,
+            grant_type: 'authorization_code'
+        });
+
+        const { access_token } = tokenResponse.data;
+
+        // Get user info
+        const userInfoResponse = await axios.get('https://www.googleapis.com/oauth2/v2/userinfo', {
+            headers: { Authorization: `Bearer ${access_token}` }
+        });
+
+        const { email, name, picture } = userInfoResponse.data;
+
+        // Find or create user
+        let user = await User.findOne({ email });
+
+        if (!user) {
+            // Create new user with OAuth
+            user = new User({
+                name,
+                email,
+                profilePicture: picture,
+                isVerified: true, // OAuth users are pre-verified
+                authProvider: 'google',
+                password: await bcrypt.hash(Math.random().toString(36), 10) // Random password for OAuth users
+            });
+            await user.save();
+        } else if (!user.authProvider) {
+            // Update existing user to link Google account
+            user.authProvider = 'google';
+            user.isVerified = true;
+            if (picture && !user.profilePicture) {
+                user.profilePicture = picture;
+            }
+            await user.save();
+        }
+
+        // Update last login
+        user.lastLogin = new Date();
+        await user.save();
+
+        // Generate JWT token
+        const token = sign({ id: user.id });
+
+        // Redirect to client with token
+        res.redirect(`${process.env.CLIENT_URL}/auth/callback?token=${token}`);
+    } catch (error) {
+        console.error('Google OAuth error:', error.response?.data || error.message);
+        res.redirect(`${process.env.CLIENT_URL}/auth/login?error=oauth_failed`);
+    }
+});
+
+// @route   GET /api/auth/facebook
+// @desc    Initiate Facebook OAuth
+// @access  Public
+router.get('/facebook', (req, res) => {
+    const facebookAuthUrl = `https://www.facebook.com/v18.0/dialog/oauth?` +
+        `client_id=${process.env.FACEBOOK_AUTH_APP_ID}&` +
+        `redirect_uri=${encodeURIComponent(process.env.FACEBOOK_AUTH_REDIRECT_URI)}&` +
+        `scope=${encodeURIComponent('email,public_profile')}&` +
+        `response_type=code`;
+
+    res.redirect(facebookAuthUrl);
+});
+
+// @route   GET /api/auth/facebook/callback
+// @desc    Handle Facebook OAuth callback
+// @access  Public
+router.get('/facebook/callback', async (req, res) => {
+    const { code } = req.query;
+
+    if (!code) {
+        return res.redirect(`${process.env.CLIENT_URL}/auth/login?error=oauth_failed`);
+    }
+
+    try {
+        const axios = require('axios');
+
+        // Exchange code for access token
+        const tokenResponse = await axios.get('https://graph.facebook.com/v18.0/oauth/access_token', {
+            params: {
+                client_id: process.env.FACEBOOK_AUTH_APP_ID,
+                client_secret: process.env.FACEBOOK_AUTH_APP_SECRET,
+                redirect_uri: process.env.FACEBOOK_AUTH_REDIRECT_URI,
+                code
+            }
+        });
+
+        const { access_token } = tokenResponse.data;
+
+        // Get user info
+        const userInfoResponse = await axios.get('https://graph.facebook.com/me', {
+            params: {
+                fields: 'id,name,email,picture',
+                access_token
+            }
+        });
+
+        const { email, name, picture } = userInfoResponse.data;
+
+        if (!email) {
+            return res.redirect(`${process.env.CLIENT_URL}/auth/login?error=no_email`);
+        }
+
+        // Find or create user
+        let user = await User.findOne({ email });
+
+        if (!user) {
+            // Create new user with OAuth
+            user = new User({
+                name,
+                email,
+                profilePicture: picture?.data?.url,
+                isVerified: true, // OAuth users are pre-verified
+                authProvider: 'facebook',
+                password: await bcrypt.hash(Math.random().toString(36), 10) // Random password for OAuth users
+            });
+            await user.save();
+        } else if (!user.authProvider) {
+            // Update existing user to link Facebook account
+            user.authProvider = 'facebook';
+            user.isVerified = true;
+            if (picture?.data?.url && !user.profilePicture) {
+                user.profilePicture = picture.data.url;
+            }
+            await user.save();
+        }
+
+        // Update last login
+        user.lastLogin = new Date();
+        await user.save();
+
+        // Generate JWT token
+        const token = sign({ id: user.id });
+
+        // Redirect to client with token
+        res.redirect(`${process.env.CLIENT_URL}/auth/callback?token=${token}`);
+    } catch (error) {
+        console.error('Facebook OAuth error:', error.response?.data || error.message);
+        res.redirect(`${process.env.CLIENT_URL}/auth/login?error=oauth_failed`);
+    }
+});
+
 module.exports = router;

@@ -47,6 +47,15 @@ const UserSchema = new mongoose.Schema({
     },
     resetPasswordToken: String,
     resetPasswordExpires: Date,
+    authProvider: {
+        type: String,
+        enum: ['local', 'google', 'facebook'],
+        default: 'local'
+    },
+    profilePicture: {
+        type: String,
+        default: ''
+    },
     socialAccounts: [{
         platform: {
             type: String,
