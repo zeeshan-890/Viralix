@@ -1,9 +1,9 @@
 'use client';
-import { useEffect } from 'react';
+import { useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuthStore } from '@/store/authStore';
 
-export default function AuthCallbackPage() {
+function AuthCallbackContent() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const { setAuth } = useAuthStore();
@@ -56,5 +56,22 @@ export default function AuthCallbackPage() {
                 </p>
             </div>
         </div>
+    );
+}
+
+export default function AuthCallbackPage() {
+    return (
+        <Suspense fallback={
+            <div className="min-h-screen flex items-center justify-center" style={{ fontFamily: 'Inter, Poppins, sans-serif' }}>
+                <div className="text-center">
+                    <div className="w-16 h-16 border-4 border-t-transparent rounded-full animate-spin mx-auto mb-4" style={{ borderColor: '#84A98C', borderTopColor: 'transparent' }}></div>
+                    <h2 className="text-2xl font-bold mb-2" style={{ color: '#354F52' }}>
+                        Loading...
+                    </h2>
+                </div>
+            </div>
+        }>
+            <AuthCallbackContent />
+        </Suspense>
     );
 }

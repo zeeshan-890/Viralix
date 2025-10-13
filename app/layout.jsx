@@ -11,7 +11,7 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 export const metadata = {
-  title: "AutoReach AI - AI-Powered Social Media Management",
+  title: "Viralix - AI-Powered Social Media Management",
   description: "Automate your social media content across TikTok, YouTube, Instagram, and LinkedIn with AI-powered optimization.",
 };
 export default function RootLayout({ children, }) {
