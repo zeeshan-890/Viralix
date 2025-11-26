@@ -46,7 +46,7 @@ app.use(limiter);
 // backend domain (e.g., *.herokuapp.com), we must allow credentials and echo
 // the exact Origin. SameSite=None cookies are required for cross-site.
 // ---------------------------------------------------------------------------
-const CLIENT_URL = process.env.CLIENT_URL || 'https://client-autoreach-ai-gs1k.vercel.app';
+const CLIENT_URL = 'https://client-autoreach-ai-gs1k.vercel.app' || 'https://client-autoreach-ai-gs1k.vercel.app';
 let ALLOWED = (process.env.CORS_ALLOWED_ORIGINS || CLIENT_URL)
     .split(',')
     .map(o => o.trim())
