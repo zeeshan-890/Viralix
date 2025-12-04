@@ -19,6 +19,9 @@ export default function RootLayout({ children, }) {
     <html lang="en">
       <head>
         <meta name="facebook-domain-verification" content="mtzxn07hoticb1c3uls3fp23wo23o6" />
+        <link rel="icon" href="/viralix_logo.png" />
+        <link rel="apple-touch-icon" href="/viralix_logo.png" />
+        <meta name="theme-color" content="#84A98C" />
       </head>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         <ThemeInit />
