@@ -1,7 +1,7 @@
 const rateLimit = require('express-rate-limit');
 const RedisStore = require('rate-limit-redis');
 
-const { redis } = require('../config/redis'); // Use our existing redis connection if possible
+const { getRedisClient } = require('../config/redis'); // Use our existing redis connection if possible
 
 // Fallback to memory store if Redis is not available or disconnected
 // But since we set up Redis in Phase 1, we should try to use it for distributed limiting.
