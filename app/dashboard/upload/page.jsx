@@ -1,11 +1,11 @@
 'use client';
 import { useState, useEffect, useMemo } from 'react';
-import { uploadAPI, postsAPI, facebookAPI, instagramAPI } from '@/lib/api';
+import { uploadAPI, postsAPI, facebookAPI, instagramAPI, tiktokAPI } from '@/lib/api';
 import { useRouter } from 'next/navigation';
 import FileUpload from './components/FileUpload';
 import TagsInput from './components/TagsInput';
 import MediaLibrary from './components/MediaLibrary';
-import { Upload, Image, Video, Calendar, Clock, Send, Save, Eye, Sparkles, CheckCircle2, AlertCircle } from 'lucide-react';
+import { Upload, Image, Video, Calendar, Clock, Send, Save, Eye, Sparkles, CheckCircle2, AlertCircle, Music2 } from 'lucide-react';
 
 export default function UploadPage() {
     const router = useRouter();
@@ -48,14 +48,15 @@ export default function UploadPage() {
         }
     };
 
-    // Load connected FB pages and IG accounts for platform selection
+    // Load connected FB pages, IG accounts, and TikTok accounts for platform selection
     useEffect(() => {
         let cancelled = false;
         async function loadTargets() {
             try {
-                const [fbRes, igRes] = await Promise.allSettled([
+                const [fbRes, igRes, ttRes] = await Promise.allSettled([
                     facebookAPI.status(),
                     instagramAPI.status(),
+                    tiktokAPI.status(),
                 ]);
                 const targets = [];
                 if (fbRes.status === 'fulfilled') {
@@ -68,6 +69,12 @@ export default function UploadPage() {
                     const accounts = igRes.value?.data?.accounts || [];
                     for (const a of accounts) {
                         targets.push({ key: `instagram:${a.igUserId}`, name: 'instagram', accountId: a.igUserId, label: `Instagram — ${a.pageName || a.igUserId}`, icon: '📷' });
+                    }
+                }
+                if (ttRes.status === 'fulfilled') {
+                    const accounts = ttRes.value?.data?.accounts || [];
+                    for (const a of accounts) {
+                        targets.push({ key: `tiktok:${a.accountId}`, name: 'tiktok', accountId: a.accountId, label: `TikTok — ${a.accountName}`, icon: '🎵' });
                     }
                 }
                 if (!cancelled) setConnectedTargets(targets);
@@ -103,15 +110,19 @@ export default function UploadPage() {
 
     const hasIG = useMemo(() => selectedPlatforms.some(p => p.name === 'instagram'), [selectedPlatforms]);
     const hasFB = useMemo(() => selectedPlatforms.some(p => p.name === 'facebook'), [selectedPlatforms]);
+    const hasTT = useMemo(() => selectedPlatforms.some(p => p.name === 'tiktok'), [selectedPlatforms]);
     const requiresMedia = hasIG; // Instagram requires media; Facebook can be text-only
+    const requiresVideo = hasTT; // TikTok requires video specifically
+    const hasVideo = useMemo(() => uploadedFiles.some(f => f.type === 'video'), [uploadedFiles]);
 
     const canSubmit = useMemo(() => {
         if (!contentForm.title || !contentForm.description) return false;
         if (selectedPlatforms.length === 0) return false;
         if (requiresMedia && uploadedFiles.length === 0) return false;
+        if (requiresVideo && !hasVideo) return false; // TikTok needs video
         if (scheduleType === 'later' && (!date || !time)) return false;
         return true;
-    }, [contentForm, selectedPlatforms, uploadedFiles, requiresMedia, scheduleType, date, time]);
+    }, [contentForm, selectedPlatforms, uploadedFiles, requiresMedia, requiresVideo, hasVideo, scheduleType, date, time]);
 
     const buildMediaPayload = () => {
         return uploadedFiles.map(f => ({
@@ -539,6 +550,15 @@ export default function UploadPage() {
                                     <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />
                                     <div className="text-sm">
                                         Instagram requires a photo or video. Add media, or deselect Instagram to post text-only to Facebook.
+                                    </div>
+                                </div>
+                            )}
+
+                            {!actionError && hasTT && !hasVideo && selectedPlatforms.length > 0 && (
+                                <div className="mt-6 bg-pink-50 border-l-4 border-pink-400 text-pink-800 px-4 py-3 rounded-lg flex items-start gap-3">
+                                    <Music2 className="w-5 h-5 flex-shrink-0 mt-0.5" />
+                                    <div className="text-sm">
+                                        <strong>TikTok requires a video.</strong> Please upload a video file to publish to TikTok. Images are not supported.
                                     </div>
                                 </div>
                             )}

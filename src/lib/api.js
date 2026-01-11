@@ -177,3 +177,32 @@ export const uploadAPI = {
     },
     deleteFile: (publicId) => api.delete(`/upload/media/${encodeURIComponent(publicId.replace(/\//g, ':'))}`),
 };
+
+// TikTok API helpers
+export const tiktokAPI = {
+    // Get OAuth connect URL
+    connect: () => api.get('/tiktok-oauth/connect'),
+    // Get connection status
+    status: () => api.get('/tiktok-oauth/status'),
+    // Get account profile with stats
+    account: (accountId) => api.get(`/tiktok-oauth/account/${accountId}`),
+    // Disconnect account
+    disconnect: (accountId) => api.delete(`/tiktok-oauth/disconnect/${accountId}`),
+    // Refresh access token
+    refresh: (accountId) => api.post(`/tiktok-oauth/refresh/${accountId}`),
+    // Get user's videos
+    videos: (accountId, params = {}) => api.get(`/tiktok-oauth/videos/${accountId}`, { params }),
+    // Publish video
+    publish: (accountId, { videoUrl, caption, privacyLevel, disableComment, disableDuet, disableStitch, useInbox }) =>
+        api.post(`/tiktok-oauth/publish/${accountId}`, {
+            videoUrl,
+            caption,
+            privacyLevel,
+            disableComment,
+            disableDuet,
+            disableStitch,
+            useInbox
+        }),
+    // Check publish status
+    publishStatus: (accountId, publishId) => api.get(`/tiktok-oauth/publish-status/${accountId}/${publishId}`),
+};
