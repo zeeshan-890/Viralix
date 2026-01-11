@@ -2,7 +2,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { ChevronLeft, ChevronRight, Calendar, Plus, Loader2 } from 'lucide-react';
 import { postsAPI } from '@/lib/api';
-import PostEditModal from './PostEditModal';
 
 import { useRouter } from 'next/navigation';
 
@@ -14,9 +13,8 @@ export default function CalendarView() {
     const [error, setError] = useState('');
     const [posts, setPosts] = useState([]);
 
-    // Modal state
-    const [modalOpen, setModalOpen] = useState(false);
-    const [selectedPost, setSelectedPost] = useState(null);
+    // Modal state removed
+
 
     const month = currentDate.getMonth() + 1; // 1-based
     const year = currentDate.getFullYear();
@@ -38,20 +36,12 @@ export default function CalendarView() {
         }
     };
 
-    const handlePostSave = () => {
-        // Refresh posts after save/delete
-        loadPosts();
-        setModalOpen(false);
-        setSelectedPost(null);
-    };
-
     const openNewPostModal = () => {
         router.push('/dashboard/upload');
     };
 
     const openEditPostModal = (post) => {
-        setSelectedPost(post);
-        setModalOpen(true);
+        router.push(`/dashboard/preview/${post._id}`);
     };
     const getDaysInMonth = (date) => {
         const year = date.getFullYear();
@@ -305,15 +295,5 @@ export default function CalendarView() {
             </button>
         </div>
 
-        {/* Post Edit Modal */}
-        <PostEditModal
-            isOpen={modalOpen}
-            onClose={() => {
-                setModalOpen(false);
-                setSelectedPost(null);
-            }}
-            post={selectedPost}
-            onSave={handlePostSave}
-        />
     </div>);
 }
