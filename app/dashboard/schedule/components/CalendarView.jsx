@@ -4,7 +4,10 @@ import { ChevronLeft, ChevronRight, Calendar, Plus, Loader2 } from 'lucide-react
 import { postsAPI } from '@/lib/api';
 import PostEditModal from './PostEditModal';
 
+import { useRouter } from 'next/navigation';
+
 export default function CalendarView() {
+    const router = useRouter();
     const [currentDate, setCurrentDate] = useState(new Date());
     const [viewMode, setViewMode] = useState('month');
     const [loading, setLoading] = useState(false);
@@ -43,8 +46,7 @@ export default function CalendarView() {
     };
 
     const openNewPostModal = () => {
-        setSelectedPost(null);
-        setModalOpen(true);
+        router.push('/dashboard/upload');
     };
 
     const openEditPostModal = (post) => {
