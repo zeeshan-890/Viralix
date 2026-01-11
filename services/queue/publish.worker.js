@@ -1,0 +1,108 @@
+const publishQueue = require('./publish.queue');
+const PublishJob = require('../../models/PublishJob');
+const User = require('../../models/User');
+const { publishPlatform } = require('../publisher');
+const mongoose = require('mongoose');
+
+// Process jobs
+publishQueue.process(async (job) => {
+    const { jobId, userId, platforms, content } = job.data;
+
+    // 1. Fetch Job and User
+    const publishJob = await PublishJob.findOne({ jobId });
+    if (!publishJob) {
+        throw new Error(`Job ${jobId} not found in database`);
+    }
+
+    const user = await User.findById(userId);
+    if (!user) {
+        publishJob.status = 'failed';
+        publishJob.error = 'User not found';
+        publishJob.completedAt = new Date();
+        await publishJob.save();
+        throw new Error(`User ${userId} not found`);
+    }
+
+    publishJob.status = 'processing';
+    publishJob.logs.push({ message: 'Starting publish job' });
+    await publishJob.save();
+
+    let successCount = 0;
+    let failCount = 0;
+    const totalPlatforms = platforms.length;
+
+    // 2. Iterate over platforms
+    for (let i = 0; i < totalPlatforms; i++) {
+        const platform = platforms[i];
+
+        // Find platform status index in job document
+        const platformIndex = publishJob.platforms.findIndex(
+            p => p.name === platform.name && p.accountId === platform.accountId
+        );
+
+        if (platformIndex === -1) continue;
+
+        try {
+            // Update platform status to processing
+            publishJob.platforms[platformIndex].status = 'processing';
+            await publishJob.save();
+
+            job.progress(Math.round(((i + 0.5) / totalPlatforms) * 100));
+
+            // Call Publisher Factory
+            publishJob.logs.push({ message: `Publishing to ${platform.name}...` });
+            await publishJob.save();
+
+            const PublisherFactory = require('../publishers/publisher.factory');
+            const publisher = PublisherFactory.getPublisher(user, platform.name);
+
+            const result = await publisher.publish({
+                accountId: platform.accountId,
+                accountName: platform.accountName // might be needed by some adapters
+            }, {
+                content: content.body,
+                media: content.media,
+                title: content.title
+            });
+
+            // Update success
+            publishJob.platforms[platformIndex].status = 'completed';
+            publishJob.platforms[platformIndex].platformPostId = result.postId;
+            publishJob.logs.push({ message: `Successfully published to ${platform.name}` });
+            successCount++;
+
+        } catch (error) {
+            console.error(`Publish failed for ${platform.name}:`, error);
+
+            // Update failure
+            publishJob.platforms[platformIndex].status = 'failed';
+            publishJob.platforms[platformIndex].error = error.message;
+            publishJob.logs.push({ level: 'error', message: `Failed to publish to ${platform.name}: ${error.message}` });
+            failCount++;
+        }
+
+        // Update global progress
+        job.progress(Math.round(((i + 1) / totalPlatforms) * 100));
+        await publishJob.save();
+    }
+
+    // 3. Finalize Job
+    publishJob.completedAt = new Date();
+    if (failCount === 0) {
+        publishJob.status = 'completed';
+        publishJob.logs.push({ message: 'Job completed successfully' });
+    } else if (successCount === 0) {
+        publishJob.status = 'failed';
+        publishJob.error = 'Failed to publish to all platforms';
+        publishJob.logs.push({ level: 'error', message: 'Job failed completely' });
+    } else {
+        publishJob.status = 'partially_failed';
+        publishJob.error = `${failCount} platform(s) failed`;
+        publishJob.logs.push({ level: 'warn', message: 'Job completed with some errors' });
+    }
+
+    await publishJob.save();
+    return { success: successCount, failed: failCount };
+});
+
+console.log('👷 Publish Worker started');

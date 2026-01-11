@@ -3,7 +3,8 @@ const { body, validationResult } = require('express-validator');
 const Post = require('../models/Post');
 const User = require('../models/User');
 const auth = require('../middleware/auth');
-const { publishPostById } = require('../services/publisher');
+const auth = require('../middleware/auth');
+// const { publishPostById } = require('../services/publisher'); // Legacy removed
 
 const router = express.Router();
 
@@ -153,14 +154,70 @@ router.delete('/:id', auth, async (req, res) => {
     }
 });
 
-// POST /api/posts/:id/publish - publish now
+const publishQueue = require('../services/queue/publish.queue');
+const PublishJob = require('../models/PublishJob');
+const { v4: uuidv4 } = require('uuid');
+
+// POST /api/posts/:id/publish - publish async via queue
 router.post('/:id/publish', auth, async (req, res) => {
     try {
-        const updated = await publishPostById(req.user.id, req.params.id);
-        res.json({ message: 'Publish attempted', post: updated });
+        const post = await Post.findById(req.params.id);
+        if (!post) return res.status(404).json({ message: 'Post not found' });
+        if (post.user.toString() !== req.user.id) return res.status(401).json({ message: 'Not authorized' });
+
+        const jobId = uuidv4();
+
+        // Create Job Record
+        const job = new PublishJob({
+            jobId,
+            userId: req.user.id,
+            platforms: post.platforms.map(p => ({
+                name: p.name,
+                accountId: p.accountId,
+                accountName: p.label || p.name, // Fallback
+                status: 'pending'
+            })),
+            content: {
+                title: post.title,
+                body: post.content,
+                media: post.media
+            },
+            status: 'queued'
+        });
+        await job.save();
+
+        // Add to Queue
+        await publishQueue.add({
+            jobId,
+            userId: req.user.id,
+            platforms: post.platforms,
+            content: {
+                title: post.title,
+                body: post.content,
+                media: post.media
+            }
+        });
+
+        res.json({
+            message: 'Publishing started in background',
+            jobId,
+            status: 'queued'
+        });
     } catch (e) {
-        console.error(e.message);
-        res.status(400).json({ message: e.message });
+        console.error('Publish error:', e.message);
+        res.status(500).json({ message: e.message });
+    }
+});
+
+// GET /api/posts/status/:jobId
+router.get('/status/:jobId', auth, async (req, res) => {
+    try {
+        const job = await PublishJob.findOne({ jobId: req.params.jobId });
+        if (!job) return res.status(404).json({ message: 'Job not found' });
+        if (job.userId.toString() !== req.user.id) return res.status(401).json({ message: 'Not authorized' });
+        res.json(job);
+    } catch (e) {
+        res.status(500).json({ message: 'Server error' });
     }
 });
 

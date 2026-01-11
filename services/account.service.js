@@ -1,0 +1,115 @@
+const SocialAccount = require('../models/SocialAccount');
+const User = require('../models/User');
+const { encrypt, decrypt } = require('../utils/encryption');
+
+class AccountService {
+
+    /**
+     * Get all connected accounts for a user
+     */
+    static async getAccounts(userId) {
+        return await SocialAccount.find({ userId, isActive: true });
+    }
+
+    /**
+     * Get a specific account with decrypted tokens
+     */
+    static async getAccount(userId, platform, accountId) {
+        const account = await SocialAccount.findOne({
+            userId,
+            platform,
+            platformAccountId: accountId
+        }).select('+accessToken +refreshToken');
+
+        if (!account) return null;
+
+        // Decrypt tokens if found
+        if (account.accessToken) account.accessToken = decrypt(account.accessToken);
+        if (account.refreshToken) account.refreshToken = decrypt(account.refreshToken);
+
+        return account;
+    }
+
+    /**
+     * Connect or update an account with encrypted tokens
+     */
+    static async connectAccount(userId, data) {
+        const { platform, accountId, name, accessToken, refreshToken, expires, metadata } = data;
+
+        const filter = { userId, platform, platformAccountId: accountId };
+        const update = {
+            accountName: name,
+            accessToken: encrypt(accessToken), // Encrypt
+            isActive: true,
+            lastUsed: new Date(),
+            connectedAt: new Date(),
+            metadata
+        };
+
+        if (refreshToken) update.refreshToken = encrypt(refreshToken); // Encrypt
+        if (expires) update.tokenExpires = expires;
+
+        const account = await SocialAccount.findOneAndUpdate(filter, update, {
+            new: true,
+            upsert: true,
+            setDefaultsOnInsert: true
+        });
+
+        // Return the saved account (tokens are encrypted in DB)
+        // If caller needs decrypted, they should use getAccount or use the input they provided
+        return account;
+    }
+
+    /**
+     * Disconnect an account (soft delete)
+     */
+    static async disconnectAccount(userId, accountId) {
+        return await SocialAccount.findOneAndUpdate(
+            { userId, _id: accountId },
+            { isActive: false },
+            { new: true }
+        );
+    }
+
+    /**
+     * Migrate a user's embedded accounts to the new collection
+     * @param {string} userId 
+     */
+    static async migrateUserAccounts(userId) {
+        const user = await User.findById(userId);
+        if (!user || !user.socialAccounts) return;
+
+        let migrated = 0;
+        for (const oldAcc of user.socialAccounts) {
+            try {
+                // Check if already exists to avoid duplicates
+                const exists = await SocialAccount.findOne({
+                    userId,
+                    platform: oldAcc.platform,
+                    platformAccountId: oldAcc.accountId
+                });
+
+                if (!exists) {
+                    await SocialAccount.create({
+                        userId,
+                        platform: oldAcc.platform,
+                        platformAccountId: oldAcc.accountId,
+                        accountName: oldAcc.accountName,
+                        accessToken: encrypt(oldAcc.accessToken), // Encrypt
+                        refreshToken: oldAcc.refreshToken ? encrypt(oldAcc.refreshToken) : undefined, // Encrypt
+                        tokenExpires: oldAcc.tokenExpires,
+                        isActive: oldAcc.isActive,
+                        connectedAt: oldAcc.connectedAt
+                    });
+                    migrated++;
+                }
+            } catch (e) {
+                console.error(`Failed to migrate account ${oldAcc.accountId}:`, e.message);
+            }
+        }
+        console.log(`Migrated ${migrated} accounts for user ${userId}`);
+        return migrated;
+    }
+}
+
+module.exports = AccountService;

@@ -3,7 +3,8 @@ const cors = require('cors');
 const helmet = require('helmet');
 const cookieParser = require('cookie-parser');
 const morgan = require('morgan');
-const rateLimit = require('express-rate-limit');
+const morgan = require('morgan');
+// const rateLimit = require('express-rate-limit'); // Moved to middleware
 const { URL } = require('url');
 require('dotenv').config();
 
@@ -29,16 +30,10 @@ app.use(helmet({
     frameguard: { action: 'deny' }
 }));
 
-// Rate limiting (honors trust proxy). Use standardized RateLimit-* headers only.
-const limiter = rateLimit({
-    windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 100, // limit each IP to 100 requests per windowMs
-    standardHeaders: true,
-    legacyHeaders: false,
-    message: 'Too many requests from this IP, please try again later.',
-    keyGenerator: (req) => req.ip, // after trust proxy this is the real client IP
-});
+// Rate Limiting
+const { limiter, authLimiter } = require('./middleware/rateLimiter');
 app.use(limiter);
+app.use('/api/auth', authLimiter);
 
 // ---------------------------------------------------------------------------
 // CORS configuration (supports multiple origins & trailing-slash normalization)
@@ -210,15 +205,18 @@ app.listen(PORT, () => {
     console.log(`🌐 Client URL: ${process.env.CLIENT_URL || 'http://localhost:3000'}`);
 });
 
+// Start background workers
+require('./services/queue/publish.worker');
+
 // Start lightweight scheduler using node-cron to publish due posts
 try {
     const cron = require('node-cron');
-    const { publishDueScheduledPosts } = require('./services/publisher');
+    const { scheduleDuePosts } = require('./services/scheduler');
     cron.schedule('* * * * *', async () => {
         try {
-            const count = await publishDueScheduledPosts(new Date());
+            const count = await scheduleDuePosts(new Date());
             if (count > 0) {
-                console.log(`📣 Scheduler published ${count} due post(s)`);
+                console.log(`📣 Scheduler enqueued ${count} due post(s)`);
             }
         } catch (e) {
             console.error('Scheduler error:', e.message);
