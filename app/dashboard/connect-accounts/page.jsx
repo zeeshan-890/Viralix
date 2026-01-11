@@ -13,24 +13,28 @@ export default function ConnectAccountsPage() {
     const [message, setMessage] = useState({ type: '', text: '' });
 
     // Derive statuses from unified accounts list
-    // Note: Assuming 'facebook' accounts are fetched separately or integrated later. 
-    // For now, keeping FB logic separate if it's not in the shared API yet, 
-    // OR assuming we migrate FB to the same pattern.
-    // Based on previous code, FB was fetched via facebookAPI.status().
-    // If useAccounts only fetches OAuth providers, we mix them.
+    // All platforms now come from the unified useAccounts() hook
+    const fbAccounts = accounts.filter(a => a.platform === 'facebook');
     const igAccounts = accounts.filter(a => a.platform === 'instagram');
     const ttAccounts = accounts.filter(a => a.platform === 'tiktok');
     const ytAccounts = accounts.filter(a => a.platform === 'youtube');
 
-    // Facebook state (kept local if not yet in unified endpoint, or fetched via hook if updated)
-    // For this refactor, let's keep FB mostly as is unless we updated its service to return compatible data.
-    // The previous server code didn't explicitly show a unified endpoint for FB.
+    // Derive Facebook status from unified accounts (for backward compatibility with UI)
     const [fbStatus, setFbStatus] = useState({ connected: false, account: null, pages: [] });
 
     useEffect(() => {
-        // Load Facebook separately for now (Legacy support)
-        facebookAPI.status().then(({ data }) => setFbStatus(data)).catch(console.error);
-    }, []);
+        // Derive FB status from unified accounts
+        if (fbAccounts.length > 0) {
+            const fb = fbAccounts[0];
+            setFbStatus({
+                connected: true,
+                account: { id: fb.platformAccountId, name: fb.accountName },
+                pages: [] // Pages are stored in user.settings, fetched separately if needed
+            });
+        } else {
+            setFbStatus({ connected: false, account: null, pages: [] });
+        }
+    }, [fbAccounts]);
 
     // Handle URL params for success/error
     useEffect(() => {
