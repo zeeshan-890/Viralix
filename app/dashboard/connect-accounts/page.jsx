@@ -24,8 +24,9 @@ export default function ConnectAccountsPage() {
 
     useEffect(() => {
         // Derive FB status from unified accounts
-        if (fbAccounts.length > 0) {
-            const fb = fbAccounts[0];
+        const fbAccts = accounts.filter(a => a.platform === 'facebook');
+        if (fbAccts.length > 0) {
+            const fb = fbAccts[0];
             setFbStatus({
                 connected: true,
                 account: { id: fb.platformAccountId, name: fb.accountName },
@@ -34,7 +35,7 @@ export default function ConnectAccountsPage() {
         } else {
             setFbStatus({ connected: false, account: null, pages: [] });
         }
-    }, [fbAccounts]);
+    }, [accounts]);
 
     // Handle URL params for success/error
     useEffect(() => {
