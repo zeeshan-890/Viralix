@@ -6,9 +6,42 @@ class AccountService {
 
     /**
      * Get all connected accounts for a user
+     * Merges accounts from SocialAccount collection AND legacy User.socialAccounts
      */
     static async getAccounts(userId) {
-        return await SocialAccount.find({ userId, isActive: true });
+        // Get accounts from new SocialAccount collection
+        const socialAccounts = await SocialAccount.find({ userId, isActive: true });
+
+        // Also get legacy Facebook accounts from User.socialAccounts
+        const user = await User.findById(userId).select('socialAccounts');
+        const legacyAccounts = [];
+
+        if (user && user.socialAccounts && user.socialAccounts.length > 0) {
+            for (const acc of user.socialAccounts) {
+                // Check if this account already exists in the SocialAccount collection
+                const alreadyMigrated = socialAccounts.some(
+                    sa => sa.platform === acc.platform && sa.platformAccountId === acc.accountId
+                );
+
+                if (!alreadyMigrated && acc.isActive !== false) {
+                    // Transform legacy format to match SocialAccount shape
+                    legacyAccounts.push({
+                        _id: acc._id,
+                        userId: userId,
+                        platform: acc.platform,
+                        platformAccountId: acc.accountId,
+                        accountName: acc.accountName,
+                        isActive: acc.isActive !== false,
+                        connectedAt: acc.connectedAt,
+                        tokenExpires: acc.tokenExpires,
+                        metadata: acc.metadata || {}
+                    });
+                }
+            }
+        }
+
+        // Merge and return all accounts
+        return [...socialAccounts, ...legacyAccounts];
     }
 
     /**
