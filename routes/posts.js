@@ -152,10 +152,54 @@ router.delete('/:id', auth, async (req, res) => {
         const post = await Post.findById(req.params.id);
         if (!post) return res.status(404).json({ message: 'Post not found' });
         if (post.user.toString() !== req.user.id) return res.status(401).json({ message: 'Not authorized' });
+
+        // 1. Delete related PublishJobs
+        const PublishJob = require('../models/PublishJob');
+        const deletedJobs = await PublishJob.deleteMany({
+            userId: req.user.id,
+            'content.title': post.title
+        });
+        console.log(`[Delete Post] Deleted ${deletedJobs.deletedCount} related PublishJobs`);
+
+        // 2. Delete media from Cloudinary
+        if (post.media && post.media.length > 0) {
+            const cloudinary = require('cloudinary').v2;
+            cloudinary.config({
+                cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+                api_key: process.env.CLOUDINARY_API_KEY,
+                api_secret: process.env.CLOUDINARY_API_SECRET
+            });
+
+            for (const media of post.media) {
+                if (media.url) {
+                    try {
+                        // Extract public_id from Cloudinary URL
+                        const urlParts = media.url.split('/');
+                        const uploadIndex = urlParts.findIndex(p => p === 'upload');
+                        if (uploadIndex !== -1) {
+                            // Get everything after 'upload/vXXX/' and remove extension
+                            const publicIdParts = urlParts.slice(uploadIndex + 2);
+                            let publicId = publicIdParts.join('/');
+                            publicId = publicId.replace(/\.[^/.]+$/, ''); // Remove extension
+
+                            const resourceType = media.type === 'video' ? 'video' : 'image';
+                            const result = await cloudinary.uploader.destroy(publicId, { resource_type: resourceType });
+                            console.log(`[Delete Post] Cloudinary delete ${publicId}:`, result.result);
+                        }
+                    } catch (cloudinaryError) {
+                        console.error('[Delete Post] Cloudinary delete error:', cloudinaryError.message);
+                        // Continue even if Cloudinary delete fails
+                    }
+                }
+            }
+        }
+
+        // 3. Delete the post
         await Post.findByIdAndDelete(req.params.id);
-        res.json({ message: 'Post removed' });
+
+        res.json({ message: 'Post and related data removed successfully' });
     } catch (e) {
-        console.error(e.message);
+        console.error('[Delete Post] Error:', e.message);
         res.status(500).json({ message: 'Server error' });
     }
 });
