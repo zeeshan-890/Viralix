@@ -43,6 +43,7 @@ async function scheduleDuePosts(now = new Date()) {
             const job = new PublishJob({
                 jobId,
                 userId: post.user,
+                postId: post._id, // Link to parent post
                 platforms: post.platforms.filter(p => p.status === 'scheduled').map(p => ({
                     name: p.name,
                     accountId: p.accountId,
@@ -62,6 +63,7 @@ async function scheduleDuePosts(now = new Date()) {
             await publishQueue.add({
                 jobId,
                 userId: post.user,
+                postId: post._id, // Critical for status updates
                 platforms: post.platforms,
                 content: {
                     title: post.title,
