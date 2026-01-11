@@ -1,7 +1,7 @@
 'use client';
 import { Clock, CheckCircle2, FileText, Users, AlertCircle } from 'lucide-react';
 import CalendarView from './components/CalendarView';
-import { useAccounts } from '@/src/hooks/useAccounts';
+import { useAccounts } from '@/hooks/useAccounts';
 
 export default function SchedulePage() {
     const { accounts, isLoading, error } = useAccounts();
