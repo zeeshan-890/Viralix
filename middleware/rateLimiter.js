@@ -13,6 +13,7 @@ const limiter = rateLimit({
     max: 100, // Limit each IP to 100 requests per windowMs
     standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
     legacyHeaders: false, // Disable the `X-RateLimit-*` headers
+    skip: (req) => req.method === 'OPTIONS', // Skip preflight requests to prevent CORS issues
     message: {
         status: 429,
         message: 'Too many requests, please try again later.'
@@ -22,7 +23,8 @@ const limiter = rateLimit({
 // Stricter limit for auth routes (login/signup)
 const authLimiter = rateLimit({
     windowMs: 60 * 60 * 1000, // 1 hour
-    max: 10, // Limit each IP to 10 login attempts per hour
+    max: 50, // Increased from 10 to allow more auth requests
+    skip: (req) => req.method === 'OPTIONS', // Skip preflight requests to prevent CORS issues
     message: {
         status: 429,
         message: 'Too many login attempts, please try again later.'
