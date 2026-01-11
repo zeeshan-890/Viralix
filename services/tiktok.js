@@ -397,6 +397,123 @@ async function waitForPublishComplete(accessToken, publishId, maxWaitMs = 300000
     throw new Error('Video publish timed out');
 }
 
+/**
+ * Initialize FILE_UPLOAD for inbox (no domain verification needed)
+ * This method uploads video directly to TikTok servers
+ * 
+ * @param {string} accessToken - Valid access token
+ * @param {number} videoSize - Size of video file in bytes
+ * @param {number} chunkSize - Size of each chunk (default 10MB, max 64MB)
+ * @returns {Promise<Object>} Response with publish_id and upload_url
+ */
+async function initializeFileUpload(accessToken, videoSize, chunkSize = 10 * 1024 * 1024) {
+    console.log(`[TikTok] Initializing FILE_UPLOAD - size: ${videoSize} bytes, chunk: ${chunkSize} bytes`);
+
+    const totalChunkCount = Math.ceil(videoSize / chunkSize);
+
+    const payload = {
+        source_info: {
+            source: 'FILE_UPLOAD',
+            video_size: videoSize,
+            chunk_size: chunkSize,
+            total_chunk_count: totalChunkCount
+        }
+    };
+
+    const { data } = await axios.post(
+        `${TIKTOK_API_BASE}/post/publish/inbox/video/init/`,
+        payload,
+        {
+            headers: {
+                'Authorization': `Bearer ${accessToken}`,
+                'Content-Type': 'application/json'
+            }
+        }
+    );
+
+    if (data.error?.code && data.error.code !== 'ok') {
+        console.error('[TikTok] FILE_UPLOAD init error:', data.error);
+        throw new Error(data.error.message || 'Failed to initialize file upload');
+    }
+
+    console.log('[TikTok] FILE_UPLOAD initialized, publish_id:', data.data?.publish_id);
+    return data.data;
+}
+
+/**
+ * Upload a video chunk to TikTok
+ * 
+ * @param {string} uploadUrl - URL from initializeFileUpload
+ * @param {Buffer} chunkData - The chunk data to upload
+ * @param {number} chunkIndex - Index of this chunk (0-based)
+ * @param {number} startByte - Starting byte position
+ * @param {number} endByte - Ending byte position
+ * @param {number} totalSize - Total file size
+ * @returns {Promise<Object>} Upload response
+ */
+async function uploadVideoChunk(uploadUrl, chunkData, chunkIndex, startByte, endByte, totalSize) {
+    console.log(`[TikTok] Uploading chunk ${chunkIndex}: bytes ${startByte}-${endByte}/${totalSize}`);
+
+    const { data } = await axios.put(uploadUrl, chunkData, {
+        headers: {
+            'Content-Type': 'video/mp4',
+            'Content-Length': chunkData.length.toString(),
+            'Content-Range': `bytes ${startByte}-${endByte}/${totalSize}`
+        }
+    });
+
+    console.log(`[TikTok] Chunk ${chunkIndex} uploaded successfully`);
+    return data;
+}
+
+/**
+ * Download video from URL and upload to TikTok using FILE_UPLOAD method
+ * This bypasses the domain verification requirement
+ * 
+ * @param {string} accessToken - Valid access token
+ * @param {string} videoUrl - URL of video to download (e.g., Cloudinary)
+ * @returns {Promise<Object>} Response with publish_id
+ */
+async function uploadVideoFromUrl(accessToken, videoUrl) {
+    console.log('[TikTok] Starting FILE_UPLOAD from URL:', videoUrl);
+
+    // Step 1: Download video to buffer
+    console.log('[TikTok] Downloading video...');
+    const videoResponse = await axios.get(videoUrl, {
+        responseType: 'arraybuffer',
+        maxContentLength: 500 * 1024 * 1024, // 500MB max
+        timeout: 300000 // 5 minute timeout for large files
+    });
+
+    const videoBuffer = Buffer.from(videoResponse.data);
+    const videoSize = videoBuffer.length;
+    console.log(`[TikTok] Video downloaded: ${(videoSize / (1024 * 1024)).toFixed(2)} MB`);
+
+    // Step 2: Initialize FILE_UPLOAD
+    const chunkSize = 10 * 1024 * 1024; // 10MB chunks
+    const initResult = await initializeFileUpload(accessToken, videoSize, chunkSize);
+
+    const { publish_id, upload_url } = initResult;
+    if (!upload_url) {
+        throw new Error('No upload URL returned from TikTok');
+    }
+
+    // Step 3: Upload in chunks
+    const totalChunks = Math.ceil(videoSize / chunkSize);
+    console.log(`[TikTok] Uploading ${totalChunks} chunks...`);
+
+    for (let i = 0; i < totalChunks; i++) {
+        const startByte = i * chunkSize;
+        const endByte = Math.min(startByte + chunkSize - 1, videoSize - 1);
+        const chunkData = videoBuffer.slice(startByte, endByte + 1);
+
+        await uploadVideoChunk(upload_url, chunkData, i, startByte, endByte, videoSize);
+    }
+
+    console.log('[TikTok] All chunks uploaded successfully');
+    return { publish_id };
+}
+
 module.exports = {
     // OAuth
     generateAuthUrl,
@@ -410,6 +527,9 @@ module.exports = {
     // Video Publishing
     initializeVideoUploadFromUrl,
     initializeInboxVideoUpload,
+    initializeFileUpload,
+    uploadVideoChunk,
+    uploadVideoFromUrl,
     getPublishStatus,
     waitForPublishComplete,
 
