@@ -2,6 +2,7 @@ const express = require('express');
 const crypto = require('crypto');
 const User = require('../models/User');
 const auth = require('../middleware/auth');
+const AccountService = require('../services/account.service');
 const { buildAuthUrl, exchangeCodeForToken, exchangeForLongLivedToken, getMe, getPages, getPermissions, getAllPages, enrichPagesWithInstagram, getPageFeed, getPageInsights, createPagePost, createPagePhoto, createPageVideo, createPagePhotoUpload, createPageVideoUpload } = require('../services/facebook');
 const multer = require('multer');
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 200 * 1024 * 1024 } });
@@ -108,21 +109,20 @@ router.get('/oauth/callback', async (req, res) => {
         const user = await User.findById(userId);
         if (!user) return res.status(401).send('Unauthorized');
 
-        // Upsert into socialAccounts for platform 'facebook' (one record per FB user)
-        const existingIdx = user.socialAccounts.findIndex(
-            a => a.platform === 'facebook' && a.accountId === me.id
-        );
-        const record = {
+        // Store Facebook account in SocialAccount collection (like other platforms)
+        await AccountService.connectAccount(userId, {
             platform: 'facebook',
             accountId: me.id,
-            accountName: me.name,
+            name: me.name,
             accessToken: long.access_token,
-            tokenExpires: long.expires_in ? new Date(Date.now() + long.expires_in * 1000) : undefined,
-            connectedAt: new Date(),
-            isActive: true,
-        };
-        if (existingIdx >= 0) user.socialAccounts[existingIdx] = record; else user.socialAccounts.push(record);
-        // Persist normalized Pages under settings for now
+            refreshToken: null, // FB doesn't use refresh tokens
+            expires: long.expires_in ? new Date(Date.now() + long.expires_in * 1000) : undefined,
+            metadata: {
+                permissions: (perms || []).filter(p => p.status === 'granted').map(p => p.permission)
+            }
+        });
+
+        // Persist normalized Pages under user.settings for now (pages have their own tokens)
         user.settings = user.settings || {};
         const normalized = normalizePages(pages);
         user.settings.facebookPages = normalized;
@@ -156,38 +156,65 @@ router.get('/oauth/callback', async (req, res) => {
 });
 
 router.get('/status', auth, async (req, res) => {
-    const user = await User.findById(req.user.id).lean();
-    if (!user) return res.status(401).json({ message: 'Unauthorized' });
-    const fb = user.socialAccounts?.find(a => a.platform === 'facebook');
-    const pages = (user.settings?.facebookPages || []).map(p => ({ id: p.id || p.pageId, name: p.name, category: p.category }));
-    console.log('[FB] status pages count:', pages.length, 'default:', user.settings?.facebookDefaultPageId || null);
-    return res.json({
-        connected: !!fb,
-        account: fb ? { id: fb.accountId, name: fb.accountName } : null,
-        pages,
-        defaultPageId: user.settings?.facebookDefaultPageId || null,
-    });
+    try {
+        const accounts = await AccountService.getAccounts(req.user.id);
+        const fb = accounts.find(a => a.platform === 'facebook');
+        const user = await User.findById(req.user.id).select('settings').lean();
+        const pages = (user?.settings?.facebookPages || []).map(p => ({ id: p.id || p.pageId, name: p.name, category: p.category }));
+        console.log('[FB] status pages count:', pages.length, 'default:', user?.settings?.facebookDefaultPageId || null);
+        return res.json({
+            connected: !!fb,
+            account: fb ? { id: fb.platformAccountId, name: fb.accountName } : null,
+            pages,
+            defaultPageId: user?.settings?.facebookDefaultPageId || null,
+        });
+    } catch (err) {
+        console.error('[FB] status error:', err);
+        return res.status(500).json({ message: 'Server error' });
+    }
 });
 
 router.delete('/disconnect', auth, async (req, res) => {
-    const user = await User.findById(req.user.id);
-    if (!user) return res.status(401).json({ message: 'Unauthorized' });
-    user.socialAccounts = (user.socialAccounts || []).filter(a => a.platform !== 'facebook');
-    if (user.settings) user.settings.facebookPages = undefined;
-    await user.save();
-    return res.json({ ok: true });
+    try {
+        // Find and disconnect from SocialAccount collection
+        const accounts = await AccountService.getAccounts(req.user.id);
+        const fb = accounts.find(a => a.platform === 'facebook');
+        if (fb && fb._id) {
+            await AccountService.disconnectAccount(req.user.id, fb._id);
+        }
+        // Also clear pages from user settings
+        const user = await User.findById(req.user.id);
+        if (user && user.settings) {
+            user.settings.facebookPages = undefined;
+            user.settings.facebookDefaultPageId = undefined;
+            user.markModified('settings');
+            await user.save();
+        }
+        return res.json({ ok: true });
+    } catch (err) {
+        console.error('[FB] disconnect error:', err);
+        return res.status(500).json({ message: 'Server error' });
+    }
 });
 
 // Refresh connected pages list
 router.post('/refresh', auth, async (req, res) => {
-    const user = await User.findById(req.user.id);
-    if (!user) return res.status(401).json({ message: 'Unauthorized' });
-    const fb = (user.socialAccounts || []).find(a => a.platform === 'facebook');
-    if (!fb) return res.status(400).json({ message: 'Facebook not connected' });
     try {
-        let pages = await getAllPages(fb.accessToken);
+        const fb = await AccountService.getAccount(req.user.id, 'facebook', null);
+        // Fallback: find any facebook account
+        let accessToken = fb?.accessToken;
+        if (!accessToken) {
+            const accounts = await AccountService.getAccountsWithTokens(req.user.id);
+            const fbAcc = accounts.find(a => a.platform === 'facebook');
+            accessToken = fbAcc?.accessToken;
+        }
+        if (!accessToken) return res.status(400).json({ message: 'Facebook not connected' });
+
+        let pages = await getAllPages(accessToken);
         pages = await enrichPagesWithInstagram(pages);
         console.log('[FB] refresh pages count:', pages?.length || 0);
+
+        const user = await User.findById(req.user.id);
         user.settings = user.settings || {};
         user.settings.facebookPages = normalizePages(pages);
         user.markModified('settings');
