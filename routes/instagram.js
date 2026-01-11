@@ -41,6 +41,7 @@ router.get('/status', auth, async (req, res) => {
         for (const acc of directAccounts) {
             accounts.push({
                 igUserId: acc.accountId,
+                accountId: acc.accountId, // Added for upload page compatibility
                 username: acc.accountName || acc.username,
                 pageName: acc.accountName || acc.username, // For frontend compatibility
                 method: 'direct_oauth',
@@ -54,6 +55,7 @@ router.get('/status', auth, async (req, res) => {
         let pages = (user.settings?.facebookPages || []);
         const fbLinkedAccounts = (pages || []).filter(p => p.instagramId).map(p => ({
             igUserId: p.instagramId,
+            accountId: p.instagramId, // Added for upload page compatibility
             pageId: p.id,
             pageName: p.name,
             username: p.name, // For consistency with direct OAuth
@@ -79,6 +81,7 @@ router.get('/status', auth, async (req, res) => {
                 pages = normalized;
                 const refreshedAccounts = (pages || []).filter(p => p.instagramId).map(p => ({
                     igUserId: p.instagramId,
+                    accountId: p.instagramId, // Added for upload page compatibility
                     pageId: p.id,
                     pageName: p.name,
                     username: p.name, // For consistency with direct OAuth
