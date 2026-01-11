@@ -12,6 +12,21 @@ class AccountService {
     }
 
     /**
+     * Get all connected accounts with decrypted tokens (internal use only)
+     * @param {string} userId
+     */
+    static async getAccountsWithTokens(userId) {
+        const accounts = await SocialAccount.find({ userId, isActive: true })
+            .select('+accessToken +refreshToken');
+
+        return accounts.map(account => {
+            if (account.accessToken) account.accessToken = decrypt(account.accessToken);
+            if (account.refreshToken) account.refreshToken = decrypt(account.refreshToken);
+            return account;
+        });
+    }
+
+    /**
      * Get a specific account with decrypted tokens
      */
     static async getAccount(userId, platform, accountId) {
