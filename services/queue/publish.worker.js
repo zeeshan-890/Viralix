@@ -6,22 +6,28 @@ const mongoose = require('mongoose');
 
 // Process jobs
 publishQueue.process(async (job) => {
+    console.log('[PublishWorker] Processing job:', job.id, 'Data:', JSON.stringify(job.data));
+
     const { jobId, userId, platforms, content } = job.data;
 
     // 1. Fetch Job and User
     const publishJob = await PublishJob.findOne({ jobId });
     if (!publishJob) {
+        console.error('[PublishWorker] Job not found in DB:', jobId);
         throw new Error(`Job ${jobId} not found in database`);
     }
 
     const user = await User.findById(userId);
     if (!user) {
+        console.error('[PublishWorker] User not found:', userId);
         publishJob.status = 'failed';
         publishJob.error = 'User not found';
         publishJob.completedAt = new Date();
         await publishJob.save();
         throw new Error(`User ${userId} not found`);
     }
+
+    console.log('[PublishWorker] Found job and user, starting publish for', platforms.length, 'platforms');
 
     publishJob.status = 'processing';
     publishJob.logs.push({ message: 'Starting publish job' });
