@@ -40,25 +40,27 @@ function generateAuthUrl(clientKey, redirectUri, state) {
  */
 async function exchangeCodeForToken(code, clientKey, clientSecret, redirectUri) {
     console.log('[TikTok] Exchanging code for token');
-    
-    const { data } = await axios.post(`${TIKTOK_API_BASE}/oauth/token/`, null, {
-        params: {
-            client_key: clientKey,
-            client_secret: clientSecret,
-            code: code,
-            grant_type: 'authorization_code',
-            redirect_uri: redirectUri
-        },
+
+    // TikTok requires form-urlencoded body, not query params
+    const params = new URLSearchParams({
+        client_key: clientKey,
+        client_secret: clientSecret,
+        code: code,
+        grant_type: 'authorization_code',
+        redirect_uri: redirectUri
+    });
+
+    const { data } = await axios.post(`${TIKTOK_API_BASE}/oauth/token/`, params.toString(), {
         headers: {
             'Content-Type': 'application/x-www-form-urlencoded'
         }
     });
-    
+
     if (data.error) {
         console.error('[TikTok] Token exchange error:', data);
         throw new Error(data.error_description || data.error);
     }
-    
+
     console.log('[TikTok] Token exchange successful, open_id:', data.open_id);
     return data;
 }
@@ -72,24 +74,26 @@ async function exchangeCodeForToken(code, clientKey, clientSecret, redirectUri) 
  */
 async function refreshAccessToken(refreshToken, clientKey, clientSecret) {
     console.log('[TikTok] Refreshing access token');
-    
-    const { data } = await axios.post(`${TIKTOK_API_BASE}/oauth/token/`, null, {
-        params: {
-            client_key: clientKey,
-            client_secret: clientSecret,
-            refresh_token: refreshToken,
-            grant_type: 'refresh_token'
-        },
+
+    // TikTok requires form-urlencoded body
+    const params = new URLSearchParams({
+        client_key: clientKey,
+        client_secret: clientSecret,
+        refresh_token: refreshToken,
+        grant_type: 'refresh_token'
+    });
+
+    const { data } = await axios.post(`${TIKTOK_API_BASE}/oauth/token/`, params.toString(), {
         headers: {
             'Content-Type': 'application/x-www-form-urlencoded'
         }
     });
-    
+
     if (data.error) {
         console.error('[TikTok] Token refresh error:', data);
         throw new Error(data.error_description || data.error);
     }
-    
+
     console.log('[TikTok] Token refresh successful');
     return data;
 }
@@ -103,7 +107,7 @@ async function refreshAccessToken(refreshToken, clientKey, clientSecret) {
  */
 async function revokeToken(accessToken, clientKey, clientSecret) {
     console.log('[TikTok] Revoking access token');
-    
+
     try {
         await axios.post(`${TIKTOK_API_BASE}/oauth/revoke/`, null, {
             params: {
@@ -129,7 +133,7 @@ async function revokeToken(accessToken, clientKey, clientSecret) {
  */
 async function getUserInfo(accessToken) {
     console.log('[TikTok] Fetching user info');
-    
+
     const { data } = await axios.get(`${TIKTOK_API_BASE}/user/info/`, {
         params: {
             fields: 'open_id,union_id,avatar_url,display_name,username,follower_count,following_count,likes_count,video_count'
@@ -138,12 +142,12 @@ async function getUserInfo(accessToken) {
             'Authorization': `Bearer ${accessToken}`
         }
     });
-    
+
     if (data.error?.code !== 'ok' && data.error?.code) {
         console.error('[TikTok] Get user info error:', data.error);
         throw new Error(data.error.message || 'Failed to get user info');
     }
-    
+
     console.log('[TikTok] User info retrieved:', data.data?.user?.display_name || data.data?.user?.username);
     return data.data?.user || data.data;
 }
@@ -165,7 +169,7 @@ async function getUserInfo(accessToken) {
  */
 async function initializeVideoUploadFromUrl(accessToken, videoUrl, options = {}) {
     console.log('[TikTok] Initializing video upload from URL:', videoUrl);
-    
+
     const payload = {
         post_info: {
             title: options.caption || '',
@@ -179,7 +183,7 @@ async function initializeVideoUploadFromUrl(accessToken, videoUrl, options = {})
             video_url: videoUrl
         }
     };
-    
+
     const { data } = await axios.post(
         `${TIKTOK_API_BASE}/post/publish/video/init/`,
         payload,
@@ -190,12 +194,12 @@ async function initializeVideoUploadFromUrl(accessToken, videoUrl, options = {})
             }
         }
     );
-    
+
     if (data.error?.code !== 'ok' && data.error?.code) {
         console.error('[TikTok] Video init error:', data.error);
         throw new Error(data.error.message || 'Failed to initialize video upload');
     }
-    
+
     console.log('[TikTok] Video upload initialized, publish_id:', data.data?.publish_id);
     return data.data;
 }
@@ -210,14 +214,14 @@ async function initializeVideoUploadFromUrl(accessToken, videoUrl, options = {})
  */
 async function initializeInboxVideoUpload(accessToken, videoUrl) {
     console.log('[TikTok] Initializing inbox video upload from URL:', videoUrl);
-    
+
     const payload = {
         source_info: {
             source: 'PULL_FROM_URL',
             video_url: videoUrl
         }
     };
-    
+
     const { data } = await axios.post(
         `${TIKTOK_API_BASE}/post/publish/inbox/video/init/`,
         payload,
@@ -228,12 +232,12 @@ async function initializeInboxVideoUpload(accessToken, videoUrl) {
             }
         }
     );
-    
+
     if (data.error?.code !== 'ok' && data.error?.code) {
         console.error('[TikTok] Inbox video init error:', data.error);
         throw new Error(data.error.message || 'Failed to initialize inbox video upload');
     }
-    
+
     console.log('[TikTok] Inbox video upload initialized, publish_id:', data.data?.publish_id);
     return data.data;
 }
@@ -246,7 +250,7 @@ async function initializeInboxVideoUpload(accessToken, videoUrl) {
  */
 async function getPublishStatus(accessToken, publishId) {
     console.log('[TikTok] Checking publish status for:', publishId);
-    
+
     const { data } = await axios.post(
         `${TIKTOK_API_BASE}/post/publish/status/fetch/`,
         { publish_id: publishId },
@@ -257,12 +261,12 @@ async function getPublishStatus(accessToken, publishId) {
             }
         }
     );
-    
+
     if (data.error?.code !== 'ok' && data.error?.code) {
         console.error('[TikTok] Get publish status error:', data.error);
         throw new Error(data.error.message || 'Failed to get publish status');
     }
-    
+
     console.log('[TikTok] Publish status:', data.data?.status);
     return data.data;
 }
@@ -276,7 +280,7 @@ async function getPublishStatus(accessToken, publishId) {
  */
 async function getVideoList(accessToken, maxCount = 20, cursor = 0) {
     console.log('[TikTok] Fetching video list, cursor:', cursor);
-    
+
     const { data } = await axios.post(
         `${TIKTOK_API_BASE}/video/list/`,
         {
@@ -293,12 +297,12 @@ async function getVideoList(accessToken, maxCount = 20, cursor = 0) {
             }
         }
     );
-    
+
     if (data.error?.code !== 'ok' && data.error?.code) {
         console.error('[TikTok] Get video list error:', data.error);
         throw new Error(data.error.message || 'Failed to get video list');
     }
-    
+
     console.log('[TikTok] Retrieved', data.data?.videos?.length || 0, 'videos');
     return data.data;
 }
@@ -311,7 +315,7 @@ async function getVideoList(accessToken, maxCount = 20, cursor = 0) {
  */
 async function queryVideos(accessToken, videoIds) {
     console.log('[TikTok] Querying videos:', videoIds);
-    
+
     const { data } = await axios.post(
         `${TIKTOK_API_BASE}/video/query/`,
         {
@@ -329,12 +333,12 @@ async function queryVideos(accessToken, videoIds) {
             }
         }
     );
-    
+
     if (data.error?.code !== 'ok' && data.error?.code) {
         console.error('[TikTok] Query videos error:', data.error);
         throw new Error(data.error.message || 'Failed to query videos');
     }
-    
+
     console.log('[TikTok] Queried', data.data?.videos?.length || 0, 'videos');
     return data.data;
 }
@@ -349,22 +353,22 @@ async function queryVideos(accessToken, videoIds) {
  */
 async function waitForPublishComplete(accessToken, publishId, maxWaitMs = 300000, pollIntervalMs = 5000) {
     const startTime = Date.now();
-    
+
     while (Date.now() - startTime < maxWaitMs) {
         const status = await getPublishStatus(accessToken, publishId);
-        
+
         if (status.status === 'PUBLISH_COMPLETE' || status.status === 'SEND_TO_USER_INBOX') {
             return status;
         }
-        
+
         if (status.status === 'FAILED') {
             throw new Error(`Video publish failed: ${status.fail_reason || 'Unknown reason'}`);
         }
-        
+
         // Still processing, wait and poll again
         await new Promise(resolve => setTimeout(resolve, pollIntervalMs));
     }
-    
+
     throw new Error('Video publish timed out');
 }
 
@@ -374,20 +378,20 @@ module.exports = {
     exchangeCodeForToken,
     refreshAccessToken,
     revokeToken,
-    
+
     // User
     getUserInfo,
-    
+
     // Video Publishing
     initializeVideoUploadFromUrl,
     initializeInboxVideoUpload,
     getPublishStatus,
     waitForPublishComplete,
-    
+
     // Video Data
     getVideoList,
     queryVideos,
-    
+
     // Constants
     TIKTOK_SCOPES
 };
