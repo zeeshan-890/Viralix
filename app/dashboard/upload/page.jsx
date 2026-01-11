@@ -2,6 +2,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { uploadAPI, postsAPI, facebookAPI, instagramAPI, tiktokAPI, youtubeAPI } from '@/lib/api';
 import { useRouter } from 'next/navigation';
+import { useAccounts } from '@/hooks/useAccounts';
 import FileUpload from './components/FileUpload';
 import TagsInput from './components/TagsInput';
 import MediaLibrary from './components/MediaLibrary';
@@ -9,6 +10,7 @@ import { Upload, Image, Video, Calendar, Clock, Send, Save, Eye, Sparkles, Check
 
 export default function UploadPage() {
     const router = useRouter();
+    const { accounts: connectedAccounts, isLoading: accountsLoading } = useAccounts();
     const [activeTab, setActiveTab] = useState('upload');
     const [uploadedFiles, setUploadedFiles] = useState([]);
     const [mediaLibrary, setMediaLibrary] = useState([]);
@@ -48,51 +50,39 @@ export default function UploadPage() {
         }
     };
 
-    // Load connected FB pages, IG accounts, TikTok accounts, and YouTube channels for platform selection
+    // Load connected targets from centralized useAccounts hook
     useEffect(() => {
-        let cancelled = false;
-        async function loadTargets() {
-            try {
-                const [fbRes, igRes, ttRes, ytRes] = await Promise.allSettled([
-                    facebookAPI.status(),
-                    instagramAPI.status(),
-                    tiktokAPI.status(),
-                    youtubeAPI.status(),
-                ]);
-                const targets = [];
-                if (fbRes.status === 'fulfilled') {
-                    const pages = fbRes.value?.data?.pages || [];
-                    for (const p of pages) {
-                        targets.push({ key: `facebook:${p.id}`, name: 'facebook', accountId: p.id, label: `Facebook — ${p.name}`, icon: '📘' });
-                    }
-                }
-                if (igRes.status === 'fulfilled') {
-                    const accounts = igRes.value?.data?.accounts || [];
-                    for (const a of accounts) {
-                        // API returns accountId, username - use those
-                        targets.push({ key: `instagram:${a.accountId}`, name: 'instagram', accountId: a.accountId, label: `Instagram — ${a.username || a.name || a.accountId}`, icon: '📷' });
-                    }
-                }
-                if (ttRes.status === 'fulfilled') {
-                    const accounts = ttRes.value?.data?.accounts || [];
-                    for (const a of accounts) {
-                        targets.push({ key: `tiktok:${a.accountId}`, name: 'tiktok', accountId: a.accountId, label: `TikTok — ${a.accountName}`, icon: '🎵' });
-                    }
-                }
-                if (ytRes.status === 'fulfilled') {
-                    const accounts = ytRes.value?.data?.accounts || [];
-                    for (const a of accounts) {
-                        targets.push({ key: `youtube:${a.accountId}`, name: 'youtube', accountId: a.accountId, label: `YouTube — ${a.accountName}`, icon: '📺' });
-                    }
-                }
-                if (!cancelled) setConnectedTargets(targets);
-            } catch (e) {
-                if (!cancelled) {/* ignore */ }
+        if (accountsLoading) return;
+
+        const targets = [];
+        for (const acc of connectedAccounts) {
+            let label = acc.accountName || acc.platformAccountId;
+            let icon = '🔌';
+
+            if (acc.platform === 'facebook') {
+                label = `Facebook — ${acc.accountName}`;
+                icon = '📘';
+            } else if (acc.platform === 'instagram') {
+                label = `Instagram — ${acc.accountName}`;
+                icon = '📷';
+            } else if (acc.platform === 'tiktok') {
+                label = `TikTok — ${acc.accountName}`;
+                icon = '🎵';
+            } else if (acc.platform === 'youtube') {
+                label = `YouTube — ${acc.accountName}`;
+                icon = '📺';
             }
+
+            targets.push({
+                key: `${acc.platform}:${acc.platformAccountId}`,
+                name: acc.platform,
+                accountId: acc.platformAccountId, // This is the Page ID for FB now!
+                label,
+                icon
+            });
         }
-        loadTargets();
-        return () => { cancelled = true; };
-    }, []);
+        setConnectedTargets(targets);
+    }, [connectedAccounts, accountsLoading]);
 
     const handleUploadComplete = (files) => {
         setUploadedFiles(prev => [...prev, ...files]);
