@@ -93,7 +93,12 @@ router.get('/status', auth, async (req, res) => {
 
         res.json({
             connected: youtubeAccounts.length > 0,
-            accounts: youtubeAccounts
+            accounts: youtubeAccounts.map(acc => ({
+                accountId: acc.platformAccountId,
+                accountName: acc.accountName,
+                connectedAt: acc.connectedAt,
+                tokenExpires: acc.tokenExpires
+            }))
         });
     } catch (error) {
         res.status(500).json({ message: error.message });
