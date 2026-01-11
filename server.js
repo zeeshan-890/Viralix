@@ -221,6 +221,7 @@ try {
     console.log('👷 Background workers started');
 } catch (error) {
     console.error('⚠️ Failed to start background workers:', error.message);
+    console.error('⚠️ Worker startup error stack:', error.stack);
 }
 
 // Start lightweight scheduler using node-cron to publish due posts
