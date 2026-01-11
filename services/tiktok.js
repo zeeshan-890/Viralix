@@ -40,6 +40,8 @@ function generateAuthUrl(clientKey, redirectUri, state) {
  */
 async function exchangeCodeForToken(code, clientKey, clientSecret, redirectUri) {
     console.log('[TikTok] Exchanging code for token');
+    console.log('[TikTok] Using client_key:', clientKey ? clientKey.substring(0, 8) + '...' : 'MISSING');
+    console.log('[TikTok] Redirect URI:', redirectUri);
 
     // TikTok requires form-urlencoded body, not query params
     const params = new URLSearchParams({
@@ -50,19 +52,29 @@ async function exchangeCodeForToken(code, clientKey, clientSecret, redirectUri) 
         redirect_uri: redirectUri
     });
 
-    const { data } = await axios.post(`${TIKTOK_API_BASE}/oauth/token/`, params.toString(), {
-        headers: {
-            'Content-Type': 'application/x-www-form-urlencoded'
+    try {
+        const { data } = await axios.post(`${TIKTOK_API_BASE}/oauth/token/`, params.toString(), {
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded'
+            }
+        });
+
+        if (data.error) {
+            console.error('[TikTok] Token exchange error response:', JSON.stringify(data, null, 2));
+            throw new Error(data.error_description || data.error);
         }
-    });
 
-    if (data.error) {
-        console.error('[TikTok] Token exchange error:', data);
-        throw new Error(data.error_description || data.error);
+        console.log('[TikTok] Token exchange successful, open_id:', data.open_id);
+        return data;
+    } catch (error) {
+        console.error('[TikTok] Token exchange failed:', {
+            status: error.response?.status,
+            statusText: error.response?.statusText,
+            data: error.response?.data,
+            message: error.message
+        });
+        throw new Error(error.response?.data?.error_description || error.response?.data?.error || error.message);
     }
-
-    console.log('[TikTok] Token exchange successful, open_id:', data.open_id);
-    return data;
 }
 
 /**
