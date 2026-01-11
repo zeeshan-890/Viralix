@@ -42,7 +42,11 @@ class FacebookPublisher extends BasePublisher {
             return response.data.access_token;
         } catch (error) {
             if (error.response && error.response.data && error.response.data.error) {
-                throw new Error(error.response.data.error.message);
+                const msg = error.response.data.error.message;
+                if (msg.includes('Provide valid app ID') || msg.includes('access token is required') || msg.includes('Error validating access token')) {
+                    throw new Error('Facebook authentication failed. Please go to Connect Accounts and Reconnect Facebook.');
+                }
+                throw new Error(msg);
             }
             throw error;
         }

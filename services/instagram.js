@@ -48,6 +48,11 @@ async function createDirectOAuthMediaContainer(igUserId, token, payload) {
 
     const finalCode = lastErr?.response?.data?.error?.code;
     const finalMessage = lastErr?.response?.data?.error?.message || lastErr?.message;
+    if (finalCode === 190) {
+        const err = new Error('Instagram authentication failed (Invalid Token). Please go to Connect Accounts and Reconnect Instagram.');
+        err.code = 'IG_INVALID_TOKEN';
+        throw err;
+    }
     if (finalCode === 100 && /Unsupported request/i.test(finalMessage)) {
         // Provide actionable guidance.
         const guidance = 'Instagram token / account does not support publishing. Publishing requires a Business or Creator Instagram account connected to a Facebook Page, authorized with the Instagram Graph API (permissions: instagram_basic, instagram_content_publish). Convert your account to Professional, connect it to a Facebook Page, then reconnect inside the platform.';
@@ -103,6 +108,11 @@ async function publishDirectOAuthContainer(igUserId, token, creationId) {
     }
     const finalCode = lastErr?.response?.data?.error?.code;
     const finalMessage = lastErr?.response?.data?.error?.message || lastErr?.message;
+    if (finalCode === 190) {
+        const err = new Error('Instagram authentication failed (Invalid Token). Please go to Connect Accounts and Reconnect Instagram.');
+        err.code = 'IG_INVALID_TOKEN';
+        throw err;
+    }
     if (finalCode === 100 && /Unsupported request/i.test(finalMessage)) {
         const guidance = 'This token cannot publish content. Please ensure the Instagram account is a Business or Creator account linked to a Facebook Page and re-authenticate with the required permissions (instagram_basic, pages_show_list, instagram_content_publish).';
         const err = new Error(`${finalMessage}. ${guidance}`);
