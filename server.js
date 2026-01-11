@@ -148,6 +148,12 @@ try {
 } catch (e) {
     console.warn('TikTok routes not mounted yet:', e.message);
 }
+try {
+    app.use('/api/youtube-oauth', require('./routes/youtube-oauth'));
+    console.log('📺 YouTube OAuth routes mounted');
+} catch (e) {
+    console.warn('YouTube routes not mounted yet:', e.message);
+}
 app.use('/api/posts', require('./routes/posts'));
 app.use('/api/analytics', require('./routes/analytics'));
 app.use('/api/ai', require('./routes/ai'));
