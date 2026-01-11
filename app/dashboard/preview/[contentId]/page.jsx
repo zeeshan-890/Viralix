@@ -4,9 +4,9 @@ import { postsAPI, analyticsAPI } from '@/lib/api';
 import { useRouter } from 'next/navigation';
 import PlatformTabs from './components/PlatformTabs';
 import CaptionEditor from './components/CaptionEditor';
-import TimePicker from './components/TimePicker';
 import MediaEditor from './components/MediaEditor';
 import PlatformSelector from './components/PlatformSelector';
+import ScheduleModal from './components/ScheduleModal';
 import {
     ArrowLeft, Save, Calendar, Send, Eye, Heart, MessageCircle, Share2,
     RefreshCw, Clock, CheckCircle2, AlertCircle, Loader2, BarChart3, Trash2
@@ -23,6 +23,9 @@ export default function PreviewPage({ params }) {
     const [publishing, setPublishing] = useState(false);
     const [refreshing, setRefreshing] = useState(false);
     const [deleting, setDeleting] = useState(false);
+
+    // Schedule Modal State
+    const [scheduleModalOpen, setScheduleModalOpen] = useState(false);
 
     useEffect(() => {
         if (!contentId) return;
@@ -58,13 +61,30 @@ export default function PreviewPage({ params }) {
         }
     };
 
-    const schedulePost = async () => {
+    // Open Schedule Modal
+    const handleScheduleClick = () => {
+        setScheduleModalOpen(true);
+    };
+
+    // Confirm Schedule - Called by Modal
+    const handleConfirmSchedule = async (date, time) => {
         if (!post) return;
 
         setSaving(true);
         try {
-            // Mark as scheduled; backend uses scheduledDate and platforms shape
-            await postsAPI.updatePost(post._id, { isScheduled: true });
+            // Combine date and time to ISO string
+            const scheduledDate = new Date(`${date}T${time}:00`).toISOString();
+
+            // Mark as scheduled; backend uses scheduledDate
+            // ensure platform statuses are updated to 'scheduled' if attempting
+            await postsAPI.updatePost(post._id, {
+                isScheduled: true,
+                scheduledDate: scheduledDate,
+                // Setting scheduleType helps some backend logic if present
+                scheduleType: 'later'
+            });
+
+            setScheduleModalOpen(false);
             router.push('/dashboard/schedule');
         } catch (err) {
             setError(err?.response?.data?.message || 'Failed to schedule post');
@@ -88,6 +108,7 @@ export default function PreviewPage({ params }) {
             setSaving(false);
         }
     };
+
 
     const publishNow = async () => {
         if (!post) return;
@@ -444,25 +465,7 @@ export default function PreviewPage({ params }) {
                         </div>
                     )}
 
-                    {/* Schedule Time */}
-                    {!allPublished && (
-                        <div className="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
-                            <div className="px-6 py-4 border-b border-gray-100"
-                                style={{ background: 'linear-gradient(135deg, #f9fafb 0%, #f3f4f6 100%)' }}>
-                                <h3 className="text-lg font-bold flex items-center gap-2" style={{ color: '#2a3e2e' }}>
-                                    <div className="w-8 h-8 rounded-lg flex items-center justify-center"
-                                        style={{ background: 'linear-gradient(135deg, #84A98C 0%, #52796F 100%)' }}>
-                                        <Calendar className="w-4 h-4 text-white" />
-                                    </div>
-                                    Schedule
-                                </h3>
-                            </div>
-                            <TimePicker
-                                post={post}
-                                onChange={(updates) => updatePost(updates)}
-                            />
-                        </div>
-                    )}
+
 
                     {/* Action Buttons */}
                     {!allPublished && (
@@ -488,8 +491,8 @@ export default function PreviewPage({ params }) {
                             )}
                             <div className="space-y-3">
                                 <button
-                                    onClick={schedulePost}
-                                    disabled={saving || !post?.scheduledDate || !(Array.isArray(post?.platforms) && post.platforms.length > 0)}
+                                    onClick={handleScheduleClick}
+                                    disabled={saving || !(Array.isArray(post?.platforms) && post.platforms.length > 0)}
                                     className="w-full flex items-center justify-center gap-3 py-4 px-4 text-white rounded-xl shadow-lg hover:shadow-2xl transition-all transform hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none font-bold"
                                     style={{ background: 'linear-gradient(135deg, #84A98C 0%, #52796F 100%)' }}
                                 >
@@ -666,8 +669,13 @@ export default function PreviewPage({ params }) {
                     )}
                 </div>
             </div>
+            {/* Schedule Modal */}
+            <ScheduleModal
+                isOpen={scheduleModalOpen}
+                onClose={() => setScheduleModalOpen(false)}
+                onConfirm={handleConfirmSchedule}
+                loading={saving}
+            />
         </div>
-
-
     );
 }
