@@ -489,8 +489,21 @@ async function uploadVideoFromUrl(accessToken, videoUrl) {
     const videoSize = videoBuffer.length;
     console.log(`[TikTok] Video downloaded: ${(videoSize / (1024 * 1024)).toFixed(2)} MB`);
 
-    // Step 2: Initialize FILE_UPLOAD
-    const chunkSize = 10 * 1024 * 1024; // 10MB chunks
+    // Step 2: Calculate chunk size based on TikTok requirements:
+    // - Minimum chunk: 5MB
+    // - Maximum chunk: 64MB  
+    // - Videos < 5MB: use video size as chunk size (single chunk)
+    // - Last chunk can be smaller than 5MB
+    let chunkSize;
+    if (videoSize < 5 * 1024 * 1024) {
+        // Video is under 5MB - upload as single chunk
+        chunkSize = videoSize;
+        console.log(`[TikTok] Small video, using single chunk of ${videoSize} bytes`);
+    } else {
+        // Use 10MB chunks (within 5-64MB range)
+        chunkSize = 10 * 1024 * 1024;
+    }
+
     const initResult = await initializeFileUpload(accessToken, videoSize, chunkSize);
 
     const { publish_id, upload_url } = initResult;
@@ -500,7 +513,7 @@ async function uploadVideoFromUrl(accessToken, videoUrl) {
 
     // Step 3: Upload in chunks
     const totalChunks = Math.ceil(videoSize / chunkSize);
-    console.log(`[TikTok] Uploading ${totalChunks} chunks...`);
+    console.log(`[TikTok] Uploading ${totalChunks} chunk(s)...`);
 
     for (let i = 0; i < totalChunks; i++) {
         const startByte = i * chunkSize;
