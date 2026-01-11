@@ -67,7 +67,7 @@ router.post(
         if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
         try {
             const { title, content, platforms, media = [], hashtags = [], mentions = [], scheduledDate, isScheduled } = req.body;
-            const validPlatforms = ['facebook', 'instagram', 'tiktok'];
+            const validPlatforms = ['facebook', 'instagram', 'tiktok', 'youtube'];
             for (const p of platforms) {
                 if (!validPlatforms.includes(p.name)) {
                     return res.status(400).json({ message: `Invalid platform: ${p.name}` });

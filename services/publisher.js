@@ -15,6 +15,7 @@ const {
     publishDirectOAuthContainer,
 } = require('./instagram');
 const tiktokService = require('./tiktok');
+const youtubeService = require('./youtube');
 
 const INSTAGRAM_GRAPH_URL = 'https://graph.instagram.com'; // Used for direct Instagram Login tokens (Instagram API with Instagram Login)
 const INSTAGRAM_BASIC_DISPLAY_URL = 'https://graph.instagram.com';
@@ -196,6 +197,54 @@ async function resolveAuthForPlatform(user, platform) {
             accountName: tiktokAccount.accountName
         };
     }
+    if (platform.name === 'youtube') {
+        console.log(`[Publisher] Looking for YouTube account: ${platform.accountId}`);
+
+        const youtubeAccount = (user.socialAccounts || []).find(
+            acc => acc.platform === 'youtube' &&
+                acc.accountId === platform.accountId &&
+                acc.isActive
+        );
+
+        if (!youtubeAccount) {
+            throw new Error('YouTube account not found. Please reconnect your YouTube account.');
+        }
+
+        if (!youtubeAccount.accessToken) {
+            throw new Error('YouTube account found but token is missing. Please reconnect.');
+        }
+
+        // Check if token is expired
+        if (youtubeAccount.tokenExpires && new Date(youtubeAccount.tokenExpires) < new Date()) {
+            console.log('[Publisher] YouTube token expired, attempting refresh...');
+            try {
+                const tokenData = await youtubeService.refreshAccessToken(
+                    youtubeAccount.refreshToken,
+                    process.env.YOUTUBE_CLIENT_ID,
+                    process.env.YOUTUBE_CLIENT_SECRET
+                );
+                youtubeAccount.accessToken = tokenData.access_token;
+                if (tokenData.refresh_token) {
+                    youtubeAccount.refreshToken = tokenData.refresh_token;
+                }
+                youtubeAccount.tokenExpires = new Date(Date.now() + (tokenData.expires_in * 1000));
+                user.markModified('socialAccounts');
+                await user.save();
+                console.log('[Publisher] YouTube token refreshed successfully');
+            } catch (refreshError) {
+                console.error('[Publisher] YouTube token refresh failed:', refreshError.message);
+                throw new Error('YouTube token expired and refresh failed. Please reconnect your account.');
+            }
+        }
+
+        console.log(`[Publisher] Found YouTube account: ${youtubeAccount.accountName}`);
+        return {
+            kind: 'youtube',
+            channelId: platform.accountId,
+            token: youtubeAccount.accessToken,
+            accountName: youtubeAccount.accountName
+        };
+    }
     throw new Error(`Unsupported platform: ${platform.name}`);
 }
 
@@ -372,6 +421,42 @@ async function publishToTikTok(auth, content, mediaList) {
     }
 }
 
+/**
+ * Publish video to YouTube
+ * Downloads video from Cloudinary and uploads to YouTube
+ */
+async function publishToYouTube(auth, content, mediaList, postTitle = '') {
+    console.log(`[Publisher] publishToYouTube called - channelId: ${auth.channelId}, account: ${auth.accountName}`);
+
+    // YouTube only supports video content
+    const video = mediaList.find(m => m.type === 'video');
+    if (!video) {
+        throw new Error('YouTube only supports video content. Please include a video in your post.');
+    }
+
+    console.log(`[Publisher] YouTube video URL: ${video.url}`);
+
+    // Upload video to YouTube
+    const result = await youtubeService.uploadVideo(
+        auth.token,
+        video.url,
+        {
+            title: postTitle || 'Uploaded via Viralix',
+            description: content || '',
+            tags: [],
+            privacyStatus: 'private', // Safe default - user can change in YouTube Studio
+            madeForKids: false
+        }
+    );
+
+    console.log(`[Publisher] YouTube upload complete, video ID: ${result.videoId}`);
+    return {
+        postId: result.videoId,
+        status: result.status,
+        message: 'Video uploaded to YouTube. Check YouTube Studio to publish publicly.'
+    };
+}
+
 async function publishPlatform(user, platform, post) {
     const auth = await resolveAuthForPlatform(user, platform);
     const startedAt = new Date();
@@ -383,6 +468,8 @@ async function publishPlatform(user, platform, post) {
             result = await publishToInstagram(auth, post.content, post.media);
         } else if (auth.kind === 'tiktok') {
             result = await publishToTikTok(auth, post.content, post.media);
+        } else if (auth.kind === 'youtube') {
+            result = await publishToYouTube(auth, post.content, post.media, post.title);
         }
         return {
             ...platform.toObject?.() || platform,
