@@ -1,8 +1,8 @@
 "use client";
 import { useCallback, useEffect, useState } from "react";
-import { facebookAPI, tiktokAPI } from "@/lib/api";
+import { facebookAPI, tiktokAPI, youtubeAPI } from "@/lib/api";
 import Link from "next/link";
-import { Facebook, Instagram, CheckCircle2, ExternalLink, Loader2, AlertCircle, HelpCircle, BookOpen, Music2, Video } from "lucide-react";
+import { Facebook, Instagram, CheckCircle2, ExternalLink, Loader2, AlertCircle, HelpCircle, BookOpen, Music2, Video, Youtube } from "lucide-react";
 import axios from "axios";
 
 const API_URL = 'https://viralix-b3ff86cb412f.herokuapp.com';
@@ -11,9 +11,11 @@ export default function ConnectAccountsPage() {
     const [fbStatus, setFbStatus] = useState({ connected: false, account: null, pages: [] });
     const [igStatus, setIgStatus] = useState({ connected: false, accounts: [] });
     const [ttStatus, setTtStatus] = useState({ connected: false, accounts: [] });
+    const [ytStatus, setYtStatus] = useState({ connected: false, accounts: [] });
     const [loading, setLoading] = useState(true);
     const [connecting, setConnecting] = useState(false);
     const [connectingTikTok, setConnectingTikTok] = useState(false);
+    const [connectingYouTube, setConnectingYouTube] = useState(false);
     const [message, setMessage] = useState({ type: '', text: '' });
 
     const loadStatuses = useCallback(async () => {
@@ -37,6 +39,14 @@ export default function ConnectAccountsPage() {
             } catch (ttErr) {
                 console.warn('TikTok status not available:', ttErr.message);
             }
+
+            // Load YouTube status
+            try {
+                const { data: ytData } = await youtubeAPI.status();
+                setYtStatus(ytData);
+            } catch (ytErr) {
+                console.warn('YouTube status not available:', ytErr.message);
+            }
         } catch (e) {
             console.error('Failed to load statuses:', e);
         } finally {
@@ -59,6 +69,11 @@ export default function ConnectAccountsPage() {
             window.history.replaceState({}, '', window.location.pathname);
         } else if (success === 'tiktok_connected') {
             setMessage({ type: 'success', text: 'TikTok account connected successfully!' });
+            setTimeout(() => setMessage({ type: '', text: '' }), 5000);
+            // Clean URL
+            window.history.replaceState({}, '', window.location.pathname);
+        } else if (success === 'youtube_connected') {
+            setMessage({ type: 'success', text: 'YouTube channel connected successfully!' });
             setTimeout(() => setMessage({ type: '', text: '' }), 5000);
             // Clean URL
             window.history.replaceState({}, '', window.location.pathname);
@@ -128,6 +143,34 @@ export default function ConnectAccountsPage() {
         } catch (e) {
             console.error('Failed to disconnect TikTok', e);
             setMessage({ type: 'error', text: 'Failed to disconnect TikTok account.' });
+        }
+    };
+
+    const connectYouTube = async () => {
+        setConnectingYouTube(true);
+        try {
+            const { data } = await youtubeAPI.connect();
+            const authUrl = data?.authUrl;
+            if (!authUrl) throw new Error('No URL received');
+            // Redirect to Google OAuth (full page redirect)
+            window.location.href = authUrl;
+        } catch (e) {
+            console.error('Failed to start YouTube OAuth', e);
+            setMessage({ type: 'error', text: 'Failed to connect YouTube. Please try again.' });
+            setConnectingYouTube(false);
+        }
+    };
+
+    const disconnectYouTube = async (accountId) => {
+        if (!confirm('Are you sure you want to disconnect this YouTube channel?')) return;
+        try {
+            await youtubeAPI.disconnect(accountId);
+            loadStatuses();
+            setMessage({ type: 'success', text: 'YouTube channel disconnected.' });
+            setTimeout(() => setMessage({ type: '', text: '' }), 3000);
+        } catch (e) {
+            console.error('Failed to disconnect YouTube', e);
+            setMessage({ type: 'error', text: 'Failed to disconnect YouTube channel.' });
         }
     };
 
@@ -488,6 +531,100 @@ export default function ConnectAccountsPage() {
                                 <Video className="w-4 h-4 text-blue-600 flex-shrink-0 mt-0.5" />
                                 <p className="text-sm text-blue-800">
                                     TikTok only supports video content. Make sure to include a video when posting to TikTok. Videos will be posted to your account as private by default until your app is reviewed by TikTok.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* YouTube Section */}
+            {!loading && (
+                <div className="rounded-xl border-2 border-gray-200 bg-white shadow-sm overflow-hidden">
+                    <div className="p-6">
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-4">
+                                <div className="p-3 rounded-xl bg-red-600">
+                                    <Youtube className="w-8 h-8 text-white" />
+                                </div>
+                                <div>
+                                    <h2 className="text-lg font-semibold text-gray-900">YouTube</h2>
+                                    <p className="text-sm text-gray-500">
+                                        {ytStatus.connected ? `${ytStatus.accounts?.length || 0} channel(s) connected` : 'Not connected'}
+                                    </p>
+                                </div>
+                            </div>
+                            {ytStatus.connected ? (
+                                <Link
+                                    href="/dashboard/connect-accounts/youtube"
+                                    className="flex items-center gap-2 px-4 py-2 border-2 border-gray-200 rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors"
+                                >
+                                    Manage
+                                    <ExternalLink className="w-4 h-4" />
+                                </Link>
+                            ) : (
+                                <button
+                                    onClick={connectYouTube}
+                                    disabled={connectingYouTube}
+                                    className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg text-sm font-medium hover:bg-red-700 transition-colors disabled:opacity-50"
+                                >
+                                    {connectingYouTube ? (
+                                        <>
+                                            <Loader2 className="w-4 h-4 animate-spin" />
+                                            Connecting...
+                                        </>
+                                    ) : (
+                                        <>Connect YouTube</>
+                                    )}
+                                </button>
+                            )}
+                        </div>
+
+                        {ytStatus.connected && ytStatus.accounts?.length > 0 && (
+                            <div className="mt-6 pt-6 border-t border-gray-200">
+                                <div className="flex items-center gap-2 mb-4">
+                                    <CheckCircle2 className="w-5 h-5 text-green-600" />
+                                    <span className="text-sm font-medium text-gray-900">
+                                        Connected Channels ({ytStatus.accounts.length})
+                                    </span>
+                                </div>
+                                <div className="space-y-3">
+                                    {ytStatus.accounts.slice(0, 3).map(account => (
+                                        <div key={account.accountId} className="flex items-center justify-between border-2 border-gray-200 rounded-lg p-3 hover:border-gray-300 transition-colors">
+                                            <div className="flex items-center gap-3">
+                                                <div className="w-10 h-10 rounded-full flex items-center justify-center bg-red-600 text-white font-semibold">
+                                                    <Youtube className="w-5 h-5" />
+                                                </div>
+                                                <div>
+                                                    <div className="font-medium text-gray-900">{account.accountName}</div>
+                                                    <div className="text-xs text-gray-500 flex items-center gap-1">
+                                                        <Video className="w-3 h-3" />
+                                                        YouTube Channel
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div className="flex items-center gap-2">
+                                                <span className="px-2 py-1 text-xs rounded-full bg-green-100 text-green-700 border border-green-200">
+                                                    Active
+                                                </span>
+                                                <button
+                                                    onClick={() => disconnectYouTube(account.accountId)}
+                                                    className="text-xs text-red-600 hover:text-red-800 font-medium"
+                                                >
+                                                    Disconnect
+                                                </button>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+
+                        <div className="mt-4 p-4 rounded-lg border border-blue-200 bg-blue-50">
+                            <div className="flex items-start gap-2">
+                                <Video className="w-4 h-4 text-blue-600 flex-shrink-0 mt-0.5" />
+                                <p className="text-sm text-blue-800">
+                                    YouTube only supports video content. Videos are uploaded as private by default - you can change visibility in YouTube Studio.
                                 </p>
                             </div>
                         </div>
