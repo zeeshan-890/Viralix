@@ -1,13 +1,14 @@
 const publishQueue = require('./publish.queue');
 const PublishJob = require('../../models/PublishJob');
 const User = require('../../models/User');
+const Post = require('../../models/Post');
 // Note: PublisherFactory is required dynamically below in the processing loop
 
 // Process jobs
 publishQueue.process(async (job) => {
     console.log('[PublishWorker] Processing job:', job.id, 'Data:', JSON.stringify(job.data));
 
-    const { jobId, userId, platforms, content } = job.data;
+    const { jobId, userId, platforms, content, postId } = job.data;
 
     // 1. Fetch Job and User
     const publishJob = await PublishJob.findOne({ jobId });
@@ -31,6 +32,11 @@ publishQueue.process(async (job) => {
     publishJob.status = 'processing';
     publishJob.logs.push({ message: 'Starting publish job' });
     await publishJob.save();
+
+    // Update Post status to processing
+    if (postId) {
+        await Post.updateOne({ _id: postId }, { $set: { isDraft: false, isScheduled: false } });
+    }
 
     let successCount = 0;
     let failCount = 0;
@@ -76,6 +82,21 @@ publishQueue.process(async (job) => {
             publishJob.logs.push({ message: `Successfully published to ${platform.name}` });
             successCount++;
 
+            // Update Post Platform Status (Published)
+            if (postId) {
+                await Post.updateOne(
+                    { _id: postId, 'platforms.accountId': platform.accountId, 'platforms.name': platform.name },
+                    {
+                        $set: {
+                            'platforms.$.status': 'published',
+                            'platforms.$.publishedAt': new Date(),
+                            'platforms.$.postId': result.postId,
+                            'platforms.$.engagement.lastUpdated': new Date()
+                        }
+                    }
+                );
+            }
+
         } catch (error) {
             console.error(`Publish failed for ${platform.name}:`, error);
 
@@ -84,6 +105,19 @@ publishQueue.process(async (job) => {
             publishJob.platforms[platformIndex].error = error.message;
             publishJob.logs.push({ level: 'error', message: `Failed to publish to ${platform.name}: ${error.message}` });
             failCount++;
+
+            // Update Post Platform Status (Failed)
+            if (postId) {
+                await Post.updateOne(
+                    { _id: postId, 'platforms.accountId': platform.accountId, 'platforms.name': platform.name },
+                    {
+                        $set: {
+                            'platforms.$.status': 'failed',
+                            'platforms.$.errorMessage': error.message
+                        }
+                    }
+                );
+            }
         }
 
         // Update global progress
@@ -104,6 +138,18 @@ publishQueue.process(async (job) => {
         publishJob.status = 'partially_failed';
         publishJob.error = `${failCount} platform(s) failed`;
         publishJob.logs.push({ level: 'warn', message: 'Job completed with some errors' });
+    }
+
+    // Update Post Global Status
+    if (postId) {
+        let globalStatus = 'published';
+        if (failCount === totalPlatforms) globalStatus = 'failed';
+        else if (failCount > 0) globalStatus = 'partially_failed'; // Post model doesn't have this enum, defaults to isPublished logic?
+
+        // Post has isPublished boolean.
+        if (successCount > 0) {
+            await Post.updateOne({ _id: postId }, { $set: { isPublished: true, isDraft: false, isScheduled: false } });
+        }
     }
 
     await publishJob.save();
