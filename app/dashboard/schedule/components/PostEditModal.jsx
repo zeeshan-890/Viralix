@@ -1,7 +1,7 @@
 'use client';
 import { useEffect, useState } from 'react';
 import { X, Upload, Trash2, Save, Send, Calendar, Loader2 } from 'lucide-react';
-import { postsAPI, facebookAPI, instagramAPI, uploadAPI } from '@/lib/api';
+import { postsAPI, uploadAPI, platformsAPI } from '@/lib/api';
 
 export default function PostEditModal({ isOpen, onClose, post, onSave }) {
     const [loading, setLoading] = useState(false);
@@ -61,48 +61,35 @@ export default function PostEditModal({ isOpen, onClose, post, onSave }) {
     const loadAvailablePlatforms = async () => {
         setLoading(true);
         try {
-            const [fbResponse, igResponse] = await Promise.all([
-                facebookAPI.status(),
-                instagramAPI.status()
-            ]);
+            const response = await platformsAPI.getConnected();
+            const accounts = response.data?.accounts || [];
 
-            const platforms = [];
-
-            // Add Facebook pages
-            if (fbResponse.data?.connected && fbResponse.data?.pages) {
-                fbResponse.data.pages.forEach(page => {
-                    platforms.push({
-                        id: `facebook-${page.id}`,
-                        name: 'facebook',
-                        accountId: page.id,
-                        displayName: `${page.name} (Facebook)`,
-                        icon: '💻'
-                    });
-                });
-            }
-
-            // Add Instagram accounts (from linked Facebook pages)
-            if (igResponse.data?.accounts) {
-                igResponse.data.accounts.forEach(account => {
-                    // instagram.js returns { igUserId, pageId, pageName }
-                    const igUserId = account.igUserId || account.instagramId || account.id;
-                    const pageName = account.pageName || account.username || igUserId;
-                    if (!igUserId) return; // skip if missing
-                    platforms.push({
-                        id: `instagram-${igUserId}`,
-                        name: 'instagram',
-                        accountId: igUserId,
-                        displayName: `${pageName} (Instagram)`,
-                        icon: '📷'
-                    });
-                });
-            }
+            const platforms = accounts.map(acc => ({
+                id: `${acc.platform}-${acc.platformAccountId}`,
+                name: acc.platform,
+                accountId: acc.platformAccountId,
+                displayName: `${acc.accountName} (${acc.platform.charAt(0).toUpperCase() + acc.platform.slice(1)})`,
+                icon: getPlatformIcon(acc.platform)
+            }));
 
             setAvailablePlatforms(platforms);
         } catch (err) {
             setError('Failed to load connected accounts');
+            console.error(err);
         } finally {
             setLoading(false);
+        }
+    };
+
+    const getPlatformIcon = (platform) => {
+        switch (platform) {
+            case 'facebook': return '📘';
+            case 'instagram': return '📷';
+            case 'tiktok': return '🎵';
+            case 'youtube': return '📺';
+            case 'twitter': return '🐦';
+            case 'linkedin': return '💼';
+            default: return '📱';
         }
     };
 
@@ -377,8 +364,8 @@ export default function PostEditModal({ isOpen, onClose, post, onSave }) {
                                     <label
                                         key={platform.id}
                                         className={`flex items-center gap-3 p-4 border-2 rounded-xl cursor-pointer transition-all ${isSelected
-                                                ? 'border-green-400 shadow-md'
-                                                : 'border-gray-200 hover:border-gray-300 hover:shadow-sm'
+                                            ? 'border-green-400 shadow-md'
+                                            : 'border-gray-200 hover:border-gray-300 hover:shadow-sm'
                                             }`}
                                         style={isSelected ? {
                                             background: 'linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%)'
