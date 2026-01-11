@@ -85,10 +85,6 @@ export default function LandingPage() {
                       <ArrowRight className="ml-2 h-5 w-5" />
                     </Button>
                   </Link>
-                  <Button size="lg" className="px-8 py-6 text-lg border-2 border-white text-white bg-transparent hover:bg-white/10 transition-all">
-                    <Play className="mr-2 h-5 w-5" />
-                    Watch Demo
-                  </Button>
                 </div>
               </div>
 
