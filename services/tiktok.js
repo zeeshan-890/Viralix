@@ -146,22 +146,35 @@ async function revokeToken(accessToken, clientKey, clientSecret) {
 async function getUserInfo(accessToken) {
     console.log('[TikTok] Fetching user info');
 
-    const { data } = await axios.get(`${TIKTOK_API_BASE}/user/info/`, {
-        params: {
-            fields: 'open_id,union_id,avatar_url,display_name,username,follower_count,following_count,likes_count,video_count'
-        },
-        headers: {
-            'Authorization': `Bearer ${accessToken}`
+    try {
+        // Only request fields that are definitely available with user.info.basic scope
+        const { data } = await axios.get(`${TIKTOK_API_BASE}/user/info/`, {
+            params: {
+                fields: 'open_id,avatar_url,display_name'
+            },
+            headers: {
+                'Authorization': `Bearer ${accessToken}`
+            }
+        });
+
+        console.log('[TikTok] getUserInfo response:', JSON.stringify(data, null, 2));
+
+        if (data.error?.code && data.error.code !== 'ok') {
+            console.error('[TikTok] Get user info error:', data.error);
+            throw new Error(data.error.message || 'Failed to get user info');
         }
-    });
 
-    if (data.error?.code !== 'ok' && data.error?.code) {
-        console.error('[TikTok] Get user info error:', data.error);
-        throw new Error(data.error.message || 'Failed to get user info');
+        console.log('[TikTok] User info retrieved:', data.data?.user?.display_name);
+        return data.data?.user || data.data || {};
+    } catch (error) {
+        console.error('[TikTok] getUserInfo failed:', {
+            status: error.response?.status,
+            data: error.response?.data,
+            message: error.message
+        });
+        // Return empty object instead of throwing - let callback handle it
+        return null;
     }
-
-    console.log('[TikTok] User info retrieved:', data.data?.user?.display_name || data.data?.user?.username);
-    return data.data?.user || data.data;
 }
 
 /**

@@ -147,7 +147,7 @@ router.get('/callback', async (req, res) => {
             TT_REDIRECT_URI
         );
 
-        // Get user info
+        // Get user info (may return null if scope not available)
         const userInfo = await tiktokService.getUserInfo(tokenData.access_token);
 
         // Calculate token expiration
@@ -158,10 +158,13 @@ router.get('/callback', async (req, res) => {
             acc => acc.platform === 'tiktok' && acc.accountId === tokenData.open_id
         );
 
+        // Build account name with fallback
+        const accountName = userInfo?.display_name || userInfo?.username || `TikTok User ${tokenData.open_id.slice(-8)}`;
+
         const accountData = {
             platform: 'tiktok',
             accountId: tokenData.open_id,
-            accountName: userInfo.display_name || userInfo.username || tokenData.open_id,
+            accountName: accountName,
             accessToken: tokenData.access_token,
             refreshToken: tokenData.refresh_token,
             tokenExpires: tokenExpires,
