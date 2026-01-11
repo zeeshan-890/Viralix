@@ -1,8 +1,7 @@
 const publishQueue = require('./publish.queue');
 const PublishJob = require('../../models/PublishJob');
 const User = require('../../models/User');
-const { publishPlatform } = require('../publisher');
-const mongoose = require('mongoose');
+// Note: PublisherFactory is required dynamically below in the processing loop
 
 // Process jobs
 publishQueue.process(async (job) => {
