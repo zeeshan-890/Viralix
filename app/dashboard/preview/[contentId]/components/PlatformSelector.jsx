@@ -1,5 +1,5 @@
 'use client';
-import { useAccounts } from '@/src/hooks/useAccounts';
+import { useAccounts } from '@/hooks/useAccounts';
 
 export default function PlatformSelector({ value = [], onChange }) {
     const { accounts, isLoading } = useAccounts();
