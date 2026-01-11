@@ -8,12 +8,23 @@ class FacebookPublisher extends BasePublisher {
     async resolveAuth(account) {
         console.log(`[FacebookPublisher] Resolving auth for page: ${account.accountId}`);
 
-        // Fetch users connected Facebook account from SocialAccount collection
+        // Fetch users connected Facebook account from SocialAccount collection or Legacy
         const accounts = await AccountService.getAccounts(this.user._id);
-        const fbAccount = accounts.find(a => a.platform === 'facebook');
+        let fbAccount = accounts.find(a => a.platform === 'facebook');
 
         if (!fbAccount) {
             throw new Error('Facebook account not connected');
+        }
+
+        // Check if token is present. If not (SocialAccount default), fetch explicitly.
+        if (!fbAccount.accessToken) {
+            const extra = await AccountService.getAccount(this.user._id, 'facebook', fbAccount.platformAccountId);
+            if (extra) {
+                fbAccount = extra;
+            } else {
+                // Should not happen if it was in getAccounts, unless it's a zombie record?
+                // But let's proceed and fail at token check if needed.
+            }
         }
 
         // We need the *Page* Access Token.
