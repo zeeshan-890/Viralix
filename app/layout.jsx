@@ -2,18 +2,23 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import ThemeInit from "../src/store/ThemeInit";
 import AuthInit from "../src/store/AuthInit";
+import QueryProvider from "../src/items/QueryProvider";
+
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
 });
+
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
 });
+
 export const metadata = {
   title: "Viralix - AI-Powered Social Media Management",
   description: "Automate your social media content across TikTok, YouTube, Instagram, and LinkedIn with AI-powered optimization.",
 };
+
 export default function RootLayout({ children, }) {
   return (
     <html lang="en">
@@ -24,9 +29,11 @@ export default function RootLayout({ children, }) {
         <meta name="theme-color" content="#84A98C" />
       </head>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
-        <ThemeInit />
-        <AuthInit />
-        {children}
+        <QueryProvider>
+          <ThemeInit />
+          <AuthInit />
+          {children}
+        </QueryProvider>
       </body>
     </html>
   );
