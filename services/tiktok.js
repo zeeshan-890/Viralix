@@ -420,24 +420,31 @@ async function initializeFileUpload(accessToken, videoSize, chunkSize = 10 * 102
         }
     };
 
-    const { data } = await axios.post(
-        `${TIKTOK_API_BASE}/post/publish/inbox/video/init/`,
-        payload,
-        {
-            headers: {
-                'Authorization': `Bearer ${accessToken}`,
-                'Content-Type': 'application/json'
+    try {
+        const { data } = await axios.post(
+            `${TIKTOK_API_BASE}/post/publish/inbox/video/init/`,
+            payload,
+            {
+                headers: {
+                    'Authorization': `Bearer ${accessToken}`,
+                    'Content-Type': 'application/json'
+                }
             }
+        );
+
+        if (data.error?.code && data.error.code !== 'ok') {
+            console.error('[TikTok] FILE_UPLOAD init error:', JSON.stringify(data.error, null, 2));
+            throw new Error(data.error.message || 'Failed to initialize file upload');
         }
-    );
 
-    if (data.error?.code && data.error.code !== 'ok') {
-        console.error('[TikTok] FILE_UPLOAD init error:', data.error);
-        throw new Error(data.error.message || 'Failed to initialize file upload');
+        console.log('[TikTok] FILE_UPLOAD initialized, publish_id:', data.data?.publish_id);
+        return data.data;
+    } catch (error) {
+        if (error.response?.data) {
+            console.error('[TikTok] Init failed response:', JSON.stringify(error.response.data, null, 2));
+        }
+        throw error;
     }
-
-    console.log('[TikTok] FILE_UPLOAD initialized, publish_id:', data.data?.publish_id);
-    return data.data;
 }
 
 /**
