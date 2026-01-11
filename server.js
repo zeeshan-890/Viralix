@@ -3,7 +3,7 @@ const cors = require('cors');
 const helmet = require('helmet');
 const cookieParser = require('cookie-parser');
 const morgan = require('morgan');
-const morgan = require('morgan');
+
 // const rateLimit = require('express-rate-limit'); // Moved to middleware
 const { URL } = require('url');
 require('dotenv').config();
