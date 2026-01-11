@@ -69,7 +69,8 @@ export default function UploadPage() {
                 if (igRes.status === 'fulfilled') {
                     const accounts = igRes.value?.data?.accounts || [];
                     for (const a of accounts) {
-                        targets.push({ key: `instagram:${a.igUserId}`, name: 'instagram', accountId: a.igUserId, label: `Instagram — ${a.pageName || a.igUserId}`, icon: '📷' });
+                        // API returns accountId, username - use those
+                        targets.push({ key: `instagram:${a.accountId}`, name: 'instagram', accountId: a.accountId, label: `Instagram — ${a.username || a.name || a.accountId}`, icon: '📷' });
                     }
                 }
                 if (ttRes.status === 'fulfilled') {
