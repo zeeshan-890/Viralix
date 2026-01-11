@@ -444,7 +444,7 @@ async function publishToYouTube(auth, content, mediaList, postTitle = '') {
             title: postTitle || 'Uploaded via Viralix',
             description: content || '',
             tags: [],
-            privacyStatus: 'private', // Safe default - user can change in YouTube Studio
+            privacyStatus: 'public', // Post publicly immediately
             madeForKids: false
         }
     );
@@ -453,7 +453,7 @@ async function publishToYouTube(auth, content, mediaList, postTitle = '') {
     return {
         postId: result.videoId,
         status: result.status,
-        message: 'Video uploaded to YouTube. Check YouTube Studio to publish publicly.'
+        message: 'Video published to YouTube!'
     };
 }
 
