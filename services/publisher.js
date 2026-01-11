@@ -323,8 +323,9 @@ async function publishToInstagram(auth, content, mediaList) {
 }
 
 /**
- * Publish video to TikTok using PULL_FROM_URL method
- * TikTok will pull the video from the Cloudinary URL
+ * Publish video to TikTok using FILE_UPLOAD method
+ * Downloads video from Cloudinary and uploads directly to TikTok servers
+ * This bypasses the domain verification requirement
  */
 async function publishToTikTok(auth, content, mediaList) {
     console.log(`[Publisher] publishToTikTok called - openId: ${auth.openId}, account: ${auth.accountName}`);
@@ -337,23 +338,22 @@ async function publishToTikTok(auth, content, mediaList) {
 
     console.log(`[Publisher] TikTok video URL: ${video.url}`);
 
-    // Use inbox upload method - this doesn't require domain verification
-    // Videos are sent to user's TikTok inbox/drafts for them to post
-    // This is the only method that works without verifying the video hosting domain
-    const result = await tiktokService.initializeInboxVideoUpload(
+    // Use FILE_UPLOAD method - downloads video and uploads directly to TikTok
+    // This bypasses domain verification by uploading directly to TikTok's servers
+    const result = await tiktokService.uploadVideoFromUrl(
         auth.token,
         video.url
     );
 
-    console.log(`[Publisher] TikTok publish initiated, publish_id: ${result.publish_id}`);
+    console.log(`[Publisher] TikTok upload complete, publish_id: ${result.publish_id}`);
 
-    // Wait briefly for TikTok to process
+    // Wait for TikTok to process the uploaded video
     try {
         const status = await tiktokService.waitForPublishComplete(
             auth.token,
             result.publish_id,
-            30000, // Wait up to 30 seconds
-            3000   // Poll every 3 seconds
+            60000, // Wait up to 60 seconds (file uploads take longer)
+            5000   // Poll every 5 seconds
         );
         console.log(`[Publisher] TikTok publish status: ${status.status}`);
         return {
@@ -366,7 +366,7 @@ async function publishToTikTok(auth, content, mediaList) {
         console.log(`[Publisher] TikTok still processing: ${waitError.message}`);
         return {
             postId: result.publish_id,
-            status: 'SENT_TO_INBOX',
+            status: 'PROCESSING',
             message: 'Video is being processed. Check your TikTok inbox to post.'
         };
     }
