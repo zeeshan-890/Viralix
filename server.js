@@ -66,7 +66,15 @@ app.use(cors({
     origin: (origin, cb) => {
         if (!origin) return cb(null, true); // Non-browser / same-origin
         const normalized = origin.replace(/\/$/, '');
+
+        // Check static allowed origins
         if (ALLOWED.includes(normalized)) return cb(null, true);
+
+        // Allow Vercel preview deployments for this project
+        if (normalized.match(/^https:\/\/client-autoreach-ai.*\.vercel\.app$/)) {
+            return cb(null, true);
+        }
+
         console.warn('[CORS] Blocked origin', origin);
         return cb(new Error('CORS: Origin not allowed'));
     },
