@@ -67,12 +67,19 @@ router.post(
         if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
         try {
             const { title, content, platforms, media = [], hashtags = [], mentions = [], scheduledDate, isScheduled } = req.body;
+
+            // Debug logging
+            console.log('[posts] Creating post with platforms:', JSON.stringify(platforms));
+
             const validPlatforms = ['facebook', 'instagram', 'tiktok', 'youtube'];
             for (const p of platforms) {
                 if (!validPlatforms.includes(p.name)) {
                     return res.status(400).json({ message: `Invalid platform: ${p.name}` });
                 }
-                if (!p.accountId) return res.status(400).json({ message: 'platform.accountId is required' });
+                if (!p.accountId) {
+                    console.log('[posts] Missing accountId for platform:', JSON.stringify(p));
+                    return res.status(400).json({ message: 'platform.accountId is required' });
+                }
             }
             const post = new Post({
                 user: req.user.id,
