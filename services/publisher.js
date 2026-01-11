@@ -14,6 +14,7 @@ const {
     getDirectOAuthContainerStatus,
     publishDirectOAuthContainer,
 } = require('./instagram');
+const tiktokService = require('./tiktok');
 
 const INSTAGRAM_GRAPH_URL = 'https://graph.instagram.com'; // Used for direct Instagram Login tokens (Instagram API with Instagram Login)
 const INSTAGRAM_BASIC_DISPLAY_URL = 'https://graph.instagram.com';
@@ -147,6 +148,54 @@ async function resolveAuthForPlatform(user, platform) {
             isDirect: false // Flag to indicate Facebook-linked
         };
     }
+    if (platform.name === 'tiktok') {
+        console.log(`[Publisher] Looking for TikTok account: ${platform.accountId}`);
+
+        const tiktokAccount = (user.socialAccounts || []).find(
+            acc => acc.platform === 'tiktok' &&
+                acc.accountId === platform.accountId &&
+                acc.isActive
+        );
+
+        if (!tiktokAccount) {
+            throw new Error('TikTok account not found. Please reconnect your TikTok account.');
+        }
+
+        if (!tiktokAccount.accessToken) {
+            throw new Error('TikTok account found but token is missing. Please reconnect.');
+        }
+
+        // Check if token is expired
+        if (tiktokAccount.tokenExpires && new Date(tiktokAccount.tokenExpires) < new Date()) {
+            console.log('[Publisher] TikTok token expired, attempting refresh...');
+            try {
+                const tokenData = await tiktokService.refreshAccessToken(
+                    tiktokAccount.refreshToken,
+                    process.env.TIKTOK_CLIENT_KEY,
+                    process.env.TIKTOK_CLIENT_SECRET
+                );
+                tiktokAccount.accessToken = tokenData.access_token;
+                if (tokenData.refresh_token) {
+                    tiktokAccount.refreshToken = tokenData.refresh_token;
+                }
+                tiktokAccount.tokenExpires = new Date(Date.now() + (tokenData.expires_in * 1000));
+                user.markModified('socialAccounts');
+                await user.save();
+                console.log('[Publisher] TikTok token refreshed successfully');
+            } catch (refreshError) {
+                console.error('[Publisher] TikTok token refresh failed:', refreshError.message);
+                throw new Error('TikTok token expired and refresh failed. Please reconnect your account.');
+            }
+        }
+
+        console.log(`[Publisher] Found TikTok account: ${tiktokAccount.accountName}`);
+        return {
+            kind: 'tiktok',
+            openId: platform.accountId,
+            token: tiktokAccount.accessToken,
+            accountName: tiktokAccount.accountName
+        };
+    }
     throw new Error(`Unsupported platform: ${platform.name}`);
 }
 
@@ -273,6 +322,57 @@ async function publishToInstagram(auth, content, mediaList) {
     return { postId: pub?.id || creationId };
 }
 
+/**
+ * Publish video to TikTok using PULL_FROM_URL method
+ * TikTok will pull the video from the Cloudinary URL
+ */
+async function publishToTikTok(auth, content, mediaList) {
+    console.log(`[Publisher] publishToTikTok called - openId: ${auth.openId}, account: ${auth.accountName}`);
+
+    // TikTok only supports video content
+    const video = mediaList.find(m => m.type === 'video');
+    if (!video) {
+        throw new Error('TikTok only supports video content. Please include a video in your post.');
+    }
+
+    console.log(`[Publisher] TikTok video URL: ${video.url}`);
+
+    // Use direct publish with PULL_FROM_URL
+    // Default to SELF_ONLY (private) for safety - users can change in TikTok app
+    // Unreviewed apps can only post as private anyway
+    const result = await tiktokService.initializeVideoUploadFromUrl(
+        auth.token,
+        video.url,
+        {
+            caption: content || '',
+            privacy_level: 'SELF_ONLY', // Safe default
+            disable_comment: false,
+            disable_duet: false,
+            disable_stitch: false
+        }
+    );
+
+    console.log(`[Publisher] TikTok publish initiated, publish_id: ${result.publish_id}`);
+
+    // Optionally wait for processing (but don't block too long)
+    // TikTok processing can take a while for PULL_FROM_URL
+    try {
+        const status = await tiktokService.waitForPublishComplete(
+            auth.token,
+            result.publish_id,
+            60000, // Wait up to 1 minute
+            5000   // Poll every 5 seconds
+        );
+        console.log(`[Publisher] TikTok publish status: ${status.status}`);
+        return { postId: result.publish_id, status: status.status };
+    } catch (waitError) {
+        // If we timeout waiting, the video might still be processing
+        // Return the publish_id anyway - it can be checked later
+        console.log(`[Publisher] TikTok processing not complete, but publish_id obtained: ${result.publish_id}`);
+        return { postId: result.publish_id, status: 'PROCESSING' };
+    }
+}
+
 async function publishPlatform(user, platform, post) {
     const auth = await resolveAuthForPlatform(user, platform);
     const startedAt = new Date();
@@ -282,6 +382,8 @@ async function publishPlatform(user, platform, post) {
             result = await publishToFacebook(auth, post.content, post.media);
         } else if (auth.kind === 'instagram') {
             result = await publishToInstagram(auth, post.content, post.media);
+        } else if (auth.kind === 'tiktok') {
+            result = await publishToTikTok(auth, post.content, post.media);
         }
         return {
             ...platform.toObject?.() || platform,

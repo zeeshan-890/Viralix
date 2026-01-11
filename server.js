@@ -53,6 +53,11 @@ let ALLOWED = (process.env.CORS_ALLOWED_ORIGINS || CLIENT_URL)
     .filter(Boolean)
     .map(o => o.replace(/\/$/, ''));
 
+// Add production domains
+['https://viralix.dev', 'https://www.viralix.dev'].forEach(prod => {
+    if (!ALLOWED.includes(prod)) ALLOWED.push(prod);
+});
+
 // In production, optionally also allow local development origins for testing
 if (process.env.ALLOW_LOCAL_DEV !== '0') {
     ['http://localhost:3000', 'http://127.0.0.1:3000'].forEach(dev => {
@@ -136,6 +141,12 @@ try {
     app.use('/api/instagram-oauth', require('./routes/instagram-oauth'));
 } catch (e) {
     console.warn('Instagram routes not mounted yet:', e.message);
+}
+try {
+    app.use('/api/tiktok-oauth', require('./routes/tiktok-oauth'));
+    console.log('🎵 TikTok OAuth routes mounted');
+} catch (e) {
+    console.warn('TikTok routes not mounted yet:', e.message);
 }
 app.use('/api/posts', require('./routes/posts'));
 app.use('/api/analytics', require('./routes/analytics'));
