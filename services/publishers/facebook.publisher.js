@@ -70,9 +70,9 @@ class FacebookPublisher extends BasePublisher {
         if (media && media.length > 0) {
             const mediaItem = media[0];
             if (mediaItem.type === 'video') {
-                return await createPageVideo(auth.pageId, auth.token, content, mediaItem.url);
+                return await createPageVideo(auth.pageId, auth.token, mediaItem.url, content);
             } else {
-                return await createPagePhoto(auth.pageId, auth.token, content, mediaItem.url);
+                return await createPagePhoto(auth.pageId, auth.token, mediaItem.url, content);
             }
         } else {
             return await createPagePost(auth.pageId, auth.token, content);
