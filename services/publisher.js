@@ -337,39 +337,38 @@ async function publishToTikTok(auth, content, mediaList) {
 
     console.log(`[Publisher] TikTok video URL: ${video.url}`);
 
-    // Use direct publish with PULL_FROM_URL
-    // Default to SELF_ONLY (private) for safety - users can change in TikTok app
-    // Unreviewed apps can only post as private anyway
-    const result = await tiktokService.initializeVideoUploadFromUrl(
+    // Use inbox upload method - this doesn't require domain verification
+    // Videos are sent to user's TikTok inbox/drafts for them to post
+    // This is the only method that works without verifying the video hosting domain
+    const result = await tiktokService.initializeInboxVideoUpload(
         auth.token,
-        video.url,
-        {
-            caption: content || '',
-            privacy_level: 'SELF_ONLY', // Safe default
-            disable_comment: false,
-            disable_duet: false,
-            disable_stitch: false
-        }
+        video.url
     );
 
     console.log(`[Publisher] TikTok publish initiated, publish_id: ${result.publish_id}`);
 
-    // Optionally wait for processing (but don't block too long)
-    // TikTok processing can take a while for PULL_FROM_URL
+    // Wait briefly for TikTok to process
     try {
         const status = await tiktokService.waitForPublishComplete(
             auth.token,
             result.publish_id,
-            60000, // Wait up to 1 minute
-            5000   // Poll every 5 seconds
+            30000, // Wait up to 30 seconds
+            3000   // Poll every 3 seconds
         );
         console.log(`[Publisher] TikTok publish status: ${status.status}`);
-        return { postId: result.publish_id, status: status.status };
+        return {
+            postId: result.publish_id,
+            status: status.status,
+            message: 'Video sent to TikTok inbox. Open TikTok app to review and post.'
+        };
     } catch (waitError) {
         // If we timeout waiting, the video might still be processing
-        // Return the publish_id anyway - it can be checked later
-        console.log(`[Publisher] TikTok processing not complete, but publish_id obtained: ${result.publish_id}`);
-        return { postId: result.publish_id, status: 'PROCESSING' };
+        console.log(`[Publisher] TikTok still processing: ${waitError.message}`);
+        return {
+            postId: result.publish_id,
+            status: 'SENT_TO_INBOX',
+            message: 'Video is being processed. Check your TikTok inbox to post.'
+        };
     }
 }
 
