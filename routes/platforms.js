@@ -1,10 +1,10 @@
 const express = require('express');
 const router = express.Router();
 const AccountService = require('../services/account.service');
-const { verifyToken } = require('../middleware/auth');
+const auth = require('../middleware/auth');
 
 // Apply auth middleware to all routes
-router.use(verifyToken);
+router.use(auth);
 
 /**
  * @route   GET /api/platforms/connected
