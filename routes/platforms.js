@@ -15,6 +15,10 @@ router.get('/connected', async (req, res) => {
     try {
         const accounts = await AccountService.getAccounts(req.user.id);
 
+        console.log('[platforms/connected] userId:', req.user.id);
+        console.log('[platforms/connected] accounts count:', accounts.length);
+        console.log('[platforms/connected] platforms:', accounts.map(a => a.platform));
+
         // Transform for frontend if needed, or return as is.
         // Frontend expects: { facebook: [...], instagram: [...], youtube: [...], tiktok: [...] } 
         // OR a flat list. The previous implementation (PlatformSelector) seemed to expect a list of objects.
