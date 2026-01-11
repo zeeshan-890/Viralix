@@ -221,6 +221,7 @@ router.post('/:id/publish', auth, async (req, res) => {
         const job = new PublishJob({
             jobId,
             userId: req.user.id,
+            postId: post._id,
             platforms: post.platforms.map(p => ({
                 name: p.name,
                 accountId: p.accountId,
@@ -240,6 +241,7 @@ router.post('/:id/publish', auth, async (req, res) => {
         await publishQueue.add({
             jobId,
             userId: req.user.id,
+            postId: post._id,
             platforms: post.platforms,
             content: {
                 title: post.title,

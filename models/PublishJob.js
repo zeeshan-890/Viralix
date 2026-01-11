@@ -12,6 +12,10 @@ const PublishJobSchema = new mongoose.Schema({
         ref: 'User',
         required: true
     },
+    postId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Post'
+    },
     platforms: [{
         name: { type: String, required: true },
         accountId: { type: String, required: true },
