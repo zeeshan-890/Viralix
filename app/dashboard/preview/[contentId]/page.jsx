@@ -277,13 +277,17 @@ export default function PreviewPage({ params }) {
                                                 <div className="flex items-center gap-3">
                                                     <div className={`w-12 h-12 rounded-xl flex items-center justify-center text-xl shadow-md ${p.name === 'facebook' ? 'bg-blue-500' :
                                                         p.name === 'instagram' ? 'bg-gradient-to-br from-purple-500 via-pink-500 to-orange-500' :
-                                                            p.name === 'twitter' ? 'bg-sky-400' :
-                                                                p.name === 'linkedin' ? 'bg-blue-700' : 'bg-gray-400'
+                                                            p.name === 'tiktok' ? 'bg-black' :
+                                                                p.name === 'youtube' ? 'bg-red-600' :
+                                                                    p.name === 'twitter' ? 'bg-sky-400' :
+                                                                        p.name === 'linkedin' ? 'bg-blue-700' : 'bg-gray-400'
                                                         }`}>
                                                         {p.name === 'facebook' ? '📘' :
                                                             p.name === 'instagram' ? '📷' :
-                                                                p.name === 'twitter' ? '🐦' :
-                                                                    p.name === 'linkedin' ? '💼' : '📱'}
+                                                                p.name === 'tiktok' ? '🎵' :
+                                                                    p.name === 'youtube' ? '📺' :
+                                                                        p.name === 'twitter' ? '🐦' :
+                                                                            p.name === 'linkedin' ? '💼' : '📱'}
                                                     </div>
                                                     <div>
                                                         <div className="font-bold text-lg capitalize" style={{ color: '#2a3e2e' }}>{p.name}</div>
@@ -548,13 +552,17 @@ export default function PreviewPage({ params }) {
                                                 <div className="flex items-center gap-3">
                                                     <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-lg shadow-md ${p.name === 'facebook' ? 'bg-blue-500' :
                                                         p.name === 'instagram' ? 'bg-gradient-to-br from-purple-500 via-pink-500 to-orange-500' :
-                                                            p.name === 'twitter' ? 'bg-sky-400' :
-                                                                p.name === 'linkedin' ? 'bg-blue-700' : 'bg-gray-400'
+                                                            p.name === 'tiktok' ? 'bg-black' :
+                                                                p.name === 'youtube' ? 'bg-red-600' :
+                                                                    p.name === 'twitter' ? 'bg-sky-400' :
+                                                                        p.name === 'linkedin' ? 'bg-blue-700' : 'bg-gray-400'
                                                         }`}>
                                                         {p.name === 'facebook' ? '📘' :
                                                             p.name === 'instagram' ? '📷' :
-                                                                p.name === 'twitter' ? '🐦' :
-                                                                    p.name === 'linkedin' ? '💼' : '📱'}
+                                                                p.name === 'tiktok' ? '🎵' :
+                                                                    p.name === 'youtube' ? '📺' :
+                                                                        p.name === 'twitter' ? '🐦' :
+                                                                            p.name === 'linkedin' ? '💼' : '📱'}
                                                     </div>
                                                     <div>
                                                         <div className="font-bold capitalize" style={{ color: '#2a3e2e' }}>{p.name}</div>

@@ -1,8 +1,53 @@
 'use client';
-import { Calendar, Clock, CheckCircle2, FileText, Users } from 'lucide-react';
+import { Clock, CheckCircle2, FileText, Users, AlertCircle } from 'lucide-react';
 import CalendarView from './components/CalendarView';
+import { useAccounts } from '@/src/hooks/useAccounts';
 
 export default function SchedulePage() {
+    const { accounts, isLoading, error } = useAccounts();
+
+    // Helper to get count of connected accounts per platform
+    const getPlatformCount = (platform) => accounts.filter(a => a.platform === platform).length;
+
+    const platforms = [
+        {
+            id: 'facebook',
+            name: 'Facebook',
+            icon: '📘',
+            connected: getPlatformCount('facebook') > 0,
+            count: getPlatformCount('facebook'),
+            countLabel: 'pages connected',
+            colors: { border: 'border-blue-100', hover: 'hover:border-blue-300', bg: '#eff6ff', iconBg: 'bg-blue-500' }
+        },
+        {
+            id: 'instagram',
+            name: 'Instagram',
+            icon: '📷',
+            connected: getPlatformCount('instagram') > 0,
+            count: getPlatformCount('instagram'),
+            countLabel: 'accounts linked',
+            colors: { border: 'border-pink-100', hover: 'hover:border-pink-300', bg: '#fdf2f8', iconBg: 'bg-gradient-to-br from-purple-500 via-pink-500 to-orange-500' }
+        },
+        {
+            id: 'tiktok',
+            name: 'TikTok',
+            icon: '🎵',
+            connected: getPlatformCount('tiktok') > 0,
+            count: getPlatformCount('tiktok'),
+            countLabel: 'accounts linked',
+            colors: { border: 'border-gray-100', hover: 'hover:border-gray-300', bg: '#fafafa', iconBg: 'bg-black' }
+        },
+        {
+            id: 'youtube',
+            name: 'YouTube',
+            icon: '📺',
+            connected: getPlatformCount('youtube') > 0,
+            count: getPlatformCount('youtube'),
+            countLabel: 'channels connected',
+            colors: { border: 'border-red-100', hover: 'hover:border-red-300', bg: '#fef2f2', iconBg: 'bg-red-600' }
+        }
+    ];
+
     return (
         <div className="space-y-6" style={{ fontFamily: 'Inter, Poppins, sans-serif' }}>
             <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
@@ -28,6 +73,7 @@ export default function SchedulePage() {
                             </div>
                         </div>
                         <div className="p-5 space-y-3">
+                            {/* Placeholder Stats - Ideally should be dynamic from API */}
                             <div className="group relative overflow-hidden rounded-xl p-4 border-2 border-gray-100 hover:border-green-200 transition-all hover:shadow-md cursor-pointer"
                                 style={{ background: 'linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%)' }}>
                                 <div className="flex items-center justify-between">
@@ -41,7 +87,7 @@ export default function SchedulePage() {
                                             <div className="text-xs text-gray-500">Ready to post</div>
                                         </div>
                                     </div>
-                                    <div className="text-2xl font-bold" style={{ color: '#52796F' }}>12</div>
+                                    <div className="text-2xl font-bold" style={{ color: '#52796F' }}>-</div>
                                 </div>
                             </div>
 
@@ -58,7 +104,7 @@ export default function SchedulePage() {
                                             <div className="text-xs text-gray-500">Live posts</div>
                                         </div>
                                     </div>
-                                    <div className="text-2xl font-bold text-green-600">8</div>
+                                    <div className="text-2xl font-bold text-green-600">-</div>
                                 </div>
                             </div>
 
@@ -75,7 +121,7 @@ export default function SchedulePage() {
                                             <div className="text-xs text-gray-500">In progress</div>
                                         </div>
                                     </div>
-                                    <div className="text-2xl font-bold text-yellow-600">4</div>
+                                    <div className="text-2xl font-bold text-yellow-600">-</div>
                                 </div>
                             </div>
                         </div>
@@ -96,77 +142,38 @@ export default function SchedulePage() {
                             </div>
                         </div>
                         <div className="p-5 space-y-3">
-                            <div className="group relative overflow-hidden rounded-xl p-4 border-2 border-blue-100 hover:border-blue-300 transition-all hover:shadow-lg cursor-pointer"
-                                style={{ background: 'linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%)' }}>
-                                <div className="flex items-center justify-between">
-                                    <div className="flex items-center gap-3">
-                                        <div className="w-10 h-10 rounded-lg bg-blue-500 flex items-center justify-center shadow-md">
-                                            <span className="text-lg">📘</span>
-                                        </div>
-                                        <div>
-                                            <div className="text-sm font-bold text-gray-900">Facebook</div>
-                                            <div className="text-xs text-gray-500">2 pages connected</div>
-                                        </div>
-                                    </div>
-                                    <div className="flex items-center gap-2">
-                                        <div className="w-2.5 h-2.5 bg-green-500 rounded-full shadow-sm animate-pulse"></div>
-                                        <span className="text-xs font-semibold text-green-600">Active</span>
-                                    </div>
-                                </div>
-                            </div>
+                            {isLoading && <div className="text-center text-sm text-gray-500 py-4">Loading accounts...</div>}
+                            {error && <div className="text-center text-sm text-red-500 py-4">Failed to load accounts</div>}
 
-                            <div className="group relative overflow-hidden rounded-xl p-4 border-2 border-pink-100 hover:border-pink-300 transition-all hover:shadow-lg cursor-pointer"
-                                style={{ background: 'linear-gradient(135deg, #fdf2f8 0%, #fce7f3 100%)' }}>
-                                <div className="flex items-center justify-between">
-                                    <div className="flex items-center gap-3">
-                                        <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-purple-500 via-pink-500 to-orange-500 flex items-center justify-center shadow-md">
-                                            <span className="text-lg">📷</span>
+                            {!isLoading && !error && platforms.map(p => (
+                                <div key={p.id} className={`group relative overflow-hidden rounded-xl p-4 border-2 transition-all hover:shadow-lg cursor-pointer ${p.connected ? `${p.colors.border} ${p.colors.hover}` : 'border-gray-200 hover:border-gray-300 bg-gray-50'}`}
+                                    style={{ background: p.connected ? `linear-gradient(135deg, ${p.colors.bg} 0%, #ffffff 100%)` : '' }}>
+                                    <div className="flex items-center justify-between">
+                                        <div className="flex items-center gap-3">
+                                            <div className={`w-10 h-10 rounded-lg flex items-center justify-center shadow-md ${p.connected ? '' : 'opacity-50'} ${p.connected ? p.colors.iconBg : 'bg-gray-400'}`}
+                                                style={{ background: p.connected ? '' : '#9ca3af' }}>
+                                                <span className={`text-lg ${p.connected ? '' : 'grayscale'}`}>{p.icon}</span>
+                                            </div>
+                                            <div>
+                                                <div className={`text-sm font-bold ${p.connected ? 'text-gray-900' : 'text-gray-500'}`}>{p.name}</div>
+                                                <div className="text-xs text-gray-500">
+                                                    {p.connected ? `${p.count} ${p.countLabel}` : 'Not connected'}
+                                                </div>
+                                            </div>
                                         </div>
-                                        <div>
-                                            <div className="text-sm font-bold text-gray-900">Instagram</div>
-                                            <div className="text-xs text-gray-500">1 account linked</div>
-                                        </div>
-                                    </div>
-                                    <div className="flex items-center gap-2">
-                                        <div className="w-2.5 h-2.5 bg-green-500 rounded-full shadow-sm animate-pulse"></div>
-                                        <span className="text-xs font-semibold text-green-600">Active</span>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div className="group relative overflow-hidden rounded-xl p-4 border-2 border-gray-200 hover:border-gray-300 transition-all hover:shadow-md cursor-pointer bg-gray-50">
-                                <div className="flex items-center justify-between">
-                                    <div className="flex items-center gap-3">
-                                        <div className="w-10 h-10 rounded-lg bg-sky-400 flex items-center justify-center shadow-md opacity-50">
-                                            <span className="text-lg">🐦</span>
-                                        </div>
-                                        <div>
-                                            <div className="text-sm font-bold text-gray-500">Twitter</div>
-                                            <div className="text-xs text-gray-400">Not connected</div>
-                                        </div>
-                                    </div>
-                                    <div className="px-3 py-1 bg-gray-200 rounded-lg">
-                                        <span className="text-xs font-semibold text-gray-600">Connect</span>
+                                        {p.connected ? (
+                                            <div className="flex items-center gap-2">
+                                                <div className="w-2.5 h-2.5 bg-green-500 rounded-full shadow-sm animate-pulse"></div>
+                                                <span className="text-xs font-semibold text-green-600">Active</span>
+                                            </div>
+                                        ) : (
+                                            <div className="px-3 py-1 bg-gray-200 rounded-lg">
+                                                <span className="text-xs font-semibold text-gray-600">Connect</span>
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
-                            </div>
-
-                            <div className="group relative overflow-hidden rounded-xl p-4 border-2 border-gray-200 hover:border-gray-300 transition-all hover:shadow-md cursor-pointer bg-gray-50">
-                                <div className="flex items-center justify-between">
-                                    <div className="flex items-center gap-3">
-                                        <div className="w-10 h-10 rounded-lg bg-blue-700 flex items-center justify-center shadow-md opacity-50">
-                                            <span className="text-lg">💼</span>
-                                        </div>
-                                        <div>
-                                            <div className="text-sm font-bold text-gray-500">LinkedIn</div>
-                                            <div className="text-xs text-gray-400">Not connected</div>
-                                        </div>
-                                    </div>
-                                    <div className="px-3 py-1 bg-gray-200 rounded-lg">
-                                        <span className="text-xs font-semibold text-gray-600">Connect</span>
-                                    </div>
-                                </div>
-                            </div>
+                            ))}
                         </div>
                     </div>
                 </div>
