@@ -3,7 +3,6 @@ const { body, validationResult } = require('express-validator');
 const Post = require('../models/Post');
 const User = require('../models/User');
 const auth = require('../middleware/auth');
-const auth = require('../middleware/auth');
 // const { publishPostById } = require('../services/publisher'); // Legacy removed
 
 const router = express.Router();
