@@ -149,6 +149,8 @@ try {
 } catch (e) {
     console.warn('YouTube routes not mounted yet:', e.message);
 }
+
+app.use('/api/platforms', require('./routes/platforms'));
 app.use('/api/posts', require('./routes/posts'));
 app.use('/api/analytics', require('./routes/analytics'));
 app.use('/api/ai', require('./routes/ai'));
