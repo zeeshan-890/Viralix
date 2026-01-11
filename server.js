@@ -207,8 +207,13 @@ app.listen(PORT, () => {
     console.log(`🌐 Client URL: ${process.env.CLIENT_URL || 'http://localhost:3000'}`);
 });
 
-// Start background workers
-require('./services/queue/publish.worker');
+try {
+    // Start background workers
+    require('./services/queue/publish.worker');
+    console.log('👷 Background workers started');
+} catch (error) {
+    console.error('⚠️ Failed to start background workers:', error.message);
+}
 
 // Start lightweight scheduler using node-cron to publish due posts
 try {
