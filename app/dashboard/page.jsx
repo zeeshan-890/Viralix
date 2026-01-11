@@ -1,10 +1,11 @@
 'use client';
 import { useState, useEffect } from 'react';
-import { analyticsAPI, postsAPI, facebookAPI, instagramAPI } from '@/lib/api';
+import { analyticsAPI, postsAPI } from '@/lib/api';
 import Link from 'next/link';
 import StatsCard from './dashboard/components/StatsCard';
 import { Modal, ModalContent, ModalHeader, ModalTitle, ModalDescription } from '@/components/ui/Modal';
 import { Upload, BarChart3, Calendar, Eye, TrendingUp, Clock, X } from 'lucide-react';
+import { useAccounts } from '@/hooks/useAccounts';
 
 export default function DashboardPage() {
     const [stats, setStats] = useState({
@@ -18,9 +19,26 @@ export default function DashboardPage() {
     const [error, setError] = useState('');
     const [showConnectDialog, setShowConnectDialog] = useState(false);
 
+    // Use the unified accounts hook
+    const { accounts, isLoading: accountsLoading } = useAccounts();
+
     useEffect(() => {
         loadDashboardData();
     }, []);
+
+    // Check account connection status once loaded
+    useEffect(() => {
+        if (!accountsLoading) {
+            // Show dialog only if NO accounts are connected at all
+            if (accounts.length === 0) {
+                // Wait a bit to ensure it's not a blip
+                const timer = setTimeout(() => setShowConnectDialog(true), 1000);
+                return () => clearTimeout(timer);
+            } else {
+                setShowConnectDialog(false);
+            }
+        }
+    }, [accounts, accountsLoading]);
 
     const loadDashboardData = async () => {
         setLoading(true);
@@ -36,19 +54,6 @@ export default function DashboardPage() {
             // Load recent posts
             const postsResponse = await postsAPI.getAllPosts({ limit: 5 });
             const postsData = postsResponse.data?.posts || [];
-
-            // Check account connections (Facebook or Instagram)
-            let anyConnected = false;
-            try {
-                const fbStatus = await facebookAPI.status();
-                anyConnected = anyConnected || !!fbStatus.data?.connected || (fbStatus.data?.pages?.length > 0);
-            } catch { /* ignore */ }
-            try {
-                const igStatus = await instagramAPI.status();
-                const accounts = igStatus.data?.accounts || [];
-                anyConnected = anyConnected || accounts.length > 0;
-            } catch { /* ignore */ }
-            setShowConnectDialog(!anyConnected);
 
             setStats({
                 totalViews: overview.totalViews || 0,
@@ -129,7 +134,7 @@ export default function DashboardPage() {
                             </button>
                         </div>
                         <ModalDescription>
-                            You haven't connected any social accounts yet. Connect your Facebook or Instagram to start publishing and see analytics.
+                            You haven't connected any social accounts yet. Connect your accounts to start publishing and see analytics.
                         </ModalDescription>
                     </ModalHeader>
                     <div className="flex items-center justify-end gap-3 mt-6">
@@ -236,10 +241,16 @@ export default function DashboardPage() {
                                         acc.views += e.views || 0;
                                         return acc;
                                     }, { likes: 0, comments: 0, shares: 0, views: 0 });
+
+                                    // Determine icon
+                                    let Icon = <span className="text-2xl">📝</span>;
+                                    if (post.media?.[0]?.type === 'video') Icon = <span className="text-2xl">🎬</span>;
+                                    else if (post.media?.[0]) Icon = <span className="text-2xl">📷</span>;
+
                                     return (
                                         <div key={post._id} className="flex items-center gap-4 p-4 border border-gray-200 rounded-xl hover:shadow-md transition-all duration-300">
-                                            <div className="w-14 h-14 rounded-lg flex items-center justify-center text-2xl" style={{ backgroundColor: '#CAD2C5' }}>
-                                                {post.media?.[0]?.type === 'video' ? '🎬' : post.media?.[0] ? '📷' : '📝'}
+                                            <div className="w-14 h-14 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#CAD2C5' }}>
+                                                {Icon}
                                             </div>
                                             <div className="flex-1 min-w-0">
                                                 <h4 className="font-semibold mb-1" style={{ color: '#354F52' }}>
