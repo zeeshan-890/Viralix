@@ -9,7 +9,7 @@ import MediaEditor from './components/MediaEditor';
 import PlatformSelector from './components/PlatformSelector';
 import {
     ArrowLeft, Save, Calendar, Send, Eye, Heart, MessageCircle, Share2,
-    RefreshCw, Clock, CheckCircle2, AlertCircle, Loader2, BarChart3
+    RefreshCw, Clock, CheckCircle2, AlertCircle, Loader2, BarChart3, Trash2
 } from 'lucide-react';
 
 export default function PreviewPage({ params }) {
@@ -22,6 +22,7 @@ export default function PreviewPage({ params }) {
     const [saving, setSaving] = useState(false);
     const [publishing, setPublishing] = useState(false);
     const [refreshing, setRefreshing] = useState(false);
+    const [deleting, setDeleting] = useState(false);
 
     useEffect(() => {
         if (!contentId) return;
@@ -113,6 +114,27 @@ export default function PreviewPage({ params }) {
             // Non-blocking
         } finally {
             setRefreshing(false);
+        }
+    };
+
+    const deletePost = async () => {
+        if (!post) return;
+
+        const confirmed = window.confirm(
+            'Are you sure you want to delete this post?\n\nThis will permanently remove:\n• The post content\n• All scheduled publish jobs\n• Associated media files\n\nThis action cannot be undone.'
+        );
+
+        if (!confirmed) return;
+
+        setDeleting(true);
+        setError('');
+        try {
+            await postsAPI.remove(post._id);
+            router.push('/dashboard/preview');
+        } catch (err) {
+            setError(err?.response?.data?.message || 'Failed to delete post');
+            console.error(err);
+            setDeleting(false);
         }
     };
 
@@ -515,6 +537,23 @@ export default function PreviewPage({ params }) {
                                         <>
                                             <Save className="w-5 h-5" />
                                             Save as Draft
+                                        </>
+                                    )}
+                                </button>
+                                <button
+                                    onClick={deletePost}
+                                    disabled={deleting}
+                                    className="w-full flex items-center justify-center gap-3 py-4 px-4 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-xl shadow-lg hover:shadow-2xl transition-all transform hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none font-bold"
+                                >
+                                    {deleting ? (
+                                        <>
+                                            <Loader2 className="w-5 h-5 animate-spin" />
+                                            Deleting...
+                                        </>
+                                    ) : (
+                                        <>
+                                            <Trash2 className="w-5 h-5" />
+                                            Delete Post
                                         </>
                                     )}
                                 </button>
