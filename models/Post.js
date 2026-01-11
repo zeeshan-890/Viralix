@@ -27,7 +27,7 @@ const PostSchema = new mongoose.Schema({
         },
         status: {
             type: String,
-            enum: ['scheduled', 'published', 'failed', 'draft'],
+            enum: ['scheduled', 'published', 'failed', 'draft', 'processing'],
             default: 'draft'
         },
         postId: String, // Platform-specific post ID
