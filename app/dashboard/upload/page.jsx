@@ -1,11 +1,11 @@
 'use client';
 import { useState, useEffect, useMemo } from 'react';
-import { uploadAPI, postsAPI, facebookAPI, instagramAPI, tiktokAPI } from '@/lib/api';
+import { uploadAPI, postsAPI, facebookAPI, instagramAPI, tiktokAPI, youtubeAPI } from '@/lib/api';
 import { useRouter } from 'next/navigation';
 import FileUpload from './components/FileUpload';
 import TagsInput from './components/TagsInput';
 import MediaLibrary from './components/MediaLibrary';
-import { Upload, Image, Video, Calendar, Clock, Send, Save, Eye, Sparkles, CheckCircle2, AlertCircle, Music2 } from 'lucide-react';
+import { Upload, Image, Video, Calendar, Clock, Send, Save, Eye, Sparkles, CheckCircle2, AlertCircle, Music2, Youtube } from 'lucide-react';
 
 export default function UploadPage() {
     const router = useRouter();
@@ -48,15 +48,16 @@ export default function UploadPage() {
         }
     };
 
-    // Load connected FB pages, IG accounts, and TikTok accounts for platform selection
+    // Load connected FB pages, IG accounts, TikTok accounts, and YouTube channels for platform selection
     useEffect(() => {
         let cancelled = false;
         async function loadTargets() {
             try {
-                const [fbRes, igRes, ttRes] = await Promise.allSettled([
+                const [fbRes, igRes, ttRes, ytRes] = await Promise.allSettled([
                     facebookAPI.status(),
                     instagramAPI.status(),
                     tiktokAPI.status(),
+                    youtubeAPI.status(),
                 ]);
                 const targets = [];
                 if (fbRes.status === 'fulfilled') {
@@ -75,6 +76,12 @@ export default function UploadPage() {
                     const accounts = ttRes.value?.data?.accounts || [];
                     for (const a of accounts) {
                         targets.push({ key: `tiktok:${a.accountId}`, name: 'tiktok', accountId: a.accountId, label: `TikTok — ${a.accountName}`, icon: '🎵' });
+                    }
+                }
+                if (ytRes.status === 'fulfilled') {
+                    const accounts = ytRes.value?.data?.accounts || [];
+                    for (const a of accounts) {
+                        targets.push({ key: `youtube:${a.accountId}`, name: 'youtube', accountId: a.accountId, label: `YouTube — ${a.accountName}`, icon: '📺' });
                     }
                 }
                 if (!cancelled) setConnectedTargets(targets);
@@ -111,8 +118,9 @@ export default function UploadPage() {
     const hasIG = useMemo(() => selectedPlatforms.some(p => p.name === 'instagram'), [selectedPlatforms]);
     const hasFB = useMemo(() => selectedPlatforms.some(p => p.name === 'facebook'), [selectedPlatforms]);
     const hasTT = useMemo(() => selectedPlatforms.some(p => p.name === 'tiktok'), [selectedPlatforms]);
+    const hasYT = useMemo(() => selectedPlatforms.some(p => p.name === 'youtube'), [selectedPlatforms]);
     const requiresMedia = hasIG; // Instagram requires media; Facebook can be text-only
-    const requiresVideo = hasTT; // TikTok requires video specifically
+    const requiresVideo = hasTT || hasYT; // TikTok and YouTube require video
     const hasVideo = useMemo(() => uploadedFiles.some(f => f.type === 'video'), [uploadedFiles]);
 
     const canSubmit = useMemo(() => {

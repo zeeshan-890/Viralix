@@ -206,3 +206,29 @@ export const tiktokAPI = {
     // Check publish status
     publishStatus: (accountId, publishId) => api.get(`/tiktok-oauth/publish-status/${accountId}/${publishId}`),
 };
+
+// YouTube API helpers
+export const youtubeAPI = {
+    // Get OAuth connect URL
+    connect: () => api.get('/youtube-oauth/connect'),
+    // Get connection status
+    status: () => api.get('/youtube-oauth/status'),
+    // Get channel info with stats
+    account: (accountId) => api.get(`/youtube-oauth/account/${accountId}`),
+    // Disconnect account
+    disconnect: (accountId) => api.delete(`/youtube-oauth/disconnect/${accountId}`),
+    // Refresh access token
+    refresh: (accountId) => api.post(`/youtube-oauth/refresh/${accountId}`),
+    // Get user's videos
+    videos: (accountId, params = {}) => api.get(`/youtube-oauth/videos/${accountId}`, { params }),
+    // Publish video
+    publish: (accountId, { videoUrl, title, description, tags, privacyStatus, madeForKids }) =>
+        api.post(`/youtube-oauth/publish/${accountId}`, {
+            videoUrl,
+            title,
+            description,
+            tags,
+            privacyStatus,
+            madeForKids
+        }),
+};
