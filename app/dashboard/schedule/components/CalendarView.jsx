@@ -126,7 +126,7 @@ export default function CalendarView() {
             style={{ background: 'linear-gradient(135deg, #84A98C 0%, #52796F 100%)' }}>
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-4">
                 <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 rounded-xl bg-white bg-opacity-20 backdrop-blur-sm flex items-center justify-center shadow-lg">
+                    <div className="w-12 h-12 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center shadow-lg">
                         <Calendar className="w-6 h-6 text-white" />
                     </div>
                     <div>
@@ -139,7 +139,7 @@ export default function CalendarView() {
                 <div className="flex items-center gap-2">
                     <button
                         onClick={() => navigateMonth('prev')}
-                        className="p-2.5 rounded-xl bg-white bg-opacity-20 hover:bg-opacity-30 backdrop-blur-sm transition-all border border-white border-opacity-20 shadow-lg hover:scale-110">
+                        className="p-2.5 rounded-xl bg-white/20 hover:bg-white/30 backdrop-blur-sm transition-all border border-white/20 shadow-lg hover:scale-110">
                         <ChevronLeft className="w-5 h-5 text-white" />
                     </button>
                     <button
@@ -149,17 +149,17 @@ export default function CalendarView() {
                     </button>
                     <button
                         onClick={() => navigateMonth('next')}
-                        className="p-2.5 rounded-xl bg-white bg-opacity-20 hover:bg-opacity-30 backdrop-blur-sm transition-all border border-white border-opacity-20 shadow-lg hover:scale-110">
+                        className="p-2.5 rounded-xl bg-white/20 hover:bg-white/30 backdrop-blur-sm transition-all border border-white/20 shadow-lg hover:scale-110">
                         <ChevronRight className="w-5 h-5 text-white" />
                     </button>
                 </div>
             </div>
 
             {/* View Mode Selector */}
-            <div className="flex gap-2 bg-white bg-opacity-20 backdrop-blur-sm rounded-xl p-1.5 shadow-lg border border-white border-opacity-20">
+            <div className="flex gap-2 bg-white/20 backdrop-blur-sm rounded-xl p-1.5 shadow-lg border border-white/20">
                 {['month', 'week', 'day'].map((mode) => (<button key={mode} onClick={() => setViewMode(mode)} className={`flex-1 px-4 py-2.5 rounded-lg text-sm font-bold transition-all ${viewMode === mode
                     ? 'bg-white text-gray-900 shadow-lg scale-105'
-                    : 'text-white hover:bg-white hover:bg-opacity-10'}`}>
+                    : 'text-white hover:bg-white/10'}`}>
                     {mode.charAt(0).toUpperCase() + mode.slice(1)}
                 </button>))}
             </div>
