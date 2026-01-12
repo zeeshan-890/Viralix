@@ -21,10 +21,10 @@ function AuthCallbackContent() {
 
         if (token) {
             // Store token and fetch user data
-            localStorage.setItem('token', token);
+            localStorage.setItem('auth_token', token);
 
             // Fetch user data
-            fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/auth/me`, {
+            fetch(`${process.env.NEXT_PUBLIC_API_URL || 'https://viralix-b3ff86cb412f.herokuapp.com/api'}/auth/me`, {
                 headers: {
                     'Authorization': `Bearer ${token}`
                 }
