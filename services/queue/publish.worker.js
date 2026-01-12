@@ -42,21 +42,43 @@ publishQueue.process(async (job) => {
     let failCount = 0;
     const totalPlatforms = platforms.length;
 
-    // 2. Iterate over platforms
-    for (let i = 0; i < totalPlatforms; i++) {
-        const platform = platforms[i];
+    // 2. Iterate over platforms in PARALLEL
+    let completedCount = 0;
 
+    const publishPromises = platforms.map(async (platform) => {
         // Find platform status index in job document
+        // We need to re-fetch or carefuly manage state, but since we modify subdocs by index/id, 
+        // using the initial index might be risky if array mutates (it shouldn't here).
+        // Safest is to find index inside the async function or pass it if stable.
+        // The platforms array in job.data is static. The DB document `publishJob` is shared.
+        // Mongoose concurrent saves to same doc can be race-condition prone for array items.
+        // BETTER APPROACH: Use `findOneAndUpdate` for atomic field updates if possible, 
+        // OR rely on the fact that we are updating different array elements. 
+
+        // However, `publishJob.save()` saves the WHOLE document. Concurrent saves might overwrite each other's status updates.
+        // To fix this parallel save execution, we should probably pull the job doc fresh or use atomic updates.
+        // Given complexity, standard practice with Mongoose arrays is tricky. 
+        // Let's use `PublishJob.updateOne` with array filters or direct index setting to match the platform.
+
         const platformIndex = publishJob.platforms.findIndex(
             p => p.name === platform.name && p.accountId === platform.accountId
         );
 
-        if (platformIndex === -1) continue;
+        if (platformIndex === -1) return { success: false, platform: platform.name };
 
         try {
-            // Update platform status to processing
-            publishJob.platforms[platformIndex].status = 'processing';
-            await publishJob.save();
+            // Update platform status to processing (Atomic update to avoid race conditions on the main doc)
+            await PublishJob.updateOne(
+                { _id: publishJob._id },
+                {
+                    $set: {
+                        [`platforms.${platformIndex}.status`]: 'processing'
+                    },
+                    $push: {
+                        logs: { message: `Publishing to ${platform.name}...` }
+                    }
+                }
+            );
 
             // Sync 'processing' status to the actual Post document so UI sees it
             if (postId) {
@@ -65,35 +87,37 @@ publishQueue.process(async (job) => {
                     {
                         $set: {
                             'platforms.$.status': 'processing',
-                            'platforms.$.errorMessage': null // Clear any previous error immediately
+                            'platforms.$.errorMessage': null
                         }
                     }
                 );
             }
-
-            job.progress(Math.round(((i + 0.5) / totalPlatforms) * 100));
-
-            // Call Publisher Factory
-            publishJob.logs.push({ message: `Publishing to ${platform.name}...` });
-            await publishJob.save();
 
             const PublisherFactory = require('../publishers/publisher.factory');
             const publisher = PublisherFactory.getPublisher(user, platform.name);
 
             const result = await publisher.publish({
                 accountId: platform.accountId,
-                accountName: platform.accountName // might be needed by some adapters
+                accountName: platform.accountName
             }, {
                 content: content.body,
                 media: content.media,
                 title: content.title
             });
 
-            // Update success
-            publishJob.platforms[platformIndex].status = 'completed';
-            publishJob.platforms[platformIndex].platformPostId = result.postId;
-            publishJob.logs.push({ message: `Successfully published to ${platform.name}` });
-            successCount++;
+            // Update success (Atomic)
+            await PublishJob.updateOne(
+                { _id: publishJob._id },
+                {
+                    $set: {
+                        [`platforms.${platformIndex}.status`]: 'completed',
+                        [`platforms.${platformIndex}.platformPostId`]: result.postId
+                    },
+                    $push: {
+                        logs: { message: `Successfully published to ${platform.name}` }
+                    }
+                }
+            );
 
             // Update Post Platform Status (Published)
             if (postId) {
@@ -111,14 +135,26 @@ publishQueue.process(async (job) => {
                 );
             }
 
+            completedCount++;
+            job.progress(Math.round((completedCount / totalPlatforms) * 100));
+            return { success: true, platform: platform.name };
+
         } catch (error) {
             console.error(`Publish failed for ${platform.name}:`, error);
 
-            // Update failure
-            publishJob.platforms[platformIndex].status = 'failed';
-            publishJob.platforms[platformIndex].error = error.message;
-            publishJob.logs.push({ level: 'error', message: `Failed to publish to ${platform.name}: ${error.message}` });
-            failCount++;
+            // Update failure (Atomic)
+            await PublishJob.updateOne(
+                { _id: publishJob._id },
+                {
+                    $set: {
+                        [`platforms.${platformIndex}.status`]: 'failed',
+                        [`platforms.${platformIndex}.error`]: error.message
+                    },
+                    $push: {
+                        logs: { level: 'error', message: `Failed to publish to ${platform.name}: ${error.message}` }
+                    }
+                }
+            );
 
             // Update Post Platform Status (Failed)
             if (postId) {
@@ -132,33 +168,58 @@ publishQueue.process(async (job) => {
                     }
                 );
             }
-        }
 
-        // Update global progress
-        job.progress(Math.round(((i + 1) / totalPlatforms) * 100));
-        await publishJob.save();
+            completedCount++;
+            job.progress(Math.round((completedCount / totalPlatforms) * 100));
+            return { success: false, platform: platform.name };
+        }
+    });
+
+    const results = await Promise.allSettled(publishPromises);
+
+    // Refresh the job document to get latest state before final save/logic
+    const updatedJob = await PublishJob.findOne({ jobId });
+    if (updatedJob) {
+        // Re-calculate counts based on actual DB state or promise results
+        // Promise results are reliable for this run.
+        successCount = results.filter(r => r.status === 'fulfilled' && r.value.success).length;
+        failCount = results.filter(r => r.status === 'fulfilled' && !r.value.success).length;
+        // Note: Promise.allSettled wrappers always return objects in catch so they are technically 'fulfilled' promises returning {success:false}
+    } else {
+        // Fallback if job missing (unlikely)
+        successCount = results.filter(r => r.status === 'fulfilled' && r.value.success).length;
+        failCount = totalPlatforms - successCount;
     }
 
     // 3. Finalize Job
-    publishJob.completedAt = new Date();
+    // Need to re-fetch job to update main status to avoid version error? 
+    // We can just update the status field atomically.
+    // 3. Finalize Job
+    const finalUpdate = {
+        $set: { completedAt: new Date() },
+        $push: { logs: {} }
+    };
+
     if (failCount === 0) {
-        publishJob.status = 'completed';
-        publishJob.logs.push({ message: 'Job completed successfully' });
+        finalUpdate.$set.status = 'completed';
+        finalUpdate.$push.logs = { message: 'Job completed successfully' };
     } else if (successCount === 0) {
-        publishJob.status = 'failed';
-        publishJob.error = 'Failed to publish to all platforms';
-        publishJob.logs.push({ level: 'error', message: 'Job failed completely' });
+        finalUpdate.$set.status = 'failed';
+        finalUpdate.$set.error = 'Failed to publish to all platforms';
+        finalUpdate.$push.logs = { level: 'error', message: 'Job failed completely' };
     } else {
-        publishJob.status = 'partially_failed';
-        publishJob.error = `${failCount} platform(s) failed`;
-        publishJob.logs.push({ level: 'warn', message: 'Job completed with some errors' });
+        finalUpdate.$set.status = 'partially_failed';
+        finalUpdate.$set.error = `${failCount} platform(s) failed`;
+        finalUpdate.$push.logs = { level: 'warn', message: 'Job completed with some errors' };
     }
+
+    await PublishJob.updateOne({ _id: publishJob._id }, finalUpdate);
 
     // Update Post Global Status
     if (postId) {
         let globalStatus = 'published';
         if (failCount === totalPlatforms) globalStatus = 'failed';
-        else if (failCount > 0) globalStatus = 'partially_failed'; // Post model doesn't have this enum, defaults to isPublished logic?
+        else if (failCount > 0) globalStatus = 'partially_failed';
 
         // Post has isPublished boolean.
         if (successCount > 0) {
@@ -166,7 +227,8 @@ publishQueue.process(async (job) => {
         }
     }
 
-    await publishJob.save();
+    // Do NOT call publishJob.save() here as it is stale and would overwrite atomic updates
+    // await publishJob.save();
     return { success: successCount, failed: failCount };
 });
 
