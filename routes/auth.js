@@ -300,8 +300,8 @@ router.post('/reset-password', [
 // @access  Public
 router.get('/google', (req, res) => {
     const googleAuthUrl = `https://accounts.google.com/o/oauth2/v2/auth?` +
-        `client_id=${process.env.GOOGLE_CLIENT_ID}&` +
-        `redirect_uri=${encodeURIComponent(process.env.GOOGLE_REDIRECT_URI)}&` +
+        `client_id=${process.env.YOUTUBE_CLIENT_ID}&` +
+        `redirect_uri=${encodeURIComponent(process.env.GOOGLE_AUTH_REDIRECT_URI || 'http://localhost:5000/api/auth/google/callback')}&` +
         `response_type=code&` +
         `scope=${encodeURIComponent('openid profile email')}&` +
         `access_type=offline&` +
@@ -325,9 +325,9 @@ router.get('/google/callback', async (req, res) => {
         const axios = require('axios');
         const tokenResponse = await axios.post('https://oauth2.googleapis.com/token', {
             code,
-            client_id: process.env.GOOGLE_CLIENT_ID,
-            client_secret: process.env.GOOGLE_CLIENT_SECRET,
-            redirect_uri: process.env.GOOGLE_REDIRECT_URI,
+            client_id: process.env.YOUTUBE_CLIENT_ID,
+            client_secret: process.env.YOUTUBE_CLIENT_SECRET,
+            redirect_uri: process.env.GOOGLE_AUTH_REDIRECT_URI || 'http://localhost:5000/api/auth/google/callback',
             grant_type: 'authorization_code'
         });
 
