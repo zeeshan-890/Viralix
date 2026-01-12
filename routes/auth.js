@@ -23,6 +23,74 @@ router.get('/me', auth, async (req, res) => {
     }
 });
 
+// @route   PUT /api/auth/profile
+// @desc    Update user profile
+// @access  Private
+router.put('/profile', auth, async (req, res) => {
+    try {
+        const { name, profilePicture, timezone } = req.body;
+
+        const updateFields = {};
+        if (name) updateFields.name = name;
+        if (profilePicture !== undefined) updateFields.profilePicture = profilePicture;
+        if (timezone) updateFields['settings.timezone'] = timezone;
+
+        const user = await User.findByIdAndUpdate(
+            req.user.id,
+            { $set: updateFields },
+            { new: true }
+        ).select('-password');
+
+        res.json(user);
+    } catch (error) {
+        console.error('Profile update error:', error.message);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
+// @route   POST /api/auth/change-password
+// @desc    Change user password
+// @access  Private
+router.post('/change-password', auth, [
+    body('currentPassword', 'Current password is required').exists(),
+    body('newPassword', 'New password must be at least 6 characters').isLength({ min: 8 })
+], async (req, res) => {
+    try {
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            return res.status(400).json({ errors: errors.array() });
+        }
+
+        const { currentPassword, newPassword } = req.body;
+        const user = await User.findById(req.user.id);
+
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        // Check if user is OAuth-only (no local password)
+        if (user.authProvider !== 'local' && !user.password) {
+            return res.status(400).json({ message: 'Cannot change password for OAuth accounts' });
+        }
+
+        // Verify current password
+        const isMatch = await bcrypt.compare(currentPassword, user.password);
+        if (!isMatch) {
+            return res.status(400).json({ message: 'Current password is incorrect' });
+        }
+
+        // Hash new password
+        const salt = await bcrypt.genSalt(10);
+        user.password = await bcrypt.hash(newPassword, salt);
+        await user.save();
+
+        res.json({ message: 'Password changed successfully' });
+    } catch (error) {
+        console.error('Password change error:', error.message);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
 // @route   POST /api/auth/signup
 // @desc    Register user
 // @access  Public
