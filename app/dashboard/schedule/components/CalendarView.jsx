@@ -245,13 +245,13 @@ export default function CalendarView() {
                                                     <span className="font-bold ml-auto text-xs" style={{ color: colors.text }}>{time}</span>
                                                 </div>
                                                 <div className="text-gray-800 font-semibold truncate text-[11px] sm:text-xs mb-1">{post.title}</div>
-                                                <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-xs font-bold shadow-sm"
+                                                <div className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] font-bold shadow-sm"
                                                     style={{
                                                         background: colors.bg,
                                                         color: colors.text,
-                                                        border: `1.5px solid ${colors.border}`
+                                                        border: `1px solid ${colors.border}`
                                                     }}>
-                                                    <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: colors.border }}></div>
+                                                    <div className="w-1 h-1 rounded-full" style={{ backgroundColor: colors.border }}></div>
                                                     {agg}
                                                 </div>
                                             </div>
