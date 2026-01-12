@@ -563,7 +563,7 @@ export default function UploadPage() {
                             )}
 
                             {/* Action Buttons */}
-                            <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <button
                                     onClick={handleSaveDraft}
                                     disabled={actionLoading || selectedPlatforms.length === 0 || !contentForm.title || !contentForm.description}
@@ -584,37 +584,39 @@ export default function UploadPage() {
                                     {actionLoading ? 'Saving...' : 'Save Draft'}
                                 </button>
 
-                                <button
-                                    onClick={handlePublishNow}
-                                    disabled={actionLoading || !canSubmit || scheduleType !== 'now'}
-                                    className="flex items-center justify-center gap-2 px-6 py-4 text-white rounded-xl text-sm font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-md hover:shadow-lg"
-                                    style={{ backgroundColor: '#52796F' }}
-                                    onMouseEnter={(e) => {
-                                        if (!e.currentTarget.disabled) {
-                                            e.currentTarget.style.backgroundColor = '#354F52';
-                                        }
-                                    }}
-                                    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#52796F'}
-                                >
-                                    <Send className="w-5 h-5" />
-                                    {actionLoading ? 'Publishing...' : 'Publish Now'}
-                                </button>
-
-                                <button
-                                    onClick={handleSchedule}
-                                    disabled={actionLoading || !canSubmit || scheduleType !== 'later'}
-                                    className="flex items-center justify-center gap-2 px-6 py-4 text-white rounded-xl text-sm font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-md hover:shadow-lg"
-                                    style={{ backgroundColor: '#84A98C' }}
-                                    onMouseEnter={(e) => {
-                                        if (!e.currentTarget.disabled) {
-                                            e.currentTarget.style.backgroundColor = '#52796F';
-                                        }
-                                    }}
-                                    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#84A98C'}
-                                >
-                                    <Calendar className="w-5 h-5" />
-                                    {actionLoading ? 'Scheduling...' : 'Schedule Post'}
-                                </button>
+                                {scheduleType === 'now' ? (
+                                    <button
+                                        onClick={handlePublishNow}
+                                        disabled={actionLoading || !canSubmit}
+                                        className="flex items-center justify-center gap-2 px-6 py-4 text-white rounded-xl text-sm font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-md hover:shadow-lg"
+                                        style={{ backgroundColor: '#52796F' }}
+                                        onMouseEnter={(e) => {
+                                            if (!e.currentTarget.disabled) {
+                                                e.currentTarget.style.backgroundColor = '#354F52';
+                                            }
+                                        }}
+                                        onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#52796F'}
+                                    >
+                                        <Send className="w-5 h-5" />
+                                        {actionLoading ? 'Publishing...' : 'Publish Now'}
+                                    </button>
+                                ) : (
+                                    <button
+                                        onClick={handleSchedule}
+                                        disabled={actionLoading || !canSubmit}
+                                        className="flex items-center justify-center gap-2 px-6 py-4 text-white rounded-xl text-sm font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-md hover:shadow-lg"
+                                        style={{ backgroundColor: '#84A98C' }}
+                                        onMouseEnter={(e) => {
+                                            if (!e.currentTarget.disabled) {
+                                                e.currentTarget.style.backgroundColor = '#52796F';
+                                            }
+                                        }}
+                                        onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#84A98C'}
+                                    >
+                                        <Calendar className="w-5 h-5" />
+                                        {actionLoading ? 'Scheduling...' : 'Schedule Post'}
+                                    </button>
+                                )}
                             </div>
                         </div>
                     </div>
