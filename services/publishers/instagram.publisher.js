@@ -141,11 +141,12 @@ class InstagramPublisher extends BasePublisher {
             payload.image_url = mediaItem.url;
         }
 
-        const containerId = await createDirectOAuthMediaContainer(
+        const containerResult = await createDirectOAuthMediaContainer(
             auth.instagramId,
             auth.accessToken,
             payload
         );
+        const containerId = containerResult.id;
 
         await this._waitForContainer(auth.accessToken, containerId, true);
 
