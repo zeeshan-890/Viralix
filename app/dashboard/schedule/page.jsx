@@ -63,7 +63,7 @@ export default function SchedulePage() {
                         <div className="px-5 py-4 border-b border-gray-100"
                             style={{ background: 'linear-gradient(135deg, #84A98C 0%, #52796F 100%)' }}>
                             <div className="flex items-center gap-3">
-                                <div className="w-10 h-10 rounded-xl bg-white bg-opacity-20 backdrop-blur-sm flex items-center justify-center shadow-lg">
+                                <div className="w-10 h-10 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center shadow-lg">
                                     <Clock className="w-5 h-5 text-white" />
                                 </div>
                                 <div>
@@ -132,7 +132,7 @@ export default function SchedulePage() {
                         <div className="px-5 py-4 border-b border-gray-100"
                             style={{ background: 'linear-gradient(135deg, #84A98C 0%, #52796F 100%)' }}>
                             <div className="flex items-center gap-3">
-                                <div className="w-10 h-10 rounded-xl bg-white bg-opacity-20 backdrop-blur-sm flex items-center justify-center shadow-lg">
+                                <div className="w-10 h-10 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center shadow-lg">
                                     <Users className="w-5 h-5 text-white" />
                                 </div>
                                 <div>
