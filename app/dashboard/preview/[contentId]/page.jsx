@@ -11,6 +11,7 @@ import {
     ArrowLeft, Save, Calendar, Send, Eye, Heart, MessageCircle, Share2,
     RefreshCw, Clock, CheckCircle2, AlertCircle, Loader2, BarChart3, Trash2
 } from 'lucide-react';
+import Image from 'next/image';
 
 export default function PreviewPage({ params }) {
     const router = useRouter();
@@ -330,17 +331,11 @@ export default function PreviewPage({ params }) {
                                         <div className="relative p-5">
                                             <div className="flex items-start justify-between mb-3">
                                                 <div className="flex items-center gap-3">
-                                                    <div className={`w-12 h-12 rounded-xl flex items-center justify-center text-xl shadow-md ${p.name === 'facebook' ? 'bg-blue-500' :
-                                                        p.name === 'instagram' ? 'bg-gradient-to-br from-purple-500 via-pink-500 to-orange-500' :
-                                                            p.name === 'tiktok' ? 'bg-black' :
-                                                                p.name === 'youtube' ? 'bg-red-600' :
-                                                                    p.name === 'twitter' ? 'bg-sky-400' :
-                                                                        p.name === 'linkedin' ? 'bg-blue-700' : 'bg-gray-400'
-                                                        }`}>
-                                                        {p.name === 'facebook' ? '📘' :
-                                                            p.name === 'instagram' ? '📷' :
-                                                                p.name === 'tiktok' ? '🎵' :
-                                                                    p.name === 'youtube' ? '📺' :
+                                                    <div className={`w-12 h-12 rounded-xl flex items-center justify-center text-xl shadow-md bg-white border border-gray-100`}>
+                                                        {p.name === 'facebook' ? <Image src="/facebook.png" alt="FB" width={24} height={24} className="w-6 h-6 object-contain" /> :
+                                                            p.name === 'instagram' ? <Image src="/instagram.png" alt="IG" width={24} height={24} className="w-6 h-6 object-contain" /> :
+                                                                p.name === 'tiktok' ? <Image src="/tiktok.png" alt="TT" width={24} height={24} className="w-6 h-6 object-contain" /> :
+                                                                    p.name === 'youtube' ? <Image src="/youtube.png" alt="YT" width={24} height={24} className="w-6 h-6 object-contain" /> :
                                                                         p.name === 'twitter' ? '🐦' :
                                                                             p.name === 'linkedin' ? '💼' : '📱'}
                                                     </div>
@@ -610,17 +605,11 @@ export default function PreviewPage({ params }) {
                                         <div key={idx} className="border-2 border-gray-100 rounded-2xl p-5 hover:border-gray-200 transition-all hover:shadow-lg bg-gradient-to-br from-white to-gray-50">
                                             <div className="flex items-center justify-between mb-4">
                                                 <div className="flex items-center gap-3">
-                                                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-lg shadow-md ${p.name === 'facebook' ? 'bg-blue-500' :
-                                                        p.name === 'instagram' ? 'bg-gradient-to-br from-purple-500 via-pink-500 to-orange-500' :
-                                                            p.name === 'tiktok' ? 'bg-black' :
-                                                                p.name === 'youtube' ? 'bg-red-600' :
-                                                                    p.name === 'twitter' ? 'bg-sky-400' :
-                                                                        p.name === 'linkedin' ? 'bg-blue-700' : 'bg-gray-400'
-                                                        }`}>
-                                                        {p.name === 'facebook' ? '📘' :
-                                                            p.name === 'instagram' ? '📷' :
-                                                                p.name === 'tiktok' ? '🎵' :
-                                                                    p.name === 'youtube' ? '📺' :
+                                                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-lg shadow-md bg-white border border-gray-100`}>
+                                                        {p.name === 'facebook' ? <Image src="/facebook.png" alt="FB" width={20} height={20} className="w-5 h-5 object-contain" /> :
+                                                            p.name === 'instagram' ? <Image src="/instagram.png" alt="IG" width={20} height={20} className="w-5 h-5 object-contain" /> :
+                                                                p.name === 'tiktok' ? <Image src="/tiktok.png" alt="TT" width={20} height={20} className="w-5 h-5 object-contain" /> :
+                                                                    p.name === 'youtube' ? <Image src="/youtube.png" alt="YT" width={20} height={20} className="w-5 h-5 object-contain" /> :
                                                                         p.name === 'twitter' ? '🐦' :
                                                                             p.name === 'linkedin' ? '💼' : '📱'}
                                                     </div>

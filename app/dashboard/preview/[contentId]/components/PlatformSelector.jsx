@@ -1,6 +1,8 @@
 'use client';
 import { useAccounts } from '@/hooks/useAccounts';
 
+import Image from 'next/image';
+
 export default function PlatformSelector({ value = [], onChange }) {
     const { accounts, isLoading } = useAccounts();
 
@@ -13,11 +15,27 @@ export default function PlatformSelector({ value = [], onChange }) {
     }));
 
     function getPlatformIcon(platform) {
+        const icons = {
+            tiktok: '/tiktok.png',
+            youtube: '/youtube.png',
+            instagram: '/instagram.png',
+            facebook: '/facebook.png',
+        };
+
+        if (icons[platform]) {
+            return (
+                <Image
+                    src={icons[platform]}
+                    alt={platform}
+                    width={20}
+                    height={20}
+                    className="w-5 h-5 object-contain"
+                />
+            );
+        }
+
         switch (platform) {
-            case 'facebook': return '📘';
-            case 'instagram': return '📷';
-            case 'tiktok': return '🎵';
-            case 'youtube': return '📺';
+            case 'facebook': return '📘'; // Fallback if file missing (though standard keys above cover it)
             default: return '📱';
         }
     }

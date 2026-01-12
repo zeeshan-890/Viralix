@@ -1,6 +1,7 @@
 'use client';
 import { useEffect, useState } from 'react';
 import { analyticsAPI } from '@/lib/api';
+import Image from 'next/image';
 
 export default function ContentPerformance() {
     const [loading, setLoading] = useState(true);
@@ -42,8 +43,10 @@ export default function ContentPerformance() {
 
     const getPlatformIcon = (platform) => {
         const icons = {
-            facebook: '📘',
-            instagram: '📷',
+            facebook: <Image src="/facebook.png" alt="FB" width={16} height={16} className="w-4 h-4 object-contain inline-block" />,
+            instagram: <Image src="/instagram.png" alt="IG" width={16} height={16} className="w-4 h-4 object-contain inline-block" />,
+            tiktok: <Image src="/tiktok.png" alt="TT" width={16} height={16} className="w-4 h-4 object-contain inline-block" />,
+            youtube: <Image src="/youtube.png" alt="YT" width={16} height={16} className="w-4 h-4 object-contain inline-block" />,
             twitter: '🐦',
             linkedin: '💼'
         };
@@ -52,8 +55,10 @@ export default function ContentPerformance() {
 
     const getPlatformColor = (platform) => {
         const colors = {
-            facebook: 'bg-blue-600 text-white',
-            instagram: 'bg-gradient-to-r from-purple-500 to-pink-500 text-white',
+            facebook: 'bg-white border border-gray-200 text-gray-800',
+            instagram: 'bg-white border border-gray-200 text-gray-800',
+            tiktok: 'bg-white border border-gray-200 text-gray-800',
+            youtube: 'bg-white border border-gray-200 text-gray-800',
             twitter: 'bg-blue-400 text-white',
             linkedin: 'bg-blue-700 text-white'
         };
