@@ -10,9 +10,7 @@ import {
     Calendar,
     BarChart3,
     Link2,
-    MessageSquare,
     Settings,
-    Shield,
     ChevronDown,
     ChevronRight
 } from 'lucide-react';
@@ -24,29 +22,7 @@ const navigation = [
     { name: 'Schedule', href: '/dashboard/schedule', icon: Calendar },
     { name: 'Analytics', href: '/dashboard/analytics', icon: BarChart3 },
     { name: 'Connect Accounts', href: '/dashboard/connect-accounts', icon: Link2 },
-    {
-        name: 'Engagement',
-        href: '/engagement',
-        icon: MessageSquare,
-        subItems: [
-            { name: 'Comments', href: '/engagement/comments' },
-            { name: 'Mentions', href: '/engagement/mentions' },
-            { name: 'Analytics', href: '/engagement/analytics' },
-            { name: 'Templates', href: '/engagement/templates' },
-        ]
-    },
     { name: 'Settings', href: '/dashboard/settings', icon: Settings },
-    {
-        name: 'Admin',
-        href: '/admin',
-        icon: Shield,
-        subItems: [
-            { name: 'Users', href: '/admin/users' },
-            { name: 'Content', href: '/admin/content' },
-            { name: 'System', href: '/admin/system' },
-            { name: 'Platforms', href: '/admin/platforms' },
-        ]
-    },
 ];
 
 export default function Sidebar({ open = false, onClose = () => { } }) {
