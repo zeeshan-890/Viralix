@@ -36,8 +36,8 @@ export default function Topbar({ onToggleSidebar = () => { } }) {
                             className="flex items-center gap-2 p-1 pl-2 pr-2 rounded-full hover:bg-gray-100 transition-colors border border-transparent hover:border-gray-200"
                         >
                             <div className="w-8 h-8 rounded-full overflow-hidden flex items-center justify-center text-white font-semibold flex-shrink-0" style={{ backgroundColor: '#84A98C' }}>
-                                {user?.avatar ? (
-                                    <Image src={user.avatar} alt={user.name || 'User'} width={32} height={32} className="w-full h-full object-cover" />
+                                {user?.profilePicture ? (
+                                    <Image src={user.profilePicture} alt={user.name || 'User'} width={32} height={32} className="w-full h-full object-cover" />
                                 ) : (
                                     <span>{user?.name?.charAt(0).toUpperCase() || 'U'}</span>
                                 )}
