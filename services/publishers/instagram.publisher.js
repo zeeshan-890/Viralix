@@ -155,19 +155,24 @@ class InstagramPublisher extends BasePublisher {
     }
 
     async _waitForContainer(token, containerId, isDirect) {
+        // PROCESSING can take time for videos/reels (up to a few minutes)
+        // We'll wait up to 5 minutes (100 attempts * 3s)
         let attempts = 0;
-        while (attempts < 10) {
+        const maxAttempts = 100;
+        const interval = 3000;
+
+        while (attempts < maxAttempts) {
             const status = isDirect
                 ? await getDirectOAuthContainerStatus(containerId, token)
-                : await getContainerStatus(containerId, token); // Assuming standard one is also (id, token) - let's verify standard
+                : await getContainerStatus(containerId, token);
 
             if (status === 'FINISHED') return;
             if (status === 'ERROR') throw new Error('Media processing failed');
 
-            await new Promise(r => setTimeout(r, 2000));
+            await new Promise(r => setTimeout(r, interval));
             attempts++;
         }
-        throw new Error('Media processing timed out');
+        throw new Error(`Media processing timed out after ${maxAttempts * interval / 1000} seconds`);
     }
 }
 
