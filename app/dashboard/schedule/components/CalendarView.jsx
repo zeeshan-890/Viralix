@@ -214,6 +214,7 @@ export default function CalendarView() {
                                         let agg = 'draft';
                                         const statuses = (post.platforms || []).map(p => p.status);
                                         if (statuses.includes('failed')) agg = 'failed';
+                                        else if (statuses.includes('processing')) agg = 'processing';
                                         else if (statuses.includes('scheduled')) agg = 'scheduled';
                                         else if (statuses.includes('published')) agg = 'published';
                                         const platforms = (post.platforms || []).map(p => p.name);
@@ -222,9 +223,10 @@ export default function CalendarView() {
                                             scheduled: { bg: 'linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%)', border: '#3b82f6', text: '#1e40af' },
                                             published: { bg: 'linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%)', border: '#10b981', text: '#065f46' },
                                             draft: { bg: 'linear-gradient(135deg, #fef3c7 0%, #fde68a 100%)', border: '#f59e0b', text: '#92400e' },
-                                            failed: { bg: 'linear-gradient(135deg, #fee2e2 0%, #fecaca 100%)', border: '#ef4444', text: '#991b1b' }
+                                            failed: { bg: 'linear-gradient(135deg, #fee2e2 0%, #fecaca 100%)', border: '#ef4444', text: '#991b1b' },
+                                            processing: { bg: 'linear-gradient(135deg, #e9d5ff 0%, #d8b4fe 100%)', border: '#a855f7', text: '#6b21a8' }
                                         };
-                                        const colors = statusColors[agg];
+                                        const colors = statusColors[agg] || statusColors.draft;
 
                                         return (
                                             <div
