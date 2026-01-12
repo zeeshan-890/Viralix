@@ -9,7 +9,8 @@ import Image from 'next/image';
 
 export default function Topbar({ onToggleSidebar = () => { } }) {
     const [showUserMenu, setShowUserMenu] = useState(false);
-    const { logout, user } = useAuthStore((state) => ({ logout: state.logout, user: state.user }));
+    const logout = useAuthStore((state) => state.logout);
+    const user = useAuthStore((state) => state.user);
     const router = useRouter();
 
     const handleLogout = () => {
