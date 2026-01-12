@@ -91,7 +91,8 @@ publishQueue.process(async (job) => {
                             'platforms.$.status': 'published',
                             'platforms.$.publishedAt': new Date(),
                             'platforms.$.postId': result.postId,
-                            'platforms.$.engagement.lastUpdated': new Date()
+                            'platforms.$.engagement.lastUpdated': new Date(),
+                            'platforms.$.errorMessage': null
                         }
                     }
                 );
