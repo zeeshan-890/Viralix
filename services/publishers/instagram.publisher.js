@@ -3,7 +3,8 @@ const {
     createDirectOAuthMediaContainer,
     publishDirectOAuthContainer,
     getDirectOAuthContainerStatus,
-    getContainerStatus
+    getContainerStatus,
+    refreshLongLivedToken
 } = require('../instagram');
 const AccountService = require('../account.service');
 
@@ -16,6 +17,41 @@ class InstagramPublisher extends BasePublisher {
         const directAccount = await AccountService.getAccount(this.user._id, 'instagram', account.accountId);
 
         if (directAccount) {
+            // Check expiry (refresh if expired or expires in < 1 hour)
+            // Long-lived tokens last 60 days. Checking < 1 hour is safe buffer.
+            const now = Date.now();
+            const expires = directAccount.tokenExpires ? new Date(directAccount.tokenExpires).getTime() : 0;
+            const isExpired = expires > 0 && (expires - now < 60 * 60 * 1000);
+
+            // If expired or we suspect it might be stale/invalid (we could also rely on try-catch in publish, but proactive is better for "expired" dates)
+            if (isExpired) {
+                console.log('[InstagramPublisher] Token likely expired. Refreshing...');
+                try {
+                    const refreshed = await refreshLongLivedToken(directAccount.accessToken);
+                    const newExpiry = new Date(Date.now() + refreshed.expires_in * 1000);
+
+                    await AccountService.connectAccount(this.user._id, {
+                        platform: 'instagram',
+                        accountId: account.accountId,
+                        name: directAccount.accountName,
+                        accessToken: refreshed.access_token,
+                        expires: newExpiry,
+                        metadata: directAccount.metadata
+                    });
+
+                    return {
+                        kind: 'instagram',
+                        accessToken: refreshed.access_token,
+                        instagramId: account.accountId,
+                        accountName: directAccount.accountName,
+                        isDirect: true
+                    };
+                } catch (e) {
+                    console.warn('[InstagramPublisher] Failed to proactive refresh:', e.message);
+                    // Fallthrough to try existing token, maybe date was wrong or refresh failed but token is still barely valid
+                }
+            }
+
             return {
                 kind: 'instagram',
                 accessToken: directAccount.accessToken,

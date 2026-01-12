@@ -227,4 +227,25 @@ module.exports = {
     createDirectOAuthMediaContainer,
     getDirectOAuthContainerStatus,
     publishDirectOAuthContainer,
+    refreshLongLivedToken,
 };
+
+// Refresh a long-lived access token.
+// The refresher should only be called if the token is at least 24 hours old, but it doesn't hurt to try if close to expiry.
+// Returns { access_token, expires_in, token_type }
+async function refreshLongLivedToken(accessToken) {
+    console.log('[IG Direct] Refreshing long-lived access token');
+    try {
+        const { data } = await axios.get(`${IG_API_BASE}/refresh_access_token`, {
+            params: {
+                grant_type: 'ig_refresh_token',
+                access_token: accessToken,
+            },
+        });
+        console.log('[IG Direct] Token refresh success');
+        return data; // contains access_token, expires_in, token_type
+    } catch (error) {
+        console.error('[IG Direct] Token refresh failed:', error.response?.data || error.message);
+        throw error;
+    }
+}
