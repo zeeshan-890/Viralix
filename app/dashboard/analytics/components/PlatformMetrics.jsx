@@ -1,3 +1,5 @@
+import Image from 'next/image';
+
 export default function PlatformMetrics({ analytics }) {
     const platformBreakdown = analytics?.platformBreakdown || {};
 
@@ -8,12 +10,24 @@ export default function PlatformMetrics({ analytics }) {
         const engagementRate = engagement.views > 0 ? ((totalEngagement / engagement.views) * 100).toFixed(1) : '0.0';
 
         const platformConfig = {
-            facebook: { icon: '💻', color: 'bg-blue-600 text-white' },
-            instagram: { icon: '📷', color: 'bg-gradient-to-r from-purple-500 to-pink-500 text-white' },
+            facebook: {
+                icon: <Image src="/facebook.png" alt="FB" width={24} height={24} className="w-6 h-6 object-contain" />,
+                color: 'bg-white border border-gray-200'
+            },
+            instagram: {
+                icon: <Image src="/instagram.png" alt="IG" width={24} height={24} className="w-6 h-6 object-contain" />,
+                color: 'bg-white border border-gray-200'
+            },
             twitter: { icon: '🐦', color: 'bg-blue-400 text-white' },
             linkedin: { icon: '💼', color: 'bg-blue-700 text-white' },
-            tiktok: { icon: '🎵', color: 'bg-black text-white' },
-            youtube: { icon: '📺', color: 'bg-red-600 text-white' }
+            tiktok: {
+                icon: <Image src="/tiktok.png" alt="TT" width={24} height={24} className="w-6 h-6 object-contain" />,
+                color: 'bg-white border border-gray-200'
+            },
+            youtube: {
+                icon: <Image src="/youtube.png" alt="YT" width={24} height={24} className="w-6 h-6 object-contain" />,
+                color: 'bg-white border border-gray-200'
+            }
         };
 
         const config = platformConfig[platformName] || { icon: '📱', color: 'bg-gray-600 text-white' };

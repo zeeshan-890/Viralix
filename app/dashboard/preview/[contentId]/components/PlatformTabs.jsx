@@ -1,16 +1,21 @@
 'use client';
 import { useState } from 'react';
+import Image from 'next/image';
 
 export default function PlatformTabs({ post }) {
     const [activeTab, setActiveTab] = useState('facebook');
 
+    const PlatformIcon = ({ src, alt }) => (
+        <Image src={src} alt={alt} width={16} height={16} className="w-4 h-4 object-contain" />
+    );
+
     const platforms = [
-        { id: 'facebook', name: 'Facebook', icon: '💻', color: 'bg-blue-600' },
-        { id: 'instagram', name: 'Instagram', icon: '📷', color: 'bg-gradient-to-r from-purple-500 to-pink-500' },
+        { id: 'facebook', name: 'Facebook', icon: <PlatformIcon src="/facebook.png" alt="FB" />, color: 'bg-blue-600' },
+        { id: 'instagram', name: 'Instagram', icon: <PlatformIcon src="/instagram.png" alt="IG" />, color: 'bg-gradient-to-r from-purple-500 to-pink-500' },
         { id: 'twitter', name: 'Twitter', icon: '🐦', color: 'bg-blue-400' },
         { id: 'linkedin', name: 'LinkedIn', icon: '💼', color: 'bg-blue-700' },
-        { id: 'tiktok', name: 'TikTok', icon: '🎵', color: 'bg-black' },
-        { id: 'youtube', name: 'YouTube', icon: '📺', color: 'bg-red-600' },
+        { id: 'tiktok', name: 'TikTok', icon: <PlatformIcon src="/tiktok.png" alt="TT" />, color: 'bg-black' },
+        { id: 'youtube', name: 'YouTube', icon: <PlatformIcon src="/youtube.png" alt="YT" />, color: 'bg-red-600' },
     ];
 
     // Filter platforms to only show those selected for this post
@@ -373,8 +378,8 @@ export default function PlatformTabs({ post }) {
                         key={platform.id}
                         onClick={() => setActiveTab(platform.id)}
                         className={`flex items-center justify-center space-x-2 py-2 px-4 rounded-md transition-colors whitespace-nowrap ${currentTab === platform.id
-                                ? 'bg-white shadow-sm text-gray-900'
-                                : 'text-gray-600 hover:text-gray-900'
+                            ? 'bg-white shadow-sm text-gray-900'
+                            : 'text-gray-600 hover:text-gray-900'
                             }`}
                     >
                         <span>{platform.icon}</span>

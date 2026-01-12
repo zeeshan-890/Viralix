@@ -6,7 +6,8 @@ import { useAccounts } from '@/hooks/useAccounts';
 import FileUpload from './components/FileUpload';
 import TagsInput from './components/TagsInput';
 import MediaLibrary from './components/MediaLibrary';
-import { Upload, Image, Video, Calendar, Clock, Send, Save, Eye, Sparkles, CheckCircle2, AlertCircle, Music2, Youtube } from 'lucide-react';
+import { Upload, Image as LucideImage, Video, Calendar, Clock, Send, Save, Eye, Sparkles, CheckCircle2, AlertCircle, Music2, Youtube } from 'lucide-react';
+import Image from 'next/image';
 
 export default function UploadPage() {
     const router = useRouter();
@@ -61,16 +62,16 @@ export default function UploadPage() {
 
             if (acc.platform === 'facebook') {
                 label = `Facebook — ${acc.accountName}`;
-                icon = '📘';
+                icon = <Image src="/facebook.png" alt="FB" width={32} height={32} className="w-8 h-8 object-contain" />;
             } else if (acc.platform === 'instagram') {
                 label = `Instagram — ${acc.accountName}`;
-                icon = '📷';
+                icon = <Image src="/instagram.png" alt="IG" width={32} height={32} className="w-8 h-8 object-contain" />;
             } else if (acc.platform === 'tiktok') {
                 label = `TikTok — ${acc.accountName}`;
-                icon = '🎵';
+                icon = <Image src="/tiktok.png" alt="TT" width={32} height={32} className="w-8 h-8 object-contain" />;
             } else if (acc.platform === 'youtube') {
                 label = `YouTube — ${acc.accountName}`;
-                icon = '📺';
+                icon = <Image src="/youtube.png" alt="YT" width={32} height={32} className="w-8 h-8 object-contain" />;
             }
 
             targets.push({
@@ -249,7 +250,7 @@ export default function UploadPage() {
                             }`}
                         style={activeTab === 'library' ? { backgroundColor: '#84A98C' } : {}}
                     >
-                        <Image className="w-4 h-4" />
+                        <LucideImage className="w-4 h-4" />
                         Media Library
                     </button>
                 </div>
@@ -306,7 +307,7 @@ export default function UploadPage() {
                                                                         className="w-full h-full object-cover"
                                                                     />
                                                                     <div className="absolute top-2 right-2 bg-blue-500 text-white text-xs px-2 py-1 rounded-md flex items-center gap-1">
-                                                                        <Image className="w-3 h-3" />
+                                                                        <LucideImage className="w-3 h-3" />
                                                                         Image
                                                                     </div>
                                                                 </>
@@ -344,7 +345,7 @@ export default function UploadPage() {
                                         <div className="h-full min-h-[300px] flex items-center justify-center p-8 bg-gray-50 rounded-xl border-2 border-dashed border-gray-300">
                                             <div className="text-center">
                                                 <div className="w-16 h-16 mx-auto mb-3 rounded-full bg-gray-200 flex items-center justify-center">
-                                                    <Image className="w-8 h-8 text-gray-400" />
+                                                    <LucideImage className="w-8 h-8 text-gray-400" />
                                                 </div>
                                                 <p className="text-sm font-medium text-gray-600 mb-1">No files uploaded yet</p>
                                                 <p className="text-xs text-gray-500">Upload photos or videos to see them here</p>

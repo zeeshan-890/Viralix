@@ -1,6 +1,7 @@
 'use client';
 import { useEffect, useMemo, useState } from 'react';
 import { ChevronLeft, ChevronRight, Calendar, Plus, Loader2 } from 'lucide-react';
+import Image from 'next/image';
 import { postsAPI } from '@/lib/api';
 
 import { useRouter } from 'next/navigation';
@@ -102,13 +103,29 @@ export default function CalendarView() {
     }, [posts, currentDate]);
     const getPlatformIcon = (platform) => {
         const icons = {
-            tiktok: '🎵',
-            youtube: '📺',
-            instagram: '📷',
-            linkedin: '💼',
-            facebook: '💻',
+            tiktok: '/tiktok.png',
+            youtube: '/youtube.png',
+            instagram: '/instagram.png',
+            facebook: '/facebook.png',
         };
-        return icons[platform] || '📱';
+
+        if (icons[platform]) {
+            return (
+                <Image
+                    src={icons[platform]}
+                    alt={platform}
+                    width={16}
+                    height={16}
+                    className="w-4 h-4 object-contain"
+                />
+            );
+        }
+
+        const fallbackIcons = {
+            linkedin: '💼',
+            twitter: '🐦'
+        };
+        return fallbackIcons[platform] || '📱';
     };
     const getStatusColor = (status) => {
         const colors = {
