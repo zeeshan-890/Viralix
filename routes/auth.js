@@ -68,10 +68,8 @@ router.post('/change-password', auth, [
             return res.status(404).json({ message: 'User not found' });
         }
 
-        // Check if user is OAuth-only (no local password)
-        if (user.authProvider !== 'local' && !user.password) {
-            return res.status(400).json({ message: 'Cannot change password for OAuth accounts' });
-        }
+        // Check if user has a password set (OAuth-only users will have random password but that's okay)
+        // They can still change their password to enable local login
 
         // Verify current password
         const isMatch = await bcrypt.compare(currentPassword, user.password);
@@ -82,6 +80,12 @@ router.post('/change-password', auth, [
         // Hash new password
         const salt = await bcrypt.genSalt(10);
         user.password = await bcrypt.hash(newPassword, salt);
+
+        // Add 'local' to authProviders if not already there
+        if (!user.authProviders) user.authProviders = [];
+        if (!user.authProviders.includes('local')) {
+            user.authProviders.push('local');
+        }
         await user.save();
 
         res.json({ message: 'Password changed successfully' });
@@ -118,7 +122,7 @@ router.post('/signup', [
         const otp = Math.floor(100000 + Math.random() * 900000).toString();
         const otpExpires = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
 
-        user = new User({ name, email, password: hashed, isVerified: false, otpCode: otp, otpExpires, otpAttempts: 0 });
+        user = new User({ name, email, password: hashed, isVerified: false, otpCode: otp, otpExpires, otpAttempts: 0, authProviders: ['local'] });
         await user.save();
 
         // Send OTP email
@@ -372,7 +376,11 @@ router.post('/reset-password', [
         // Hash new password and enable email/password login
         const salt = await bcrypt.genSalt(10);
         user.password = await bcrypt.hash(password, salt);
-        user.authProvider = 'local'; // Enable email/password login
+        // Add 'local' to authProviders if not already there
+        if (!user.authProviders) user.authProviders = [];
+        if (!user.authProviders.includes('local')) {
+            user.authProviders.push('local');
+        }
         user.resetPasswordToken = undefined;
         user.resetPasswordExpires = undefined;
         await user.save();
@@ -439,14 +447,15 @@ router.get('/google/callback', async (req, res) => {
                 email: email.toLowerCase(),
                 profilePicture: picture,
                 isVerified: true, // OAuth users are pre-verified
-                authProvider: 'google',
+                authProviders: ['google'],
                 password: await bcrypt.hash(Math.random().toString(36), 10) // Random password for OAuth users
             });
             await user.save();
         } else {
-            // User exists - link Google account and ensure verified
-            if (user.authProvider === 'local' || !user.authProvider) {
-                user.authProvider = 'google';
+            // User exists - add Google to auth providers if not already there
+            if (!user.authProviders) user.authProviders = [];
+            if (!user.authProviders.includes('google')) {
+                user.authProviders.push('google');
             }
             user.isVerified = true;
             if (picture && !user.profilePicture) {
@@ -532,14 +541,15 @@ router.get('/facebook/callback', async (req, res) => {
                 email: email.toLowerCase(),
                 profilePicture: picture?.data?.url,
                 isVerified: true, // OAuth users are pre-verified
-                authProvider: 'facebook',
+                authProviders: ['facebook'],
                 password: await bcrypt.hash(Math.random().toString(36), 10) // Random password for OAuth users
             });
             await user.save();
         } else {
-            // User exists - link Facebook account and ensure verified
-            if (user.authProvider === 'local' || !user.authProvider) {
-                user.authProvider = 'facebook';
+            // User exists - add Facebook to auth providers if not already there
+            if (!user.authProviders) user.authProviders = [];
+            if (!user.authProviders.includes('facebook')) {
+                user.authProviders.push('facebook');
             }
             user.isVerified = true;
             if (picture?.data?.url && !user.profilePicture) {
