@@ -298,13 +298,14 @@ router.post('/forgot-password', [
         }
 
         const { email } = req.body;
-        const user = await User.findOne({ email });
+        const user = await User.findOne({ email: email.toLowerCase() });
 
+        // Always return success to prevent email enumeration
         if (!user) {
-            return res.status(404).json({ message: 'User not found' });
+            return res.json({ message: 'If an account exists, we sent a password reset email' });
         }
 
-        // Generate reset token (implement email sending logic here)
+        // Generate reset token
         const resetToken = jwt.sign(
             { userId: user.id },
             process.env.JWT_SECRET,
@@ -316,13 +317,32 @@ router.post('/forgot-password', [
         user.resetPasswordExpires = Date.now() + 3600000; // 1 hour
         await user.save();
 
-        res.json({
-            message: 'Password reset email sent',
-            resetToken // In production, this should be sent via email
+        // Send reset email
+        const resetUrl = `${process.env.CLIENT_URL}/auth/reset-password?token=${resetToken}`;
+
+        await sendEmail({
+            to: user.email,
+            subject: 'Reset Your Password - Viralix',
+            html: `
+                <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+                    <h2 style="color: #354F52;">Reset Your Password</h2>
+                    <p>Hi ${user.name},</p>
+                    <p>We received a request to reset your password. Click the button below to create a new password:</p>
+                    <div style="text-align: center; margin: 30px 0;">
+                        <a href="${resetUrl}" style="background-color: #84A98C; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; display: inline-block;">Reset Password</a>
+                    </div>
+                    <p>This link will expire in 1 hour.</p>
+                    <p>If you didn't request this, you can safely ignore this email.</p>
+                    <hr style="border: none; border-top: 1px solid #eee; margin: 20px 0;" />
+                    <p style="color: #888; font-size: 12px;">Viralix - Social Media Management</p>
+                </div>
+            `
         });
+
+        res.json({ message: 'If an account exists, we sent a password reset email' });
     } catch (error) {
-        console.error(error.message);
-        res.status(500).send('Server error');
+        console.error('Forgot password error:', error.message);
+        res.status(500).json({ message: 'Failed to send reset email' });
     }
 });
 
