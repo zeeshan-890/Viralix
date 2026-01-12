@@ -125,17 +125,20 @@ class InstagramPublisher extends BasePublisher {
     }
 
     async _publishInternal(auth, mediaItem, caption) {
+        // Validation: Instagram Graph API deprecation requires REELS for video
+        const isVideo = mediaItem.type === 'video';
+
         const payload = {
             caption: caption,
-            media_type: mediaItem.type === 'video' ? 'VIDEO' : 'IMAGE'
+            media_type: isVideo ? 'REELS' : 'IMAGE'
         };
 
-        if (mediaItem.type === 'video') {
+        if (isVideo) {
             payload.video_url = mediaItem.url;
-            payload.media_type = 'VIDEO';
+            // Ensure media_type is REELS for video, as VIDEO is deprecated
+            payload.media_type = 'REELS';
         } else {
             payload.image_url = mediaItem.url;
-            // IMAGE is default, but explicit is fine
         }
 
         const containerId = await createDirectOAuthMediaContainer(
