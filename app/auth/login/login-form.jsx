@@ -72,9 +72,14 @@ export default function LoginForm() {
             </div>
 
             <div>
-                <label htmlFor="password" className="block text-sm font-medium mb-1" style={{ color: '#354F52' }}>
-                    Password
-                </label>
+                <div className="flex items-center justify-between mb-1">
+                    <label htmlFor="password" className="block text-sm font-medium" style={{ color: '#354F52' }}>
+                        Password
+                    </label>
+                    <Link href="/auth/forgot-password" className="text-sm font-medium hover:underline" style={{ color: '#84A98C' }}>
+                        Forgot password?
+                    </Link>
+                </div>
                 <input
                     id="password"
                     type="password"
@@ -107,7 +112,7 @@ export default function LoginForm() {
                 {isSubmitting ? 'Logging in...' : 'Log in'}
             </button>
 
-           
+
 
             <div className="text-center">
                 <span className="text-sm text-gray-600">
