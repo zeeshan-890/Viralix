@@ -2,7 +2,8 @@
 import { useCallback, useEffect, useState } from "react";
 import { tiktokAPI } from "@/lib/api";
 import Link from "next/link";
-import { Music2, Video, CheckCircle2, AlertCircle, Loader2, ArrowLeft, RefreshCw, Trash2, Eye, Heart, MessageCircle, Share2, Users } from "lucide-react";
+import { Video, CheckCircle2, AlertCircle, Loader2, ArrowLeft, RefreshCw, Trash2, Eye, Heart, MessageCircle, Share2, Users } from "lucide-react";
+import Image from "next/image";
 
 export default function TikTokManagePage() {
     const [status, setStatus] = useState({ connected: false, accounts: [] });
@@ -123,8 +124,8 @@ export default function TikTokManagePage() {
                     Back to Connect Accounts
                 </Link>
                 <div className="flex items-center gap-4">
-                    <div className="w-14 h-14 rounded-xl flex items-center justify-center bg-black">
-                        <Music2 className="w-7 h-7 text-white" />
+                    <div className="w-14 h-14 rounded-xl flex items-center justify-center bg-white border border-gray-100 shadow-sm">
+                        <Image src="/tiktok.png" alt="TikTok" width={28} height={28} className="w-7 h-7 object-contain" />
                     </div>
                     <div>
                         <h1 className="text-3xl font-bold" style={{ color: '#354F52' }}>TikTok Accounts</h1>
@@ -155,8 +156,8 @@ export default function TikTokManagePage() {
                 </div>
             ) : !status.connected || status.accounts?.length === 0 ? (
                 <div className="bg-white rounded-xl border border-gray-200 p-12 text-center">
-                    <div className="w-20 h-20 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-4">
-                        <Music2 className="w-10 h-10 text-gray-400" />
+                    <div className="w-20 h-20 rounded-full bg-white border border-gray-100 flex items-center justify-center mx-auto mb-4 shadow-sm">
+                        <Image src="/tiktok.png" alt="TikTok" width={40} height={40} className="w-10 h-10 object-contain" />
                     </div>
                     <h2 className="text-xl font-semibold mb-2" style={{ color: '#354F52' }}>No TikTok Accounts Connected</h2>
                     <p className="text-gray-600 mb-6">Connect your TikTok account to start publishing videos</p>
@@ -165,7 +166,7 @@ export default function TikTokManagePage() {
                         className="px-6 py-3 rounded-lg text-white font-medium shadow-md hover:opacity-90 transition-all flex items-center gap-2 mx-auto"
                         style={{ backgroundColor: '#000' }}
                     >
-                        <Music2 className="w-5 h-5" />
+                        <Image src="/tiktok.png" alt="TikTok" width={20} height={20} className="w-5 h-5 object-contain brightness-0 invert" />
                         Connect TikTok Account
                     </button>
                 </div>
@@ -181,13 +182,13 @@ export default function TikTokManagePage() {
                                         key={account.accountId}
                                         onClick={() => setSelectedAccount(account)}
                                         className={`w-full text-left p-3 rounded-lg border-2 transition-all ${selectedAccount?.accountId === account.accountId
-                                                ? 'border-black bg-gray-50'
-                                                : 'border-gray-200 hover:border-gray-300'
+                                            ? 'border-black bg-gray-50'
+                                            : 'border-gray-200 hover:border-gray-300'
                                             }`}
                                     >
                                         <div className="flex items-center gap-3">
-                                            <div className="w-10 h-10 rounded-full bg-black flex items-center justify-center">
-                                                <Music2 className="w-5 h-5 text-white" />
+                                            <div className="w-10 h-10 rounded-full bg-white border border-gray-100 flex items-center justify-center shadow-sm">
+                                                <Image src="/tiktok.png" alt="TikTok" width={20} height={20} className="w-5 h-5 object-contain" />
                                             </div>
                                             <div className="flex-1 min-w-0">
                                                 <div className="font-medium text-gray-900 truncate">
@@ -209,7 +210,7 @@ export default function TikTokManagePage() {
                                 onClick={handleConnect}
                                 className="w-full mt-4 px-4 py-2 text-sm font-medium text-gray-700 border-2 border-dashed border-gray-300 rounded-lg hover:border-gray-400 hover:bg-gray-50 transition-colors flex items-center justify-center gap-2"
                             >
-                                <Music2 className="w-4 h-4" />
+                                <Image src="/tiktok.png" alt="Add" width={16} height={16} className="w-4 h-4 object-contain" />
                                 Add Another Account
                             </button>
                         </div>
@@ -223,7 +224,7 @@ export default function TikTokManagePage() {
                                 <div className="bg-white rounded-xl border border-gray-200 p-6">
                                     <div className="flex items-start justify-between mb-6">
                                         <div className="flex items-center gap-4">
-                                            <div className="w-16 h-16 rounded-full bg-black flex items-center justify-center">
+                                            <div className="w-16 h-16 rounded-full bg-white border border-gray-100 flex items-center justify-center shadow-sm">
                                                 {accountDetails?.profile?.avatarUrl ? (
                                                     <img
                                                         src={accountDetails.profile.avatarUrl}
@@ -231,7 +232,7 @@ export default function TikTokManagePage() {
                                                         className="w-16 h-16 rounded-full object-cover"
                                                     />
                                                 ) : (
-                                                    <Music2 className="w-8 h-8 text-white" />
+                                                    <Image src="/tiktok.png" alt="TikTok" width={32} height={32} className="w-8 h-8 object-contain" />
                                                 )}
                                             </div>
                                             <div>
@@ -368,7 +369,9 @@ export default function TikTokManagePage() {
                             </div>
                         ) : (
                             <div className="bg-white rounded-xl border border-gray-200 p-12 text-center">
-                                <Music2 className="w-12 h-12 mx-auto mb-4 text-gray-300" />
+                                <div className="w-12 h-12 mx-auto mb-4 bg-white border border-gray-100 rounded-full flex items-center justify-center shadow-sm">
+                                    <Image src="/tiktok.png" alt="Select" width={24} height={24} className="w-6 h-6 object-contain" />
+                                </div>
                                 <p className="text-gray-600">Select an account to view details</p>
                             </div>
                         )}

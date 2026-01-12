@@ -1,7 +1,8 @@
 'use client';
 import { useState, useEffect } from 'react';
-import { Instagram, CheckCircle2, XCircle, Loader2, ExternalLink, RefreshCw } from 'lucide-react';
+import { CheckCircle2, XCircle, Loader2, ExternalLink, RefreshCw } from 'lucide-react';
 import Link from 'next/link';
+import Image from 'next/image';
 import axios from 'axios';
 
 // const API_URL = 'https://viralix-b3ff86cb412f.herokuapp.com' ;
@@ -134,8 +135,8 @@ export default function InstagramOAuthPage() {
         <div className="max-w-4xl mx-auto">
             <div className="mb-8">
                 <div className="flex items-center gap-3 mb-3">
-                    <div className="w-12 h-12 rounded-xl flex items-center justify-center" style={{ backgroundColor: '#CAD2C5' }}>
-                        <Instagram className="w-6 h-6" style={{ color: '#52796F' }} />
+                    <div className="w-12 h-12 rounded-xl flex items-center justify-center bg-white border border-gray-100 shadow-sm">
+                        <Image src="/instagram.png" alt="Instagram" width={24} height={24} className="w-6 h-6 object-contain" />
                     </div>
                     <div>
                         <h1 className="text-3xl font-bold" style={{ color: '#354F52' }}>
@@ -189,8 +190,8 @@ export default function InstagramOAuthPage() {
                                         className="flex items-center justify-between p-4 border-2 border-gray-200 rounded-xl hover:shadow-md transition-all"
                                     >
                                         <div className="flex items-center gap-4">
-                                            <div className="w-12 h-12 rounded-full flex items-center justify-center text-white font-semibold" style={{ backgroundColor: '#84A98C' }}>
-                                                <Instagram className="w-6 h-6" />
+                                            <div className="w-12 h-12 rounded-full flex items-center justify-center bg-white border border-gray-100 shadow-sm">
+                                                <Image src="/instagram.png" alt="Instagram" width={24} height={24} className="w-6 h-6 object-contain" />
                                             </div>
                                             <div>
                                                 <div className="flex items-center gap-2">
@@ -226,8 +227,8 @@ export default function InstagramOAuthPage() {
 
                     {/* Connect New Account */}
                     <div className="bg-white rounded-xl border border-gray-200 p-8 text-center">
-                        <div className="w-16 h-16 mx-auto mb-4 rounded-full flex items-center justify-center" style={{ backgroundColor: '#CAD2C5' }}>
-                            <Instagram className="w-8 h-8" style={{ color: '#52796F' }} />
+                        <div className="w-16 h-16 mx-auto mb-4 rounded-full flex items-center justify-center bg-white border border-gray-100 shadow-sm">
+                            <Image src="/instagram.png" alt="Instagram" width={32} height={32} className="w-8 h-8 object-contain" />
                         </div>
                         <h2 className="text-xl font-semibold mb-2" style={{ color: '#354F52' }}>
                             {accounts.length > 0 ? 'Connect Another Account' : 'Connect Your Instagram Account'}
@@ -249,7 +250,7 @@ export default function InstagramOAuthPage() {
                                 </>
                             ) : (
                                 <>
-                                    <Instagram className="w-5 h-5" />
+                                    <Image src="/instagram.png" alt="Info" width={20} height={20} className="w-5 h-5 object-contain brightness-0 invert" />
                                     Connect Instagram
                                     <ExternalLink className="w-4 h-4" />
                                 </>

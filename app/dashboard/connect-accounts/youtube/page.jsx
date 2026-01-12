@@ -1,9 +1,10 @@
 'use client';
 import { useState, useEffect } from 'react';
-import { Youtube, CheckCircle2, XCircle, Loader2, ExternalLink } from 'lucide-react';
+import { CheckCircle2, XCircle, Loader2, ExternalLink } from 'lucide-react';
 import Link from 'next/link';
 import { youtubeAPI } from '@/lib/api';
 import { useAccounts } from '@/hooks/useAccounts';
+import Image from 'next/image';
 
 export default function YouTubeManagePage() {
     const { accounts, isLoading, disconnect } = useAccounts();
@@ -64,8 +65,8 @@ export default function YouTubeManagePage() {
         <div className="max-w-4xl mx-auto">
             <div className="mb-8">
                 <div className="flex items-center gap-3 mb-3">
-                    <div className="w-12 h-12 rounded-xl flex items-center justify-center bg-red-600">
-                        <Youtube className="w-6 h-6 text-white" />
+                    <div className="w-12 h-12 rounded-xl flex items-center justify-center bg-white border border-gray-100 shadow-sm">
+                        <Image src="/youtube.png" alt="YouTube" width={24} height={24} className="w-6 h-6 object-contain" />
                     </div>
                     <div>
                         <h1 className="text-3xl font-bold" style={{ color: '#354F52' }}>
@@ -112,8 +113,8 @@ export default function YouTubeManagePage() {
                                         className="flex items-center justify-between p-4 border-2 border-gray-200 rounded-xl hover:shadow-md transition-all"
                                     >
                                         <div className="flex items-center gap-4">
-                                            <div className="w-12 h-12 rounded-full flex items-center justify-center bg-red-600 text-white">
-                                                <Youtube className="w-6 h-6" />
+                                            <div className="w-12 h-12 rounded-full flex items-center justify-center bg-white border border-gray-100 shadow-sm">
+                                                <Image src="/youtube.png" alt="YouTube" width={24} height={24} className="w-6 h-6 object-contain" />
                                             </div>
                                             <div>
                                                 <h3 className="font-semibold" style={{ color: '#354F52' }}>
@@ -138,8 +139,8 @@ export default function YouTubeManagePage() {
 
                     {/* Connect New Account */}
                     <div className="bg-white rounded-xl border border-gray-200 p-8 text-center">
-                        <div className="w-16 h-16 mx-auto mb-4 rounded-full flex items-center justify-center bg-red-600">
-                            <Youtube className="w-8 h-8 text-white" />
+                        <div className="w-16 h-16 mx-auto mb-4 rounded-full flex items-center justify-center bg-white border border-gray-100 shadow-sm">
+                            <Image src="/youtube.png" alt="YouTube" width={32} height={32} className="w-8 h-8 object-contain" />
                         </div>
                         <h2 className="text-xl font-semibold mb-2" style={{ color: '#354F52' }}>
                             {ytAccounts.length > 0 ? 'Connect Another Channel' : 'Connect Your YouTube Channel'}
@@ -160,7 +161,7 @@ export default function YouTubeManagePage() {
                                 </>
                             ) : (
                                 <>
-                                    <Youtube className="w-5 h-5" />
+                                    <Image src="/youtube.png" alt="YT" width={20} height={20} className="w-5 h-5 object-contain brightness-0 invert" />
                                     Connect YouTube
                                     <ExternalLink className="w-4 h-4" />
                                 </>

@@ -2,6 +2,7 @@
 import { Clock, CheckCircle2, FileText, Users, AlertCircle } from 'lucide-react';
 import CalendarView from './components/CalendarView';
 import { useAccounts } from '@/hooks/useAccounts';
+import Image from 'next/image';
 
 export default function SchedulePage() {
     const { accounts, isLoading, error } = useAccounts();
@@ -13,38 +14,38 @@ export default function SchedulePage() {
         {
             id: 'facebook',
             name: 'Facebook',
-            icon: '📘',
+            icon: <Image src="/facebook.png" alt="FB" width={24} height={24} className="w-6 h-6 object-contain" />,
             connected: getPlatformCount('facebook') > 0,
             count: getPlatformCount('facebook'),
             countLabel: 'pages connected',
-            colors: { border: 'border-blue-100', hover: 'hover:border-blue-300', bg: '#eff6ff', iconBg: 'bg-blue-500' }
+            colors: { border: 'border-blue-100', hover: 'hover:border-blue-300', bg: '#eff6ff', iconBg: 'bg-white border border-gray-100' }
         },
         {
             id: 'instagram',
             name: 'Instagram',
-            icon: '📷',
+            icon: <Image src="/instagram.png" alt="IG" width={24} height={24} className="w-6 h-6 object-contain" />,
             connected: getPlatformCount('instagram') > 0,
             count: getPlatformCount('instagram'),
             countLabel: 'accounts linked',
-            colors: { border: 'border-pink-100', hover: 'hover:border-pink-300', bg: '#fdf2f8', iconBg: 'bg-gradient-to-br from-purple-500 via-pink-500 to-orange-500' }
+            colors: { border: 'border-pink-100', hover: 'hover:border-pink-300', bg: '#fdf2f8', iconBg: 'bg-white border border-gray-100' }
         },
         {
             id: 'tiktok',
             name: 'TikTok',
-            icon: '🎵',
+            icon: <Image src="/tiktok.png" alt="TT" width={24} height={24} className="w-6 h-6 object-contain" />,
             connected: getPlatformCount('tiktok') > 0,
             count: getPlatformCount('tiktok'),
             countLabel: 'accounts linked',
-            colors: { border: 'border-gray-100', hover: 'hover:border-gray-300', bg: '#fafafa', iconBg: 'bg-black' }
+            colors: { border: 'border-gray-100', hover: 'hover:border-gray-300', bg: '#fafafa', iconBg: 'bg-white border border-gray-100' }
         },
         {
             id: 'youtube',
             name: 'YouTube',
-            icon: '📺',
+            icon: <Image src="/youtube.png" alt="YT" width={24} height={24} className="w-6 h-6 object-contain" />,
             connected: getPlatformCount('youtube') > 0,
             count: getPlatformCount('youtube'),
             countLabel: 'channels connected',
-            colors: { border: 'border-red-100', hover: 'hover:border-red-300', bg: '#fef2f2', iconBg: 'bg-red-600' }
+            colors: { border: 'border-red-100', hover: 'hover:border-red-300', bg: '#fef2f2', iconBg: 'bg-white border border-gray-100' }
         }
     ];
 

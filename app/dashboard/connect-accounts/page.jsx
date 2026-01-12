@@ -2,8 +2,9 @@
 import { useCallback, useEffect, useState } from "react";
 import { facebookAPI, tiktokAPI, youtubeAPI } from "@/lib/api";
 import Link from "next/link";
-import { Facebook, Instagram, CheckCircle2, ExternalLink, Loader2, AlertCircle, HelpCircle, BookOpen, Music2, Video, Youtube } from "lucide-react";
+import { CheckCircle2, ExternalLink, Loader2, AlertCircle, HelpCircle, BookOpen } from "lucide-react";
 import { useAccounts } from "@/hooks/useAccounts";
+import Image from "next/image";
 
 export default function ConnectAccountsPage() {
     const { accounts, isLoading, disconnect } = useAccounts();
@@ -163,8 +164,8 @@ export default function ConnectAccountsPage() {
                     <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
                         <div className="flex items-center justify-between">
                             <div className="flex items-center gap-4">
-                                <div className="w-14 h-14 rounded-xl flex items-center justify-center bg-blue-50">
-                                    <Facebook className="w-7 h-7 text-blue-600" />
+                                <div className="w-14 h-14 rounded-xl flex items-center justify-center bg-white border border-gray-100 shadow-sm">
+                                    <Image src="/facebook.png" alt="Facebook" width={32} height={32} className="w-8 h-8 object-contain" />
                                 </div>
                                 <div>
                                     <h2 className="text-xl font-semibold mb-1" style={{ color: '#354F52' }}>Facebook</h2>
@@ -173,7 +174,7 @@ export default function ConnectAccountsPage() {
                             </div>
                             {!fbStatus.connected ? (
                                 <button onClick={connectFacebook} disabled={connecting} className="px-5 py-2.5 rounded-lg text-white transition-all shadow-md flex items-center gap-2" style={{ backgroundColor: '#84A98C' }}>
-                                    {connecting ? <Loader2 className="animate-spin w-4 h-4" /> : <Facebook className="w-4 h-4" />} Connect
+                                    {connecting ? <Loader2 className="animate-spin w-4 h-4" /> : <Image src="/facebook.png" alt="FB" width={16} height={16} className="w-4 h-4 object-contain brightness-0 invert" />} Connect
                                 </button>
                             ) : (
                                 <button onClick={disconnectFacebook} className="px-5 py-2.5 rounded-lg border-2 border-gray-300 hover:bg-gray-50 font-medium">Disconnect</button>
@@ -193,8 +194,8 @@ export default function ConnectAccountsPage() {
                     <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
                         <div className="flex items-center justify-between">
                             <div className="flex items-center gap-4">
-                                <div className="w-14 h-14 rounded-xl flex items-center justify-center" style={{ background: 'linear-gradient(45deg, #f09433 0%,#e6683c 25%,#dc2743 50%,#cc2366 75%,#bc1888 100%)' }}>
-                                    <Instagram className="w-7 h-7 text-white" />
+                                <div className="w-14 h-14 rounded-xl flex items-center justify-center bg-white border border-gray-100 shadow-sm">
+                                    <Image src="/instagram.png" alt="Instagram" width={32} height={32} className="w-8 h-8 object-contain" />
                                 </div>
                                 <div>
                                     <h2 className="text-xl font-semibold mb-1" style={{ color: '#354F52' }}>Instagram</h2>
@@ -202,7 +203,7 @@ export default function ConnectAccountsPage() {
                                 </div>
                             </div>
                             <Link href="/dashboard/connect-accounts/instagram-oauth" className="px-5 py-2.5 rounded-lg text-white shadow-md flex items-center gap-2" style={{ backgroundColor: '#84A98C' }}>
-                                <Instagram className="w-4 h-4" /> {igAccounts.length > 0 ? 'Manage' : 'Connect'}
+                                <Image src="/instagram.png" alt="IG" width={16} height={16} className="w-4 h-4 object-contain brightness-0 invert" /> {igAccounts.length > 0 ? 'Manage' : 'Connect'}
                             </Link>
                         </div>
                         {igAccounts.length > 0 && (
@@ -210,7 +211,9 @@ export default function ConnectAccountsPage() {
                                 {igAccounts.map(acc => (
                                     <div key={acc.platformAccountId || acc._id} className="flex items-center justify-between p-3 border rounded-lg">
                                         <div className="flex items-center gap-3">
-                                            <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center"><Instagram className="w-5 h-5 text-pink-600" /></div>
+                                            <div className="w-10 h-10 rounded-full bg-white border border-gray-100 flex items-center justify-center">
+                                                <Image src="/instagram.png" alt="IG" width={20} height={20} className="w-5 h-5 object-contain" />
+                                            </div>
                                             <div>
                                                 <div className="font-medium">@{acc.accountName || acc.metadata?.username || 'Instagram Account'}</div>
                                                 <div className="text-xs text-gray-500">{acc.metadata?.accountType || 'Business'}</div>
@@ -227,8 +230,8 @@ export default function ConnectAccountsPage() {
                     <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
                         <div className="flex items-center justify-between">
                             <div className="flex items-center gap-4">
-                                <div className="w-14 h-14 rounded-xl flex items-center justify-center bg-black">
-                                    <Music2 className="w-7 h-7 text-white" />
+                                <div className="w-14 h-14 rounded-xl flex items-center justify-center bg-white border border-gray-100 shadow-sm">
+                                    <Image src="/tiktok.png" alt="TikTok" width={32} height={32} className="w-8 h-8 object-contain" />
                                 </div>
                                 <div>
                                     <h2 className="text-xl font-semibold mb-1" style={{ color: '#354F52' }}>TikTok</h2>
@@ -237,7 +240,7 @@ export default function ConnectAccountsPage() {
                             </div>
                             {!ttAccounts.length ? (
                                 <button onClick={connectTikTok} disabled={connectingTikTok} className="px-5 py-2.5 rounded-lg text-white bg-black shadow-md flex items-center gap-2">
-                                    {connectingTikTok ? <Loader2 className="animate-spin w-4 h-4" /> : <Music2 className="w-4 h-4" />} Connect
+                                    {connectingTikTok ? <Loader2 className="animate-spin w-4 h-4" /> : <Image src="/tiktok.png" alt="TT" width={16} height={16} className="w-4 h-4 object-contain brightness-0 invert" />} Connect
                                 </button>
                             ) : (
                                 <Link href="/dashboard/connect-accounts/tiktok" className="px-5 py-2.5 rounded-lg text-white shadow-md flex items-center gap-2" style={{ backgroundColor: '#84A98C' }}>
@@ -250,7 +253,9 @@ export default function ConnectAccountsPage() {
                                 {ttAccounts.map(acc => (
                                     <div key={acc.accountId} className="flex items-center justify-between p-3 border rounded-lg">
                                         <div className="flex items-center gap-3">
-                                            <div className="w-10 h-10 rounded-full bg-black flex items-center justify-center text-white"><Music2 className="w-5 h-5" /></div>
+                                            <div className="w-10 h-10 rounded-full bg-black flex items-center justify-center text-white">
+                                                <Image src="/tiktok.png" alt="TT" width={20} height={20} className="w-5 h-5 object-contain" />
+                                            </div>
                                             <div className="font-medium">{acc.accountName}</div>
                                         </div>
                                         <button onClick={() => handleDisconnect('tiktok', acc.accountId)} className="text-xs text-red-600 hover:text-red-800">Disconnect</button>
@@ -264,8 +269,8 @@ export default function ConnectAccountsPage() {
                     <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
                         <div className="flex items-center justify-between">
                             <div className="flex items-center gap-4">
-                                <div className="w-14 h-14 rounded-xl flex items-center justify-center bg-red-600">
-                                    <Youtube className="w-7 h-7 text-white" />
+                                <div className="w-14 h-14 rounded-xl flex items-center justify-center bg-white border border-gray-100 shadow-sm">
+                                    <Image src="/youtube.png" alt="YouTube" width={32} height={32} className="w-8 h-8 object-contain" />
                                 </div>
                                 <div>
                                     <h2 className="text-xl font-semibold mb-1" style={{ color: '#354F52' }}>YouTube</h2>
@@ -274,7 +279,7 @@ export default function ConnectAccountsPage() {
                             </div>
                             {!ytAccounts.length ? (
                                 <button onClick={connectYouTube} disabled={connectingYouTube} className="px-5 py-2.5 rounded-lg text-white bg-red-600 hover:bg-red-700 shadow-md flex items-center gap-2">
-                                    {connectingYouTube ? <Loader2 className="animate-spin w-4 h-4" /> : <Youtube className="w-4 h-4" />} Connect
+                                    {connectingYouTube ? <Loader2 className="animate-spin w-4 h-4" /> : <Image src="/youtube.png" alt="YT" width={16} height={16} className="w-4 h-4 object-contain brightness-0 invert" />} Connect
                                 </button>
                             ) : (
                                 <Link href="/dashboard/connect-accounts/youtube" className="px-5 py-2.5 rounded-lg border-2 border-gray-200 hover:bg-gray-50 font-medium flex items-center gap-2">
@@ -287,7 +292,9 @@ export default function ConnectAccountsPage() {
                                 {ytAccounts.map(acc => (
                                     <div key={acc.accountId} className="flex items-center justify-between p-3 border rounded-lg">
                                         <div className="flex items-center gap-3">
-                                            <div className="w-10 h-10 rounded-full bg-red-600 flex items-center justify-center text-white"><Youtube className="w-5 h-5" /></div>
+                                            <div className="w-10 h-10 rounded-full bg-red-600 flex items-center justify-center text-white">
+                                                <Image src="/youtube.png" alt="YT" width={20} height={20} className="w-5 h-5 object-contain" />
+                                            </div>
                                             <div className="font-medium">{acc.accountName}</div>
                                         </div>
                                         <button onClick={() => handleDisconnect('youtube', acc.accountId)} className="text-xs text-red-600 hover:text-red-800">Disconnect</button>
