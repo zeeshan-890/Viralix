@@ -69,7 +69,7 @@ class InstagramPublisher extends BasePublisher {
     }
 
     async publish(account, postData) {
-        const auth = await this.resolveAuth(account);
+        let auth = await this.resolveAuth(account);
         const { content, media } = postData;
 
         if (!media || media.length === 0) {
@@ -79,22 +79,64 @@ class InstagramPublisher extends BasePublisher {
         const mediaItem = media[0];
         const caption = content || '';
 
-        if (auth.isDirect) {
-            const containerId = await createDirectOAuthMediaContainer(
-                auth.accessToken,
-                auth.instagramId,
-                mediaItem.url,
-                caption,
-                mediaItem.type
-            );
-
-            await this._waitForContainer(auth.accessToken, containerId, true);
-
-            const publishId = await publishDirectOAuthContainer(auth.accessToken, auth.instagramId, containerId);
-            return this.formatResponse(publishId, 'published');
-        } else {
+        if (!auth.isDirect) {
             throw new Error('Only Direct Instagram Login supported in this version');
         }
+
+        try {
+            return await this._publishInternal(auth, mediaItem, caption);
+        } catch (error) {
+            // Check if it's an invalid token error (IG_INVALID_TOKEN or code 190)
+            const isTokenError = error.code === 'IG_INVALID_TOKEN' || error.message?.includes('Invalid OAuth access token');
+
+            if (isTokenError) {
+                console.log('[InstagramPublisher] Token invalid during publish. Attempting reactive refresh...');
+                try {
+                    // Force refresh
+                    const directAccount = await AccountService.getAccount(this.user._id, 'instagram', account.accountId);
+                    if (!directAccount) throw error; // account gone?
+
+                    const refreshed = await refreshLongLivedToken(directAccount.accessToken);
+                    const newExpiry = new Date(Date.now() + refreshed.expires_in * 1000);
+
+                    await AccountService.connectAccount(this.user._id, {
+                        platform: 'instagram',
+                        accountId: account.accountId,
+                        name: directAccount.accountName,
+                        accessToken: refreshed.access_token,
+                        expires: newExpiry,
+                        metadata: directAccount.metadata
+                    });
+
+                    // Update auth object with new token
+                    auth.accessToken = refreshed.access_token;
+
+                    // Retry publish with new token
+                    console.log('[InstagramPublisher] Retrying publish with refreshed token...');
+                    return await this._publishInternal(auth, mediaItem, caption);
+
+                } catch (refreshErr) {
+                    console.error('[InstagramPublisher] Reactive refresh failed:', refreshErr.message);
+                    throw error; // Throw original error if refresh fails
+                }
+            }
+            throw error; // Throw non-token errors
+        }
+    }
+
+    async _publishInternal(auth, mediaItem, caption) {
+        const containerId = await createDirectOAuthMediaContainer(
+            auth.accessToken,
+            auth.instagramId,
+            mediaItem.url,
+            caption,
+            mediaItem.type
+        );
+
+        await this._waitForContainer(auth.accessToken, containerId, true);
+
+        const publishId = await publishDirectOAuthContainer(auth.accessToken, auth.instagramId, containerId);
+        return this.formatResponse(publishId, 'published');
     }
 
     async _waitForContainer(token, containerId, isDirect) {
