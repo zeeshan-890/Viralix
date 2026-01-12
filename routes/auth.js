@@ -340,23 +340,25 @@ router.get('/google/callback', async (req, res) => {
 
         const { email, name, picture } = userInfoResponse.data;
 
-        // Find or create user
-        let user = await User.findOne({ email });
+        // Find or create user (case-insensitive email match)
+        let user = await User.findOne({ email: email.toLowerCase() });
 
         if (!user) {
             // Create new user with OAuth
             user = new User({
                 name,
-                email,
+                email: email.toLowerCase(),
                 profilePicture: picture,
                 isVerified: true, // OAuth users are pre-verified
                 authProvider: 'google',
                 password: await bcrypt.hash(Math.random().toString(36), 10) // Random password for OAuth users
             });
             await user.save();
-        } else if (!user.authProvider) {
-            // Update existing user to link Google account
-            user.authProvider = 'google';
+        } else {
+            // User exists - link Google account and ensure verified
+            if (user.authProvider === 'local' || !user.authProvider) {
+                user.authProvider = 'google';
+            }
             user.isVerified = true;
             if (picture && !user.profilePicture) {
                 user.profilePicture = picture;
