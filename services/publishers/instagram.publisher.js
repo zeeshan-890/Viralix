@@ -150,8 +150,8 @@ class InstagramPublisher extends BasePublisher {
 
         await this._waitForContainer(auth.accessToken, containerId, true);
 
-        const publishId = await publishDirectOAuthContainer(auth.instagramId, auth.accessToken, containerId);
-        return this.formatResponse(publishId, 'published');
+        const publishResult = await publishDirectOAuthContainer(auth.instagramId, auth.accessToken, containerId);
+        return this.formatResponse(publishResult.id, 'published');
     }
 
     async _waitForContainer(token, containerId, isDirect) {
