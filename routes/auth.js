@@ -386,8 +386,8 @@ router.get('/google/callback', async (req, res) => {
 // @access  Public
 router.get('/facebook', (req, res) => {
     const facebookAuthUrl = `https://www.facebook.com/v18.0/dialog/oauth?` +
-        `client_id=${process.env.FACEBOOK_AUTH_APP_ID}&` +
-        `redirect_uri=${encodeURIComponent(process.env.FACEBOOK_AUTH_REDIRECT_URI)}&` +
+        `client_id=${process.env.FACEBOOK_APP_ID}&` +
+        `redirect_uri=${encodeURIComponent(process.env.FACEBOOK_AUTH_REDIRECT_URI || 'https://viralix-b3ff86cb412f.herokuapp.com/api/auth/facebook/callback')}&` +
         `scope=${encodeURIComponent('email,public_profile')}&` +
         `response_type=code`;
 
@@ -410,9 +410,9 @@ router.get('/facebook/callback', async (req, res) => {
         // Exchange code for access token
         const tokenResponse = await axios.get('https://graph.facebook.com/v18.0/oauth/access_token', {
             params: {
-                client_id: process.env.FACEBOOK_AUTH_APP_ID,
-                client_secret: process.env.FACEBOOK_AUTH_APP_SECRET,
-                redirect_uri: process.env.FACEBOOK_AUTH_REDIRECT_URI,
+                client_id: process.env.FACEBOOK_APP_ID,
+                client_secret: process.env.FACEBOOK_APP_SECRET,
+                redirect_uri: process.env.FACEBOOK_AUTH_REDIRECT_URI || 'https://viralix-b3ff86cb412f.herokuapp.com/api/auth/facebook/callback',
                 code
             }
         });
