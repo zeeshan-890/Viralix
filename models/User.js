@@ -47,11 +47,10 @@ const UserSchema = new mongoose.Schema({
     },
     resetPasswordToken: String,
     resetPasswordExpires: Date,
-    authProvider: {
+    authProviders: [{
         type: String,
-        enum: ['local', 'google', 'facebook'],
-        default: 'local'
-    },
+        enum: ['local', 'google', 'facebook']
+    }],
     profilePicture: {
         type: String,
         default: ''
