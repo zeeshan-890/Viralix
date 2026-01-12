@@ -148,18 +148,18 @@ class InstagramPublisher extends BasePublisher {
         );
         const containerId = containerResult.id;
 
-        // User requested to remove polling: attempts publish immediately
-        // await this._waitForContainer(auth.accessToken, containerId, true);
+        // Must wait for container to be ready, otherwise we get "Media ID is not available"
+        await this._waitForContainer(auth.accessToken, containerId, true);
 
         const publishResult = await publishDirectOAuthContainer(auth.instagramId, auth.accessToken, containerId);
         return this.formatResponse(publishResult.id, 'published');
     }
 
     async _waitForContainer(token, containerId, isDirect) {
-        // PROCESSING can take time for videos/reels. Confirmed ~80s in production.
-        // We check every 1s for responsiveness, up to 180s (3 mins).
+        // PROCESSING can take time for videos/reels. Found ~80s in logs.
+        // We check every 1s (fastest safe interval) up to 5 mins.
         let attempts = 0;
-        const maxAttempts = 180;
+        const maxAttempts = 300;
         const interval = 1000;
 
         while (attempts < maxAttempts) {
