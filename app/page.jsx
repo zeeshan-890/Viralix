@@ -567,7 +567,7 @@ export default function LandingPage() {
                   { label: 'Help Center', href: '#' },
                   { label: 'Instagram Linking Guide', href: '/guide/instagram-linking' },
                   { label: 'Status', href: '#' },
-                  { label: 'Privacy Policy', href: '#' }
+                  { label: 'Privacy Policy', href: '/privacy' }
                 ].map((item) => (
                   <li key={item.label}>
                     <Link href={item.href} className="text-gray-300 hover:text-white transition-colors">
