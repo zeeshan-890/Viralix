@@ -433,23 +433,25 @@ router.get('/facebook/callback', async (req, res) => {
             return res.redirect(`${process.env.CLIENT_URL}/auth/login?error=no_email`);
         }
 
-        // Find or create user
-        let user = await User.findOne({ email });
+        // Find or create user (case-insensitive email match)
+        let user = await User.findOne({ email: email.toLowerCase() });
 
         if (!user) {
             // Create new user with OAuth
             user = new User({
                 name,
-                email,
+                email: email.toLowerCase(),
                 profilePicture: picture?.data?.url,
                 isVerified: true, // OAuth users are pre-verified
                 authProvider: 'facebook',
                 password: await bcrypt.hash(Math.random().toString(36), 10) // Random password for OAuth users
             });
             await user.save();
-        } else if (!user.authProvider) {
-            // Update existing user to link Facebook account
-            user.authProvider = 'facebook';
+        } else {
+            // User exists - link Facebook account and ensure verified
+            if (user.authProvider === 'local' || !user.authProvider) {
+                user.authProvider = 'facebook';
+            }
             user.isVerified = true;
             if (picture?.data?.url && !user.profilePicture) {
                 user.profilePicture = picture.data.url;
