@@ -125,12 +125,23 @@ class InstagramPublisher extends BasePublisher {
     }
 
     async _publishInternal(auth, mediaItem, caption) {
+        const payload = {
+            caption: caption,
+            media_type: mediaItem.type === 'video' ? 'VIDEO' : 'IMAGE'
+        };
+
+        if (mediaItem.type === 'video') {
+            payload.video_url = mediaItem.url;
+            payload.media_type = 'VIDEO';
+        } else {
+            payload.image_url = mediaItem.url;
+            // IMAGE is default, but explicit is fine
+        }
+
         const containerId = await createDirectOAuthMediaContainer(
             auth.instagramId,
             auth.accessToken,
-            mediaItem.url,
-            caption,
-            mediaItem.type
+            payload
         );
 
         await this._waitForContainer(auth.accessToken, containerId, true);
