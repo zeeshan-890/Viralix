@@ -126,8 +126,8 @@ class InstagramPublisher extends BasePublisher {
 
     async _publishInternal(auth, mediaItem, caption) {
         const containerId = await createDirectOAuthMediaContainer(
-            auth.accessToken,
             auth.instagramId,
+            auth.accessToken,
             mediaItem.url,
             caption,
             mediaItem.type
@@ -135,7 +135,7 @@ class InstagramPublisher extends BasePublisher {
 
         await this._waitForContainer(auth.accessToken, containerId, true);
 
-        const publishId = await publishDirectOAuthContainer(auth.accessToken, auth.instagramId, containerId);
+        const publishId = await publishDirectOAuthContainer(auth.instagramId, auth.accessToken, containerId);
         return this.formatResponse(publishId, 'published');
     }
 
@@ -143,8 +143,8 @@ class InstagramPublisher extends BasePublisher {
         let attempts = 0;
         while (attempts < 10) {
             const status = isDirect
-                ? await getDirectOAuthContainerStatus(token, containerId)
-                : await getContainerStatus(token, containerId);
+                ? await getDirectOAuthContainerStatus(containerId, token)
+                : await getContainerStatus(containerId, token); // Assuming standard one is also (id, token) - let's verify standard
 
             if (status === 'FINISHED') return;
             if (status === 'ERROR') throw new Error('Media processing failed');
