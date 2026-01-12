@@ -129,8 +129,8 @@ export default function Sidebar({ open = false, onClose = () => { } }) {
                 <div className="p-4 border-t" style={{ borderColor: 'rgba(255, 255, 255, 0.1)' }}>
                     <div className="flex items-center gap-3">
                         <div className="w-10 h-10 rounded-full overflow-hidden flex items-center justify-center text-white font-semibold flex-shrink-0" style={{ backgroundColor: '#84A98C' }}>
-                            {user?.avatar ? (
-                                <Image src={user.avatar} alt={user.name || 'User'} width={40} height={40} className="w-full h-full object-cover" />
+                            {user?.profilePicture ? (
+                                <Image src={user.profilePicture} alt={user.name || 'User'} width={40} height={40} className="w-full h-full object-cover" />
                             ) : (
                                 <span>{user?.name?.charAt(0).toUpperCase() || 'U'}</span>
                             )}
