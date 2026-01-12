@@ -56,6 +56,11 @@ export const useAuthStore = create((set, get) => ({
         }
     },
 
+    setAuth: (user, token) => {
+        set({ user });
+        setStoredUser(user);
+    },
+
     updateUser: (partial) => {
         const current = get().user;
         if (!current) return;
