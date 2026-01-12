@@ -369,9 +369,10 @@ router.post('/reset-password', [
             return res.status(400).json({ message: 'Invalid or expired token' });
         }
 
-        // Hash new password
+        // Hash new password and enable email/password login
         const salt = await bcrypt.genSalt(10);
         user.password = await bcrypt.hash(password, salt);
+        user.authProvider = 'local'; // Enable email/password login
         user.resetPasswordToken = undefined;
         user.resetPasswordExpires = undefined;
         await user.save();
