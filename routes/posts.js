@@ -20,8 +20,10 @@ router.get('/', auth, async (req, res) => {
         if (req.query.month && req.query.year) {
             const year = parseInt(req.query.year, 10);
             const month = parseInt(req.query.month, 10) - 1; // 0-based
-            const start = new Date(Date.UTC(year, month, 1, 0, 0, 0));
-            const end = new Date(Date.UTC(year, month + 1, 0, 23, 59, 59));
+            // Add padding to cover timezone differences (fetch a few days before and after)
+            // This ensures logic like "Jan 1st Local = Dec 31st UTC" is captured when querying for Jan
+            const start = new Date(Date.UTC(year, month, -2, 0, 0, 0));
+            const end = new Date(Date.UTC(year, month + 1, 3, 23, 59, 59));
             filter.scheduledDate = { $gte: start, $lte: end };
         }
 
