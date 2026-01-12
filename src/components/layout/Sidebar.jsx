@@ -14,6 +14,8 @@ import {
     ChevronDown,
     ChevronRight
 } from 'lucide-react';
+import { useAuthStore } from '../../store/authStore';
+import Image from 'next/image';
 
 const navigation = [
     { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
@@ -27,6 +29,7 @@ const navigation = [
 
 export default function Sidebar({ open = false, onClose = () => { } }) {
     const pathname = usePathname();
+    const user = useAuthStore((state) => state.user);
     const [expandedItems, setExpandedItems] = useState([]);
     const toggleExpanded = (itemName) => {
         setExpandedItems(prev => prev.includes(itemName)
@@ -125,12 +128,16 @@ export default function Sidebar({ open = false, onClose = () => { } }) {
                 {/* User Profile */}
                 <div className="p-4 border-t" style={{ borderColor: 'rgba(255, 255, 255, 0.1)' }}>
                     <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full flex items-center justify-center text-white font-semibold" style={{ backgroundColor: '#84A98C' }}>
-                            U
+                        <div className="w-10 h-10 rounded-full overflow-hidden flex items-center justify-center text-white font-semibold flex-shrink-0" style={{ backgroundColor: '#84A98C' }}>
+                            {user?.avatar ? (
+                                <Image src={user.avatar} alt={user.name || 'User'} width={40} height={40} className="w-full h-full object-cover" />
+                            ) : (
+                                <span>{user?.name?.charAt(0).toUpperCase() || 'U'}</span>
+                            )}
                         </div>
-                        <div>
-                            <p className="text-sm font-medium text-white">User Name</p>
-                            <p className="text-xs text-gray-400">Free Plan</p>
+                        <div className="overflow-hidden">
+                            <p className="text-sm font-medium text-white truncate">{user?.name || 'User'}</p>
+                            <p className="text-xs text-gray-400 truncate">{user?.email || 'Free Plan'}</p>
                         </div>
                     </div>
                 </div>
