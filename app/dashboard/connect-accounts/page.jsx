@@ -253,7 +253,7 @@ export default function ConnectAccountsPage() {
                                 {ttAccounts.map(acc => (
                                     <div key={acc.accountId} className="flex items-center justify-between p-3 border rounded-lg">
                                         <div className="flex items-center gap-3">
-                                            <div className="w-10 h-10 rounded-full bg-black flex items-center justify-center text-white">
+                                            <div className="w-10 h-10 rounded-full  flex items-center justify-center text-white">
                                                 <Image src="/tiktok.png" alt="TT" width={20} height={20} className="w-5 h-5 object-contain" />
                                             </div>
                                             <div className="font-medium">{acc.accountName}</div>
@@ -292,7 +292,7 @@ export default function ConnectAccountsPage() {
                                 {ytAccounts.map(acc => (
                                     <div key={acc.accountId} className="flex items-center justify-between p-3 border rounded-lg">
                                         <div className="flex items-center gap-3">
-                                            <div className="w-10 h-10 rounded-full bg-red-600 flex items-center justify-center text-white">
+                                            <div className="w-10 h-10 rounded-full  flex items-center justify-center text-white">
                                                 <Image src="/youtube.png" alt="YT" width={20} height={20} className="w-5 h-5 object-contain" />
                                             </div>
                                             <div className="font-medium">{acc.accountName}</div>

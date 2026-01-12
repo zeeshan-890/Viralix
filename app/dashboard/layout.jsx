@@ -12,7 +12,6 @@ export default function DashboardLayout({ children }) {
             <div className="flex-1 flex flex-col overflow-hidden md:ml-64">
                 <Topbar onToggleSidebar={() => setSidebarOpen(true)} />
                 <main className="flex-1 overflow-auto p-4 sm:p-6">
-                    <Breadcrumb />
                     {children}
                 </main>
             </div>

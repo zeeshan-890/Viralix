@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { postsAPI } from '@/lib/api';
 import Link from 'next/link';
 import { Eye, Upload, Calendar, FileText, RefreshCw, BarChart3, Settings, Plus, Search, Filter } from 'lucide-react';
+import Image from 'next/image';
 
 export default function PreviewPage() {
     const [posts, setPosts] = useState([]);
@@ -53,15 +54,17 @@ export default function PreviewPage() {
     };
 
     const getPlatformIcon = (platform) => {
+        const p = platform.toLowerCase();
+        if (p === 'facebook') return <Image src="/facebook.png" alt="FB" width={16} height={16} className="w-4 h-4 object-contain" />;
+        if (p === 'instagram') return <Image src="/instagram.png" alt="IG" width={16} height={16} className="w-4 h-4 object-contain" />;
+        if (p === 'tiktok') return <Image src="/tiktok.png" alt="TT" width={16} height={16} className="w-4 h-4 object-contain" />;
+        if (p === 'youtube') return <Image src="/youtube.png" alt="YT" width={16} height={16} className="w-4 h-4 object-contain" />;
+
         const icons = {
-            facebook: '💻',
-            instagram: '📷',
             twitter: '🐦',
-            linkedin: '💼',
-            tiktok: '🎵',
-            youtube: '📺'
+            linkedin: '💼'
         };
-        return icons[platform] || '📱';
+        return icons[p] || '📱';
     };
 
     const formatDate = (dateString) => {
@@ -403,8 +406,8 @@ export default function PreviewPage() {
                         <div className="space-y-4">
                             <div className="flex items-center justify-between p-3 rounded-lg bg-gray-50">
                                 <div className="flex items-center gap-3">
-                                    <div className="w-8 h-8 rounded-lg bg-blue-500 flex items-center justify-center">
-                                        <span className="text-white text-sm">�</span>
+                                    <div className="w-8 h-8 rounded-lg bg-white border border-gray-100 flex items-center justify-center shadow-sm">
+                                        <Image src="/facebook.png" alt="FB" width={20} height={20} className="w-5 h-5 object-contain" />
                                     </div>
                                     <span className="font-medium text-gray-900">Facebook</span>
                                 </div>
@@ -412,8 +415,8 @@ export default function PreviewPage() {
                             </div>
                             <div className="flex items-center justify-between p-3 rounded-lg bg-gray-50">
                                 <div className="flex items-center gap-3">
-                                    <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center">
-                                        <span className="text-white text-sm">📷</span>
+                                    <div className="w-8 h-8 rounded-lg bg-white border border-gray-100 flex items-center justify-center shadow-sm">
+                                        <Image src="/instagram.png" alt="IG" width={20} height={20} className="w-5 h-5 object-contain" />
                                     </div>
                                     <span className="font-medium text-gray-900">Instagram</span>
                                 </div>
@@ -421,21 +424,21 @@ export default function PreviewPage() {
                             </div>
                             <div className="flex items-center justify-between p-3 rounded-lg bg-gray-50">
                                 <div className="flex items-center gap-3">
-                                    <div className="w-8 h-8 rounded-lg bg-sky-400 flex items-center justify-center">
-                                        <span className="text-white text-sm">🐦</span>
+                                    <div className="w-8 h-8 rounded-lg bg-white border border-gray-100 flex items-center justify-center shadow-sm">
+                                        <Image src="/tiktok.png" alt="TT" width={20} height={20} className="w-5 h-5 object-contain" />
                                     </div>
-                                    <span className="font-medium text-gray-900">Twitter</span>
+                                    <span className="font-medium text-gray-900">TikTok</span>
                                 </div>
-                                <div className={`w-3 h-3 rounded-full ${connectedPlatforms.includes('twitter') ? 'bg-green-500' : 'bg-gray-300'}`} />
+                                <div className={`w-3 h-3 rounded-full ${connectedPlatforms.includes('tiktok') ? 'bg-green-500' : 'bg-gray-300'}`} />
                             </div>
                             <div className="flex items-center justify-between p-3 rounded-lg bg-gray-50">
                                 <div className="flex items-center gap-3">
-                                    <div className="w-8 h-8 rounded-lg bg-blue-700 flex items-center justify-center">
-                                        <span className="text-white text-sm">💼</span>
+                                    <div className="w-8 h-8 rounded-lg bg-white border border-gray-100 flex items-center justify-center shadow-sm">
+                                        <Image src="/youtube.png" alt="YT" width={20} height={20} className="w-5 h-5 object-contain" />
                                     </div>
-                                    <span className="font-medium text-gray-900">LinkedIn</span>
+                                    <span className="font-medium text-gray-900">YouTube</span>
                                 </div>
-                                <div className={`w-3 h-3 rounded-full ${connectedPlatforms.includes('linkedin') ? 'bg-green-500' : 'bg-gray-300'}`} />
+                                <div className={`w-3 h-3 rounded-full ${connectedPlatforms.includes('youtube') ? 'bg-green-500' : 'bg-gray-300'}`} />
                             </div>
                         </div>
                         <Link

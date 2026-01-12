@@ -29,18 +29,18 @@ export default function Breadcrumb() {
     const generateBreadcrumbPath = (index) => {
         return '/' + pathSegments.slice(0, index + 1).join('/');
     };
-    return (<nav className="flex items-center space-x-2 text-sm text-gray-600 mb-6">
-            <Link href="/" className="flex items-center hover:text-gray-900 transition-colors">
-                <Home className="w-4 h-4"/>
-            </Link>
+    return (<nav className="flex items-center space-x-2 text-sm text-gray-600">
+        <Link href="/dashboard" className="flex items-center hover:text-gray-900 transition-colors">
+            <Home className="w-4 h-4" />
+        </Link>
 
-            {pathSegments.map((segment, index) => (<div key={index} className="flex items-center space-x-2">
-                    <ChevronRight className="w-4 h-4 text-gray-400"/>
-                    {index === pathSegments.length - 1 ? (<span className="text-gray-900 font-medium">
-                            {getBreadcrumbLabel(segment)}
-                        </span>) : (<Link href={generateBreadcrumbPath(index)} className="hover:text-gray-900 transition-colors">
-                            {getBreadcrumbLabel(segment)}
-                        </Link>)}
-                </div>))}
-        </nav>);
+        {pathSegments.map((segment, index) => (<div key={index} className="flex items-center space-x-2">
+            <ChevronRight className="w-4 h-4 text-gray-400" />
+            {index === pathSegments.length - 1 ? (<span className="text-gray-900 font-medium">
+                {getBreadcrumbLabel(segment)}
+            </span>) : (<Link href={generateBreadcrumbPath(index)} className="hover:text-gray-900 transition-colors">
+                {getBreadcrumbLabel(segment)}
+            </Link>)}
+        </div>))}
+    </nav>);
 }
