@@ -1,11 +1,14 @@
 'use client';
 import { Clock, CheckCircle2, FileText, Users, AlertCircle } from 'lucide-react';
+import { useState } from 'react';
 import CalendarView from './components/CalendarView';
 import { useAccounts } from '@/hooks/useAccounts';
 import Image from 'next/image';
 
 export default function SchedulePage() {
     const { accounts, isLoading, error } = useAccounts();
+
+    const [stats, setStats] = useState({ scheduled: 0, published: 0, title: 'Schedule' });
 
     // Helper to get count of connected accounts per platform
     const getPlatformCount = (platform) => accounts.filter(a => a.platform === platform).length;
@@ -54,7 +57,7 @@ export default function SchedulePage() {
             <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
                 {/* Calendar View */}
                 <div className="lg:col-span-3">
-                    <CalendarView />
+                    <CalendarView onStatsChange={setStats} />
                 </div>
 
                 {/* Sidebar Stats */}
@@ -68,13 +71,12 @@ export default function SchedulePage() {
                                     <Clock className="w-5 h-5 text-white" />
                                 </div>
                                 <div>
-                                    <h3 className="text-lg font-bold text-white">This Week</h3>
+                                    <h3 className="text-lg font-bold text-white capitalize">{stats.title || 'This Week'}</h3>
                                     <p className="text-xs text-white text-opacity-90">Quick overview</p>
                                 </div>
                             </div>
                         </div>
                         <div className="p-5 space-y-3">
-                            {/* Placeholder Stats - Ideally should be dynamic from API */}
                             <div className="group relative overflow-hidden rounded-xl p-4 border-2 border-gray-100 hover:border-green-200 transition-all hover:shadow-md cursor-pointer"
                                 style={{ background: 'linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%)' }}>
                                 <div className="flex items-center justify-between">
@@ -88,7 +90,7 @@ export default function SchedulePage() {
                                             <div className="text-xs text-gray-500">Ready to post</div>
                                         </div>
                                     </div>
-                                    <div className="text-2xl font-bold" style={{ color: '#52796F' }}>-</div>
+                                    <div className="text-2xl font-bold" style={{ color: '#52796F' }}>{stats.scheduled}</div>
                                 </div>
                             </div>
 
@@ -105,24 +107,7 @@ export default function SchedulePage() {
                                             <div className="text-xs text-gray-500">Live posts</div>
                                         </div>
                                     </div>
-                                    <div className="text-2xl font-bold text-green-600">-</div>
-                                </div>
-                            </div>
-
-                            <div className="group relative overflow-hidden rounded-xl p-4 border-2 border-gray-100 hover:border-yellow-200 transition-all hover:shadow-md cursor-pointer"
-                                style={{ background: 'linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%)' }}>
-                                <div className="flex items-center justify-between">
-                                    <div className="flex items-center gap-3">
-                                        <div className="w-10 h-10 rounded-lg flex items-center justify-center shadow-sm"
-                                            style={{ background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)' }}>
-                                            <FileText className="w-5 h-5 text-white" />
-                                        </div>
-                                        <div>
-                                            <div className="text-sm font-semibold text-gray-700">Drafts</div>
-                                            <div className="text-xs text-gray-500">In progress</div>
-                                        </div>
-                                    </div>
-                                    <div className="text-2xl font-bold text-yellow-600">-</div>
+                                    <div className="text-2xl font-bold text-green-600">{stats.published}</div>
                                 </div>
                             </div>
                         </div>

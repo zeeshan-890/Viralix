@@ -6,7 +6,7 @@ import { postsAPI } from '@/lib/api';
 
 import { useRouter } from 'next/navigation';
 
-export default function CalendarView() {
+export default function CalendarView({ onStatsChange = () => { } }) {
     const router = useRouter();
     const [currentDate, setCurrentDate] = useState(new Date());
     const [viewMode, setViewMode] = useState('month');
@@ -14,15 +14,88 @@ export default function CalendarView() {
     const [error, setError] = useState('');
     const [posts, setPosts] = useState([]);
 
-    // Modal state removed
-
-
     const month = currentDate.getMonth() + 1; // 1-based
     const year = currentDate.getFullYear();
 
     useEffect(() => {
         loadPosts();
     }, [month, year]);
+
+    // Calculate stats whenever posts, viewMode, or currentDate changes
+    useEffect(() => {
+        if (!posts.length) {
+            onStatsChange({ scheduled: 0, published: 0, title: getHeaderTitle() });
+            return;
+        }
+
+        let filteredPosts = [];
+        const startOfView = getStartDateForView();
+        const endOfView = getEndDateForView();
+
+        filteredPosts = posts.filter(post => {
+            if (!post.scheduledDate) return false;
+            const d = new Date(post.scheduledDate);
+            return d >= startOfView && d <= endOfView;
+        });
+
+        const stats = filteredPosts.reduce((acc, post) => {
+            const statuses = (post.platforms || []).map(p => p.status);
+            // Count as visible if it has at least one valid status
+            if (statuses.includes('published')) acc.published++;
+            else if (statuses.includes('scheduled')) acc.scheduled++;
+            return acc;
+        }, { scheduled: 0, published: 0 });
+
+        onStatsChange({
+            scheduled: stats.scheduled,
+            published: stats.published,
+            title: getHeaderTitle()
+        });
+    }, [posts, viewMode, currentDate]);
+
+    const getStartDateForView = () => {
+        const date = new Date(currentDate);
+        date.setHours(0, 0, 0, 0);
+
+        if (viewMode === 'day') return date;
+
+        if (viewMode === 'week') {
+            const day = date.getDay(); // 0 is Sunday
+            const diff = date.getDate() - day;
+            return new Date(date.setDate(diff));
+        }
+
+        // Month
+        return new Date(date.getFullYear(), date.getMonth(), 1);
+    };
+
+    const getEndDateForView = () => {
+        const date = new Date(currentDate);
+        date.setHours(23, 59, 59, 999);
+
+        if (viewMode === 'day') return date;
+
+        if (viewMode === 'week') {
+            const day = date.getDay();
+            const diff = date.getDate() + (6 - day);
+            return new Date(date.setDate(diff));
+        }
+
+        // Month
+        return new Date(date.getFullYear(), date.getMonth() + 1, 0);
+    };
+
+    const getHeaderTitle = () => {
+        if (viewMode === 'day') {
+            return currentDate.toLocaleDateString('en-US', { day: 'numeric', month: 'long', year: 'numeric' });
+        }
+        if (viewMode === 'week') {
+            const start = getStartDateForView();
+            const end = getEndDateForView();
+            return `${start.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - ${end.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`;
+        }
+        return formatMonth(currentDate);
+    };
 
     const loadPosts = async () => {
         setLoading(true);
@@ -44,43 +117,35 @@ export default function CalendarView() {
     const openEditPostModal = (post) => {
         router.push(`/dashboard/preview/${post._id}`);
     };
-    const getDaysInMonth = (date) => {
-        const year = date.getFullYear();
-        const month = date.getMonth();
-        const firstDay = new Date(year, month, 1);
-        const lastDay = new Date(year, month + 1, 0);
-        const daysInMonth = lastDay.getDate();
-        const startingDayOfWeek = firstDay.getDay();
-        const days = [];
-        // Add empty cells for days before the first day of the month
-        for (let i = 0; i < startingDayOfWeek; i++) {
-            days.push(null);
-        }
-        // Add all days of the month
-        for (let day = 1; day <= daysInMonth; day++) {
-            days.push(day);
-        }
-        return days;
-    };
+
+    // Original helper simplified/removed as we use new logic
     const formatMonth = (date) => {
         return date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
     };
+
     const navigateMonth = (direction) => {
         setCurrentDate(prev => {
             const newDate = new Date(prev);
-            if (direction === 'prev') {
-                newDate.setMonth(prev.getMonth() - 1);
-            }
-            else {
-                newDate.setMonth(prev.getMonth() + 1);
+            if (viewMode === 'day') {
+                newDate.setDate(prev.getDate() + (direction === 'prev' ? -1 : 1));
+            } else if (viewMode === 'week') {
+                newDate.setDate(prev.getDate() + (direction === 'prev' ? -7 : 7));
+            } else {
+                newDate.setMonth(prev.getMonth() + (direction === 'prev' ? -1 : 1));
             }
             return newDate;
         });
     };
     const isToday = (day) => {
-        if (!day)
-            return false;
+        if (!day) return false;
         const today = new Date();
+        // Check if full date matches
+        if (day instanceof Date) {
+            return (day.getDate() === today.getDate() &&
+                day.getMonth() === today.getMonth() &&
+                day.getFullYear() === today.getFullYear());
+        }
+        // Fallback for number passed from getDaysInMonth
         return (day === today.getDate() &&
             currentDate.getMonth() === today.getMonth() &&
             currentDate.getFullYear() === today.getFullYear());
@@ -90,17 +155,20 @@ export default function CalendarView() {
         for (const p of posts) {
             if (!p.scheduledDate) continue;
             const d = new Date(p.scheduledDate);
-            if (d.getMonth() !== currentDate.getMonth() || d.getFullYear() !== currentDate.getFullYear()) continue;
-            const day = d.getDate();
-            if (!map.has(day)) map.set(day, []);
-            map.get(day).push(p);
+            // Relaxed filter: include if it matches current date logic? 
+            // Actually reusing existing logic but adapting for render
+            // Store by full date string key to handle week spanning months
+            const key = d.toDateString();
+            if (!map.has(key)) map.set(key, []);
+            map.get(key).push(p);
         }
         for (const [k, arr] of map.entries()) {
             arr.sort((a, b) => new Date(a.scheduledDate) - new Date(b.scheduledDate));
             map.set(k, arr);
         }
         return map;
-    }, [posts, currentDate]);
+    }, [posts]);
+
     const getPlatformIcon = (platform) => {
         const icons = {
             tiktok: '/tiktok.png',
@@ -136,6 +204,38 @@ export default function CalendarView() {
         };
         return colors[status] || 'bg-gray-100 text-gray-800';
     };
+
+    // Determine grid days based on view mode
+    const getVisibleGridDays = () => {
+        if (viewMode === 'day') {
+            return [currentDate];
+        }
+        if (viewMode === 'week') {
+            const start = getStartDateForView();
+            const days = [];
+            const temp = new Date(start);
+            for (let i = 0; i < 7; i++) {
+                days.push(new Date(temp));
+                temp.setDate(temp.getDate() + 1);
+            }
+            return days;
+        }
+
+        // Month view (original logic adapted)
+        const year = currentDate.getFullYear();
+        const month = currentDate.getMonth();
+        const firstDay = new Date(year, month, 1);
+        const lastDay = new Date(year, month + 1, 0);
+        const daysInMonth = lastDay.getDate();
+        const startingDayOfWeek = firstDay.getDay();
+        const days = [];
+        for (let i = 0; i < startingDayOfWeek; i++) days.push(null);
+        for (let day = 1; day <= daysInMonth; day++) days.push(new Date(year, month, day));
+        return days;
+    };
+
+    const gridDays = getVisibleGridDays();
+
     return (<div className="bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden"
         style={{ fontFamily: 'Inter, Poppins, sans-serif' }}>
         {/* Calendar Header */}
@@ -148,7 +248,7 @@ export default function CalendarView() {
                     </div>
                     <div>
                         <h2 className="text-2xl font-bold text-white">
-                            {formatMonth(currentDate)}
+                            {getHeaderTitle()}
                         </h2>
                         <p className="text-sm text-white text-opacity-90">Manage your content schedule</p>
                     </div>
@@ -198,12 +298,74 @@ export default function CalendarView() {
             </div>
 
             {/* Calendar Days */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-7 gap-2 sm:gap-3">
-                {getDaysInMonth(currentDate).map((day, index) => {
-                    const isWeekend = index % 7 === 0 || index % 7 === 6;
+            <div className={`grid gap-2 sm:gap-3 ${viewMode === 'day' ? 'grid-cols-1' : 'grid-cols-7'}`}>
+                {gridDays.map((day, index) => {
+                    const isWeekend = day ? (day.getDay() === 0 || day.getDay() === 6) : false;
+                    const dateKey = day ? day.toDateString() : `empty-${index}`;
+
+                    if (viewMode === 'day' && day) {
+                        // Day View Render
+                        const dayPosts = postsByDay.get(dateKey) || [];
+                        return (
+                            <div key={dateKey} className="min-h-[500px] bg-white rounded-2xl p-4 sm:p-6 border-2 border-gray-100 shadow-sm">
+                                <div className="flex items-center justify-between mb-6">
+                                    <h3 className="text-xl font-bold text-gray-900">{day.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}</h3>
+                                    <span className="px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm font-medium">
+                                        {dayPosts.length} posts
+                                    </span>
+                                </div>
+                                <div className="space-y-4">
+                                    {dayPosts.length === 0 ? (
+                                        <div className="text-center py-20 text-gray-500">No posts scheduled for this day</div>
+                                    ) : (
+                                        dayPosts.map(post => {
+                                            const d = new Date(post.scheduledDate);
+                                            const time = `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+                                            let agg = 'draft';
+                                            const statuses = (post.platforms || []).map(p => p.status);
+                                            if (statuses.includes('failed')) agg = 'failed';
+                                            else if (statuses.includes('processing')) agg = 'processing';
+                                            else if (statuses.includes('scheduled')) agg = 'scheduled';
+                                            else if (statuses.includes('published')) agg = 'published';
+
+                                            const statusColors = {
+                                                scheduled: { bg: '#eff6ff', border: '#bfdbfe', text: '#1e40af' },
+                                                published: { bg: '#f0fdf4', border: '#bbf7d0', text: '#166534' },
+                                                draft: { bg: '#fffbeb', border: '#fde68a', text: '#92400e' },
+                                                failed: { bg: '#fef2f2', border: '#fecaca', text: '#991b1b' },
+                                                processing: { bg: '#faf5ff', border: '#e9d5ff', text: '#6b21a8' }
+                                            };
+                                            const colors = statusColors[agg];
+
+                                            return (
+                                                <div key={post._id} onClick={() => openEditPostModal(post)}
+                                                    className="flex items-center gap-4 p-4 rounded-xl border-2 hover:shadow-md transition-all cursor-pointer"
+                                                    style={{ backgroundColor: colors.bg, borderColor: colors.border }}>
+                                                    <div className="text-lg font-bold" style={{ color: colors.text }}>{time}</div>
+                                                    <div className="flex-1">
+                                                        <div className="font-semibold text-gray-900">{post.title}</div>
+                                                        <div className="flex items-center gap-2 mt-1">
+                                                            {(post.platforms || []).map(p => (
+                                                                <span key={p.name}>{getPlatformIcon(p.name)}</span>
+                                                            ))}
+                                                        </div>
+                                                    </div>
+                                                    <div className="px-3 py-1 rounded-lg text-sm font-semibold capitalize"
+                                                        style={{ backgroundColor: 'rgba(255,255,255,0.5)', color: colors.text }}>
+                                                        {agg}
+                                                    </div>
+                                                </div>
+                                            );
+                                        })
+                                    )}
+                                </div>
+                            </div>
+                        );
+                    }
+
                     return (
                         <div
-                            key={index}
+                            key={dateKey}
                             className={`min-h-[110px] sm:min-h-[140px] rounded-2xl p-2 sm:p-3 transition-all ${day
                                 ? 'bg-white border-2 hover:border-gray-300 hover:shadow-xl cursor-pointer transform hover:scale-105'
                                 : 'bg-transparent border-2 border-transparent'
@@ -220,12 +382,12 @@ export default function CalendarView() {
                                     style={isToday(day) ? {
                                         background: 'linear-gradient(135deg, #84A98C 0%, #52796F 100%)'
                                     } : {}}>
-                                    {day}
+                                    {day.getDate()}
                                 </div>
 
                                 {/* Posts for this day */}
                                 <div className="space-y-2">
-                                    {(postsByDay.get(day) || []).slice(0, 3).map((post) => {
+                                    {(postsByDay.get(day.toDateString()) || []).slice(0, 3).map((post) => {
                                         const d = new Date(post.scheduledDate);
                                         const time = `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
                                         let agg = 'draft';
@@ -276,9 +438,9 @@ export default function CalendarView() {
                                             </div>
                                         );
                                     })}
-                                    {(postsByDay.get(day) || []).length > 3 && (
+                                    {(postsByDay.get(day.toDateString()) || []).length > 3 && (
                                         <div className="text-xs text-center py-1.5 px-2 bg-gray-100 rounded-lg font-semibold text-gray-600 border border-gray-200">
-                                            +{(postsByDay.get(day) || []).length - 3} more
+                                            +{(postsByDay.get(day.toDateString()) || []).length - 3} more
                                         </div>
                                     )}
                                 </div>
