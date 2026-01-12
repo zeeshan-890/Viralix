@@ -58,6 +58,19 @@ publishQueue.process(async (job) => {
             publishJob.platforms[platformIndex].status = 'processing';
             await publishJob.save();
 
+            // Sync 'processing' status to the actual Post document so UI sees it
+            if (postId) {
+                await Post.updateOne(
+                    { _id: postId, 'platforms.accountId': platform.accountId, 'platforms.name': platform.name },
+                    {
+                        $set: {
+                            'platforms.$.status': 'processing',
+                            'platforms.$.errorMessage': null // Clear any previous error immediately
+                        }
+                    }
+                );
+            }
+
             job.progress(Math.round(((i + 0.5) / totalPlatforms) * 100));
 
             // Call Publisher Factory
