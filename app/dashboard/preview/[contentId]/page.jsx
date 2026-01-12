@@ -33,6 +33,15 @@ export default function PreviewPage({ params }) {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [contentId]);
 
+    // Auto-refresh if any platform is processing
+    useEffect(() => {
+        const isProcessing = post?.platforms?.some(p => p.status === 'processing');
+        if (isProcessing) {
+            const interval = setInterval(loadPost, 3000); // Refresh every 3s
+            return () => clearInterval(interval);
+        }
+    }, [post]);
+
     const loadPost = async () => {
         setLoading(true);
         setError('');
