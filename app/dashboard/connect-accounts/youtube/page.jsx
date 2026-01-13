@@ -44,6 +44,7 @@ export default function YouTubeManagePage() {
 
     const handleDisconnect = async (accountId) => {
         if (!confirm('Are you sure you want to disconnect this YouTube channel?')) return;
+        console.log('[YouTubePage] Disconnecting:', accountId);
         try {
             await disconnect({ platform: 'youtube', accountId });
             setMessage({ type: 'success', text: 'YouTube channel disconnected' });

@@ -23,6 +23,7 @@ export function useAccounts() {
 
     const disconnectMutation = useMutation({
         mutationFn: async ({ platform, accountId }) => {
+            console.log('[useAccounts] Disconnect requested:', { platform, accountId });
             // Map platform to endpoint
             let endpoint = '';
             if (platform === 'instagram') endpoint = `/instagram-oauth/disconnect/${accountId}`;
