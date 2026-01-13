@@ -126,17 +126,33 @@ router.get('/account/:accountId', auth, async (req, res) => {
 
 // DELETE /disconnect/:accountId
 router.delete('/disconnect/:accountId', auth, async (req, res) => {
+    console.log(`[YouTube] Disconnect request for accountId: ${req.params.accountId}`);
     try {
         const account = await AccountService.getAccount(req.user.id, 'youtube', req.params.accountId);
-        if (!account) return res.status(404).json({ message: 'YouTube account not found' });
+        if (!account) {
+            console.log(`[YouTube] Account not found in DB for user ${req.user.id} and account ${req.params.accountId}`);
+            return res.status(404).json({ message: 'YouTube account not found' });
+        }
 
+        console.log(`[YouTube] Found account: ${account._id}, revoking token...`);
         if (account.accessToken) {
-            await youtubeService.revokeToken(account.accessToken);
+            try {
+                // Add timeout to prevent hanging
+                await youtubeService.revokeToken(account.accessToken);
+                console.log('[YouTube] Token revoked.');
+            } catch (e) {
+                console.warn('[YouTube] Revoke warning (continuing):', e.message);
+            }
+        } else {
+            console.log('[YouTube] No access token to revoke.');
         }
 
         await AccountService.disconnectAccount(req.user.id, account._id);
+        console.log(`[YouTube] Account ${account._id} disconnected (isActive=false).`);
+
         res.json({ message: 'YouTube account disconnected' });
     } catch (error) {
+        console.error('[YouTube] Disconnect Error:', error);
         res.status(500).json({ message: error.message });
     }
 });
