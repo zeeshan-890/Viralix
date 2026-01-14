@@ -566,7 +566,7 @@ export default function LandingPage() {
                 {[
                   { label: 'Help Center', href: '#' },
                   { label: 'Instagram Linking Guide', href: '/guide/instagram-linking' },
-                  { label: 'Status', href: '#' },
+                  { label: 'Terms', href: '/terms' },
                   { label: 'Privacy Policy', href: '/privacy' }
                 ].map((item) => (
                   <li key={item.label}>
