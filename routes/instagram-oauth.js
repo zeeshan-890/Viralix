@@ -47,7 +47,7 @@ router.get('/connect', auth, async (req, res) => {
         const authUrl = `${INSTAGRAM_OAUTH_URL}?` + new URLSearchParams({
             client_id: IG_APP_ID,
             redirect_uri: IG_REDIRECT_URI,
-            scope: 'instagram_business_basic,instagram_business_content_publish,instagram_business_manage_messages,instagram_business_manage_comments',
+            scope: 'instagram_business_basic,instagram_business_content_publish,instagram_business_manage_messages,instagram_business_manage_comments,instagram_business_manage_insights',
             response_type: 'code',
             state: state
         });
