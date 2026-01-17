@@ -266,6 +266,24 @@ async function sendInstagramDM(igAccountId, recipientId, content, accessToken) {
     }
 }
 
+// Webhook verification endpoint (Required by Meta)
+router.get('/webhook', (req, res) => {
+    const mode = req.query['hub.mode'];
+    const token = req.query['hub.verify_token'];
+    const challenge = req.query['hub.challenge'];
+
+    if (mode && token) {
+        if (mode === 'subscribe') { // In prod, check token against env var
+            console.log('[Webhook] Verified.');
+            res.status(200).send(challenge);
+        } else {
+            res.sendStatus(403);
+        }
+    } else {
+        res.sendStatus(403);
+    }
+});
+
 // Webhook endpoint for Instagram comments (to be called by Facebook webhook)
 router.post('/webhook', async (req, res) => {
     const { object, entry } = req.body;
@@ -277,21 +295,27 @@ router.post('/webhook', async (req, res) => {
 
     // Process each entry
     for (const e of entry || []) {
+        const accountId = e.id; // Instagram Business Account ID
+
         for (const change of e.changes || []) {
             if (change.field === 'comments') {
                 const { media_id, id, text, from } = change.value;
 
                 // Get access token for this account
                 try {
-                    const accounts = await AccountService.getAccountsByPlatformId(from.id);
-                    if (accounts && accounts[0]) {
+                    // Find the account that OWNS this business ID
+                    const account = await AccountService.getAccountByPlatformId('instagram', accountId);
+
+                    if (account) {
                         await processComment({
                             mediaId: media_id,
                             commentId: id,
                             commentText: text,
                             commenterId: from.id,
                             commenterUsername: from.username
-                        }, accounts[0].accessToken);
+                        }, account.accessToken);
+                    } else {
+                        console.log(`[AutoReply Webhook] No matching account found for ID ${accountId}`);
                     }
                 } catch (error) {
                     console.error('[AutoReply Webhook] Error:', error);

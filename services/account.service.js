@@ -79,6 +79,24 @@ class AccountService {
     }
 
     /**
+     * Get account by platform ID (for webhooks where userId is unknown)
+     */
+    static async getAccountByPlatformId(platform, platformAccountId) {
+        const account = await SocialAccount.findOne({
+            platform,
+            platformAccountId,
+            isActive: true
+        }).select('+accessToken +refreshToken');
+
+        if (!account) return null;
+
+        if (account.accessToken) account.accessToken = decrypt(account.accessToken);
+        if (account.refreshToken) account.refreshToken = decrypt(account.refreshToken);
+
+        return account;
+    }
+
+    /**
      * Connect or update an account with encrypted tokens
      */
     static async connectAccount(userId, data) {
