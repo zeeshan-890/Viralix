@@ -315,6 +315,8 @@ async function syncFacebook(userId, account) {
             return { synced: 0, content: [] };
         }
 
+        console.log(`[Sync Facebook] Found ${pages.length} pages:`, JSON.stringify(pages.map(p => ({ id: p.id, name: p.name, hasToken: !!p.accessToken })), null, 2));
+
         for (const page of pages) {
             if (!page.id || !page.accessToken) {
                 console.log(`[Sync Facebook] Skipping page without ID or token: ${page.name}`);
@@ -322,6 +324,8 @@ async function syncFacebook(userId, account) {
             }
 
             try {
+                console.log(`[Sync Facebook] Fetching feed for page: ${page.name} (${page.id})`);
+
                 // Fetch feed for this specific page using its Page Access Token
                 const response = await axios.get(`https://graph.facebook.com/v19.0/${page.id}/feed`, {
                     params: {
@@ -330,6 +334,8 @@ async function syncFacebook(userId, account) {
                         access_token: page.accessToken
                     }
                 });
+
+                console.log(`[Sync Facebook] Raw API response for ${page.name}:`, JSON.stringify(response.data, null, 2));
 
                 const posts = response.data?.data || [];
 
