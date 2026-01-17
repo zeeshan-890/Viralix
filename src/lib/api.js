@@ -141,6 +141,12 @@ export const facebookAPI = {
     // Detailed post insights
     getPostInsights: (postId) => api.get(`/facebook/post/${postId}/insights`),
 };
+
+// Facebook Auto-Reply helpers
+export const facebookAutoReplyAPI = {
+    getRules: () => api.get('/facebook-auto-reply/rules'),
+    createRule: (data) => api.post('/facebook-auto-reply/rules', data),
+};
 // Instagram API helpers
 export const instagramAPI = {
     status: () => api.get('/instagram/status'),

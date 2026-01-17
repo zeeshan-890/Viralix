@@ -4,6 +4,8 @@ import { useAccounts } from '@/hooks/useAccounts';
 import { platformSyncAPI, facebookAPI } from '@/lib/api';
 import PlatformPageLayout from '../components/PlatformPageLayout';
 import Link from 'next/link';
+import { Plus } from 'lucide-react';
+import CreateFacebookPost from './components/CreateFacebookPost';
 
 export default function FacebookPage() {
     const { accounts, isLoading: accountsLoading } = useAccounts();
@@ -12,6 +14,8 @@ export default function FacebookPage() {
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
     const [pages, setPages] = useState([]);
+
+    const [showCreateModal, setShowCreateModal] = useState(false);
 
     const fbAccounts = accounts.filter(a => a.platform === 'facebook');
 
@@ -93,6 +97,17 @@ export default function FacebookPage() {
             refreshing={refreshing}
             onRefresh={handleRefresh}
         >
+            {/* Action Bar */}
+            <div className="flex justify-end mb-6">
+                <button
+                    onClick={() => setShowCreateModal(true)}
+                    className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors shadow-sm"
+                >
+                    <Plus className="w-5 h-5" />
+                    Create Post
+                </button>
+            </div>
+
             {/* Facebook Pages Section */}
             {pages.length > 0 && (
                 <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm mb-8">
@@ -141,6 +156,13 @@ export default function FacebookPage() {
                     </div>
                 </div>
             )}
+
+            <CreateFacebookPost
+                isOpen={showCreateModal}
+                onClose={() => setShowCreateModal(false)}
+                pages={pages}
+                onSuccess={() => { handleRefresh(); setShowCreateModal(false); }}
+            />
         </PlatformPageLayout>
     );
 }
