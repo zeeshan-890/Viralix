@@ -216,6 +216,8 @@ export const tiktokAPI = {
         }),
     // Check publish status
     publishStatus: (accountId, publishId) => api.get(`/tiktok-oauth/publish-status/${accountId}/${publishId}`),
+    // Get live video insights
+    getVideoInsights: (videoId) => api.get(`/tiktok-oauth/video/insights/${videoId}`),
 };
 
 // YouTube API helpers

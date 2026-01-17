@@ -252,13 +252,16 @@ export default function PlatformPageLayout({
                                         </>
                                     );
 
-                                    // Instagram and Facebook have detail pages
-                                    if ((platform === 'instagram' || platform === 'facebook') && item.id) {
+                                    // Instagram, Facebook, and TikTok have detail pages
+                                    if ((platform === 'instagram' || platform === 'facebook' || platform === 'tiktok') && item.id) {
                                         return (
                                             <Link
                                                 key={item.id || index}
                                                 href={`/dashboard/platforms/${platform}/post/${item.id}`}
-                                                className={`group relative aspect-square rounded-xl overflow-hidden bg-gray-100 border border-gray-200 cursor-pointer hover:ring-2 ${platform === 'instagram' ? 'hover:ring-pink-400' : 'hover:ring-blue-400'} transition-all`}
+                                                className={`group relative aspect-square rounded-xl overflow-hidden bg-gray-100 border border-gray-200 cursor-pointer hover:ring-2 ${platform === 'instagram' ? 'hover:ring-pink-400' :
+                                                        platform === 'facebook' ? 'hover:ring-blue-400' :
+                                                            'hover:ring-black'
+                                                    } transition-all`}
                                             >
                                                 {itemContent}
                                             </Link>
