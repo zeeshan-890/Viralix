@@ -162,6 +162,18 @@ export default function InstagramPostDetailPage() {
                     <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
                         <h2 className="text-lg font-semibold mb-4" style={{ color: '#354F52' }}>Engagement</h2>
                         <div className="grid grid-cols-2 gap-4">
+                            {/* Views - show for videos/reels */}
+                            {isVideo && (
+                                <div className="p-4 bg-purple-50 rounded-xl flex items-center gap-3 col-span-2">
+                                    <div className="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center">
+                                        <Eye className="w-5 h-5 text-purple-600" />
+                                    </div>
+                                    <div>
+                                        <p className="text-2xl font-bold text-purple-600">{formatNumber(engagement?.views || engagement?.plays)}</p>
+                                        <p className="text-xs text-gray-600">Views</p>
+                                    </div>
+                                </div>
+                            )}
                             <div className="p-4 bg-pink-50 rounded-xl flex items-center gap-3">
                                 <div className="w-10 h-10 bg-pink-100 rounded-full flex items-center justify-center">
                                     <Heart className="w-5 h-5 text-pink-600" />
@@ -180,17 +192,6 @@ export default function InstagramPostDetailPage() {
                                     <p className="text-xs text-gray-600">Comments</p>
                                 </div>
                             </div>
-                            {isVideo && (
-                                <div className="p-4 bg-purple-50 rounded-xl flex items-center gap-3">
-                                    <div className="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center">
-                                        <Eye className="w-5 h-5 text-purple-600" />
-                                    </div>
-                                    <div>
-                                        <p className="text-2xl font-bold text-purple-600">{formatNumber(engagement?.plays)}</p>
-                                        <p className="text-xs text-gray-600">Plays</p>
-                                    </div>
-                                </div>
-                            )}
                             <div className="p-4 bg-orange-50 rounded-xl flex items-center gap-3">
                                 <div className="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center">
                                     <Bookmark className="w-5 h-5 text-orange-600" />
