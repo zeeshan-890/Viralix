@@ -324,6 +324,8 @@ router.post('/webhook', async (req, res) => {
 
                             try {
                                 const token = decrypt(candidate.accessToken);
+                                console.log(`[Webhook Fallback] Checking candidate: ${candidate.accountName}`);
+
                                 // Try to fetch the Webhook ID using this token.
                                 const verifyRes = await axios.get(`${INSTAGRAM_GRAPH_URL}/${accountId}`, {
                                     params: { fields: 'id', access_token: token }
@@ -341,7 +343,10 @@ router.post('/webhook', async (req, res) => {
                                     break;
                                 }
                             } catch (e) {
-                                // Token invalid or unauthorized for this ID
+                                console.log(`[Webhook Fallback] Failed for ${candidate.accountName || 'Unknown'}: ${e.message}`);
+                                if (e.response && e.response.data) {
+                                    console.log(`[Webhook Fallback] Error details:`, JSON.stringify(e.response.data));
+                                }
                             }
                         }
                     }
