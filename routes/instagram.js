@@ -244,6 +244,10 @@ router.post('/accounts/:igUserId/publish-by-url', auth, async (req, res) => {
             acc.isActive
         );
 
+        console.log('[DEBUG-IG] Looking for:', req.params.igUserId);
+        console.log('[DEBUG-IG] User accounts:', (user.socialAccounts || []).map(a => `${a.platform}:${a.accountId}:${a.isActive}`));
+        console.log('[DEBUG-IG] Found direct:', !!directAccount);
+
         if (directAccount) {
             // Use direct Instagram Graph API for publishing
             try {
@@ -313,7 +317,16 @@ router.post('/accounts/:igUserId/publish-by-url', auth, async (req, res) => {
         // Fallback to Facebook-linked method
         const { fbToken, pages } = getFbAndPages(user);
         const page = findPageByIg(pages, req.params.igUserId);
-        if (!page) return res.status(404).json({ message: 'IG not linked' });
+        if (!page) {
+            return res.status(404).json({
+                message: 'IG not linked. Please disconnect and reconnect your Instagram account.',
+                debug: {
+                    reqId: req.params.igUserId,
+                    hasDirect: !!directAccount,
+                    fbPages: pages?.length || 0
+                }
+            });
+        }
 
         const payload = mediaType === 'VIDEO' ? { media_type: 'REELS', video_url: url, caption } : { image_url: url, caption };
         let creationId;
