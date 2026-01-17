@@ -235,8 +235,18 @@ async function sendInstagramDM(igAccountId, recipientId, content, accessToken) {
                 type: 'image',
                 payload: { url: content.attachmentUrl }
             };
+        } else if (content.attachmentType === 'file' && content.attachmentUrl) {
+            // For files, Instagram Messaging API supports file attachments
+            messagePayload.message.attachment = {
+                type: 'file',
+                payload: { url: content.attachmentUrl }
+            };
+            // Add file name info to message
+            if (content.attachmentFileName) {
+                messagePayload.message.text += `\n\n📎 ${content.attachmentFileName}`;
+            }
         } else if (content.attachmentType === 'link' && content.linkUrl) {
-            messagePayload.message.text += `\n\n${content.linkUrl}`;
+            messagePayload.message.text += `\n\n🔗 ${content.linkUrl}`;
         }
 
         const response = await axios.post(

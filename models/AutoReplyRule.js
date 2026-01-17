@@ -50,6 +50,7 @@ const autoReplyRuleSchema = new mongoose.Schema({
             maxlength: 1000
         },
         attachmentUrl: String,
+        attachmentFileName: String,
         attachmentType: {
             type: String,
             enum: ['none', 'image', 'file', 'link'],
