@@ -328,8 +328,10 @@ router.post('/webhook', async (req, res) => {
 
                                 // Try to fetch the Webhook ID using this token.
                                 const verifyRes = await axios.get(`${INSTAGRAM_GRAPH_URL}/${accountId}`, {
-                                    params: { fields: 'id', access_token: token }
+                                    params: { fields: 'id,username,name', access_token: token }
                                 });
+
+                                console.log(`[Webhook Fallback] API Response for ${accountId}:`, JSON.stringify(verifyRes.data));
 
                                 if (verifyRes.data.id === accountId) {
                                     console.log(`[Webhook] Matched account ${candidate.accountName} via API verification!`);
