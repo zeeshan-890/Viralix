@@ -12,7 +12,8 @@ import {
     Link2,
     Settings,
     ChevronDown,
-    ChevronRight
+    ChevronRight,
+    Layers
 } from 'lucide-react';
 import { useAuthStore } from '../../store/authStore';
 import Image from 'next/image';
@@ -23,6 +24,18 @@ const navigation = [
     { name: 'Preview', href: '/dashboard/preview', icon: Eye },
     { name: 'Schedule', href: '/dashboard/schedule', icon: Calendar },
     { name: 'Analytics', href: '/dashboard/analytics', icon: BarChart3 },
+    {
+        name: 'Platforms',
+        href: '/dashboard/platforms',
+        icon: Layers,
+        subItems: [
+            { name: 'All Platforms', href: '/dashboard/platforms' },
+            { name: 'Instagram', href: '/dashboard/platforms/instagram' },
+            { name: 'TikTok', href: '/dashboard/platforms/tiktok' },
+            { name: 'YouTube', href: '/dashboard/platforms/youtube' },
+            { name: 'Facebook', href: '/dashboard/platforms/facebook' },
+        ]
+    },
     { name: 'Connect Accounts', href: '/dashboard/connect-accounts', icon: Link2 },
     { name: 'Settings', href: '/dashboard/settings', icon: Settings },
 ];
