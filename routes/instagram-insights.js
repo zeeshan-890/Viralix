@@ -32,26 +32,64 @@ router.get('/media/:mediaId/insights', auth, async (req, res) => {
         // Fetch insights based on media type
         let insights = {};
         try {
-            // Different metrics based on media type
-            let metricsToFetch = 'reach,saved';
-
+            // For Reels/Videos - try views metric first (newer API), then plays
             if (media.media_type === 'VIDEO' || media.media_type === 'REELS') {
-                metricsToFetch = 'reach,plays,saved,shares,total_interactions';
-            } else if (media.media_type === 'IMAGE' || media.media_type === 'CAROUSEL_ALBUM') {
-                metricsToFetch = 'reach,saved,total_interactions';
-            }
-
-            const insightsRes = await axios.get(`${INSTAGRAM_GRAPH_URL}/${mediaId}/insights`, {
-                params: {
-                    metric: metricsToFetch,
-                    access_token: igAccount.accessToken
+                // Try the new 'views' metric first
+                try {
+                    const viewsRes = await axios.get(`${INSTAGRAM_GRAPH_URL}/${mediaId}/insights`, {
+                        params: {
+                            metric: 'views',
+                            access_token: igAccount.accessToken
+                        }
+                    });
+                    const viewsData = viewsRes.data?.data?.find(m => m.name === 'views');
+                    if (viewsData) {
+                        insights.views = viewsData.values?.[0]?.value || 0;
+                    }
+                } catch (e) {
+                    // views metric may not be available, try plays
                 }
-            });
 
-            // Parse insights into a more usable format
-            (insightsRes.data?.data || []).forEach(metric => {
-                insights[metric.name] = metric.values?.[0]?.value || 0;
-            });
+                // Fallback to plays if views not available
+                if (!insights.views) {
+                    try {
+                        const playsRes = await axios.get(`${INSTAGRAM_GRAPH_URL}/${mediaId}/insights`, {
+                            params: {
+                                metric: 'plays',
+                                access_token: igAccount.accessToken
+                            }
+                        });
+                        const playsData = playsRes.data?.data?.find(m => m.name === 'plays');
+                        insights.plays = playsData?.values?.[0]?.value || 0;
+                    } catch (e) { }
+                }
+
+                // Get other reel metrics
+                try {
+                    const reelRes = await axios.get(`${INSTAGRAM_GRAPH_URL}/${mediaId}/insights`, {
+                        params: {
+                            metric: 'reach,saved,shares,total_interactions',
+                            access_token: igAccount.accessToken
+                        }
+                    });
+                    (reelRes.data?.data || []).forEach(metric => {
+                        insights[metric.name] = metric.values?.[0]?.value || 0;
+                    });
+                } catch (e) { }
+            } else {
+                // For images/carousels
+                try {
+                    const imgRes = await axios.get(`${INSTAGRAM_GRAPH_URL}/${mediaId}/insights`, {
+                        params: {
+                            metric: 'reach,saved,total_interactions',
+                            access_token: igAccount.accessToken
+                        }
+                    });
+                    (imgRes.data?.data || []).forEach(metric => {
+                        insights[metric.name] = metric.values?.[0]?.value || 0;
+                    });
+                } catch (e) { }
+            }
         } catch (e) {
             console.warn('[IG Insights] Error fetching insights:', e.response?.data?.error?.message || e.message);
         }
@@ -88,10 +126,13 @@ router.get('/media/:mediaId/insights', auth, async (req, res) => {
                 reach: insights.reach || 0,
                 saves: insights.saved || 0,
                 shares: insights.shares || 0,
-                plays: insights.plays || 0,
+                views: insights.views || insights.plays || 0,
+                plays: insights.plays || insights.views || 0,
                 totalInteractions: insights.total_interactions || 0
             },
-            comments
+            comments,
+            // Include raw insights for debugging
+            rawInsights: insights
         });
     } catch (error) {
         console.error('[IG Media Insights] Error:', error.response?.data || error.message);
