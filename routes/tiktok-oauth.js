@@ -4,6 +4,7 @@ const auth = require('../middleware/auth');
 const User = require('../models/User');
 const tiktokService = require('../services/tiktok');
 const AccountService = require('../services/account.service');
+const PlatformContent = require('../models/PlatformContent');
 
 const router = express.Router();
 
@@ -241,6 +242,59 @@ router.get('/publish-status/:accountId/:publishId', auth, async (req, res) => {
         res.json(status);
     } catch (error) {
         res.status(500).json({ message: error.message });
+    }
+});
+
+
+
+// GET /video/insights/:videoId
+router.get('/video/insights/:videoId', auth, async (req, res) => {
+    try {
+        const { videoId } = req.params;
+
+        // Find the content to identify which account needed
+        const content = await PlatformContent.findOne({
+            userId: req.user.id,
+            platform: 'tiktok',
+            platformContentId: videoId
+        });
+
+        if (!content) {
+            return res.status(404).json({ message: 'Video not found in your library. Please sync first.' });
+        }
+
+        const account = await AccountService.getAccount(req.user.id, 'tiktok', content.accountId);
+        if (!account) return res.status(404).json({ message: 'Linked TikTok account not found' });
+
+        // Fetch fresh insights from TikTok
+        const videoData = await tiktokService.queryVideos(account.accessToken, [videoId]);
+        const video = videoData?.videos?.[0];
+
+        if (!video) {
+            return res.status(404).json({ message: 'Video not found on TikTok' });
+        }
+
+        res.json({
+            id: video.id,
+            title: video.title || '',
+            description: video.video_description || '',
+            thumbnail: video.cover_image_url,
+            mediaType: 'video',
+            createdTime: new Date(video.create_time * 1000).toISOString(),
+            permalink: video.share_url,
+            embedLink: video.embed_link,
+            metrics: {
+                views: video.view_count || 0,
+                likes: video.like_count || 0,
+                comments: video.comment_count || 0,
+                shares: video.share_count || 0,
+                liveData: true
+            }
+        });
+
+    } catch (error) {
+        console.error('[TikTok Insights] Error:', error.message);
+        res.status(500).json({ message: 'Failed to fetch insights', error: error.message });
     }
 });
 
