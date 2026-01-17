@@ -250,6 +250,18 @@ async function createPageVideoUpload(pageId, pageAccessToken, fileBuffer, filena
     return data;
 }
 
+async function subscribePageToWebhooks(pageId, pageAccessToken) {
+    try {
+        const { data } = await axios.post(`${FB_API}/${pageId}/subscribed_apps`, null, {
+            params: { access_token: pageAccessToken, subscribed_fields: 'feed' },
+        });
+        return data?.success;
+    } catch (e) {
+        console.warn(`Failed to subscribe page ${pageId} to webhooks:`, e.message);
+        return false;
+    }
+}
+
 module.exports = {
     buildAuthUrl,
     exchangeCodeForToken,
@@ -268,4 +280,5 @@ module.exports = {
     createPagePhotoUpload,
     createPageVideoUpload,
     getPostMetrics,
+    subscribePageToWebhooks,
 };
