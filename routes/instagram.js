@@ -4,6 +4,7 @@ const path = require('path');
 const axios = require('axios');
 const auth = require('../middleware/auth');
 const User = require('../models/User');
+const AccountService = require('../services/account.service');
 const { getIgUser, getIgFeed, getIgUserInsights, createMediaContainer, getContainerStatus, publishContainer } = require('../services/instagram');
 const { getAllPages, enrichPagesWithInstagram } = require('../services/facebook');
 
@@ -35,23 +36,26 @@ router.get('/status', auth, async (req, res) => {
     try {
         let user = await User.findById(req.user.id);
         const accounts = [];
+        const allAccounts = await AccountService.getAccounts(req.user.id);
 
         // Method 1: Direct Instagram OAuth accounts (new)
-        const directAccounts = getDirectInstagramAccounts(user.toObject());
+        const directAccounts = allAccounts.filter(a => a.platform === 'instagram' && a.isActive);
         for (const acc of directAccounts) {
             accounts.push({
-                igUserId: acc.accountId,
-                accountId: acc.accountId, // Added for upload page compatibility
+                igUserId: acc.platformAccountId,
+                accountId: acc.platformAccountId, // Added for upload page compatibility
                 username: acc.accountName || acc.username,
                 pageName: acc.accountName || acc.username, // For frontend compatibility
                 method: 'direct_oauth',
-                accountType: acc.accountType || 'BUSINESS',
+                accountType: acc.metadata?.accountType || 'BUSINESS',
                 connectedAt: acc.connectedAt
             });
         }
 
         // Method 2: Facebook-linked Instagram accounts (legacy)
-        const { fbToken } = getFbAndPages(user.toObject());
+        const fbAccount = allAccounts.find(a => a.platform === 'facebook' && a.isActive);
+        const fbToken = fbAccount?.accessToken;
+
         let pages = (user.settings?.facebookPages || []);
         const fbLinkedAccounts = (pages || []).filter(p => p.instagramId).map(p => ({
             igUserId: p.instagramId,
@@ -108,11 +112,8 @@ router.get('/accounts/:igUserId/profile', auth, async (req, res) => {
         const user = await User.findById(req.user.id).lean();
 
         // Check if it's a direct OAuth account first
-        const directAccount = (user.socialAccounts || []).find(acc =>
-            acc.platform === 'instagram' &&
-            acc.accountId === req.params.igUserId &&
-            acc.isActive
-        );
+        // Check if it's a direct OAuth account first
+        const directAccount = await AccountService.getAccount(req.user.id, 'instagram', req.params.igUserId);
 
         if (directAccount) {
             // Use direct Instagram Graph API
@@ -150,11 +151,8 @@ router.get('/accounts/:igUserId/feed', auth, async (req, res) => {
         const limit = Math.min(parseInt(req.query.limit || '12', 10), 50);
 
         // Check if it's a direct OAuth account first
-        const directAccount = (user.socialAccounts || []).find(acc =>
-            acc.platform === 'instagram' &&
-            acc.accountId === req.params.igUserId &&
-            acc.isActive
-        );
+        // Check if it's a direct OAuth account first
+        const directAccount = await AccountService.getAccount(req.user.id, 'instagram', req.params.igUserId);
 
         if (directAccount) {
             // Use direct Instagram Graph API
@@ -192,11 +190,8 @@ router.get('/accounts/:igUserId/insights', auth, async (req, res) => {
         const user = await User.findById(req.user.id).lean();
 
         // Check if it's a direct OAuth account first
-        const directAccount = (user.socialAccounts || []).find(acc =>
-            acc.platform === 'instagram' &&
-            acc.accountId === req.params.igUserId &&
-            acc.isActive
-        );
+        // Check if it's a direct OAuth account first
+        const directAccount = await AccountService.getAccount(req.user.id, 'instagram', req.params.igUserId);
 
         if (directAccount) {
             // Use direct Instagram Graph API for insights
@@ -238,15 +233,10 @@ router.post('/accounts/:igUserId/publish-by-url', auth, async (req, res) => {
         const user = await User.findById(req.user.id).lean();
 
         // Check if it's a direct OAuth account first
-        const directAccount = (user.socialAccounts || []).find(acc =>
-            acc.platform === 'instagram' &&
-            acc.accountId === req.params.igUserId &&
-            acc.isActive
-        );
+        // Check if it's a direct OAuth account first
+        const directAccount = await AccountService.getAccount(req.user.id, 'instagram', req.params.igUserId);
 
-        console.log('[DEBUG-IG] Looking for:', req.params.igUserId);
-        console.log('[DEBUG-IG] User accounts:', (user.socialAccounts || []).map(a => `${a.platform}:${a.accountId}:${a.isActive}`));
-        console.log('[DEBUG-IG] Found direct:', !!directAccount);
+        console.log('[DEBUG-IG] Publish request for:', req.params.igUserId, 'Found:', !!directAccount);
 
         if (directAccount) {
             // Use direct Instagram Graph API for publishing
