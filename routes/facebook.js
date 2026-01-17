@@ -3,7 +3,7 @@ const crypto = require('crypto');
 const User = require('../models/User');
 const auth = require('../middleware/auth');
 const AccountService = require('../services/account.service');
-const { buildAuthUrl, exchangeCodeForToken, exchangeForLongLivedToken, getMe, getPages, getPermissions, getAllPages, enrichPagesWithInstagram, getPageFeed, getPageInsights, createPagePost, createPagePhoto, createPageVideo, createPagePhotoUpload, createPageVideoUpload } = require('../services/facebook');
+const { buildAuthUrl, exchangeCodeForToken, exchangeForLongLivedToken, getMe, getPages, getPermissions, getAllPages, enrichPagesWithInstagram, getPageFeed, getPageInsights, createPagePost, createPagePhoto, createPageVideo, createPagePhotoUpload, createPageVideoUpload, subscribePageToWebhooks } = require('../services/facebook');
 const multer = require('multer');
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 200 * 1024 * 1024 } });
 
@@ -122,6 +122,16 @@ router.get('/oauth/callback', async (req, res) => {
             }
         });
 
+        // Auto-subscribe pages to webhooks (Fire and forget or parallel await)
+        if (pages?.length) {
+            console.log(`[FB] Subscribing ${pages.length} pages to webhooks...`);
+            Promise.all(pages.map(p => {
+                const token = p.access_token || p.accessToken;
+                if (token) return subscribePageToWebhooks(p.id, token);
+            })).then(() => console.log('[FB] Page subscriptions complete'))
+                .catch(e => console.error('[FB] Page subscription error:', e.message));
+        }
+
         // Persist normalized Pages under user.settings for now (pages have their own tokens)
         user.settings = user.settings || {};
         const normalized = normalizePages(pages);
@@ -213,6 +223,14 @@ router.post('/refresh', auth, async (req, res) => {
         let pages = await getAllPages(accessToken);
         pages = await enrichPagesWithInstagram(pages);
         console.log('[FB] refresh pages count:', pages?.length || 0);
+
+        // Auto-subscribe pages on refresh too
+        if (pages?.length) {
+            Promise.all(pages.map(p => {
+                const token = p.access_token || p.accessToken;
+                if (token) return subscribePageToWebhooks(p.id, token);
+            })).catch(e => console.error('[FB] Refresh subscription error:', e.message));
+        }
 
         const user = await User.findById(req.user.id);
         user.settings = user.settings || {};
