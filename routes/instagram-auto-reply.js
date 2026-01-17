@@ -304,7 +304,8 @@ router.post('/webhook', async (req, res) => {
 
         for (const change of e.changes || []) {
             if (change.field === 'comments') {
-                const { media_id, id, text, from } = change.value;
+                const { media, id, text, from } = change.value;
+                const mediaId = media?.id; // Extract from nested object
 
                 // Get access token for this account
                 try {
@@ -357,7 +358,7 @@ router.post('/webhook', async (req, res) => {
 
                     if (account) {
                         await processComment({
-                            mediaId: media_id,
+                            mediaId: mediaId,
                             commentId: id,
                             commentText: text,
                             commenterId: from.id,
