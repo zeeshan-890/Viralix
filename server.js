@@ -162,6 +162,12 @@ app.use('/api/platforms', require('./routes/platforms'));
 app.use('/api/posts', require('./routes/posts'));
 app.use('/api/analytics', require('./routes/analytics'));
 app.use('/api/ai', require('./routes/ai'));
+try {
+    app.use('/api/platform-sync', require('./routes/platform-sync'));
+    console.log('🔄 Platform sync routes mounted');
+} catch (e) {
+    console.warn('Platform sync routes not mounted:', e.message);
+}
 // app.use('/api/social', require('./routes/social'));
 // app.use('/api/analytics', require('./routes/analytics'));
 // app.use('/api/engagement', require('./routes/engagement'));
