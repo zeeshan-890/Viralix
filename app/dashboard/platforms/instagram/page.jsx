@@ -2,14 +2,17 @@
 import { useState, useEffect } from 'react';
 import { useAccounts } from '@/hooks/useAccounts';
 import { platformSyncAPI } from '@/lib/api';
+import { Plus } from 'lucide-react';
 import PlatformPageLayout from '../components/PlatformPageLayout';
+import CreateInstagramPost from './components/CreateInstagramPost';
 
 export default function InstagramPage() {
-    const { accounts, isLoading: accountsLoading } = useAccounts();
+    const { accounts, isLoading: accountsLoading, refetch } = useAccounts();
     const [metrics, setMetrics] = useState({});
     const [content, setContent] = useState([]);
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
+    const [showCreatePost, setShowCreatePost] = useState(false);
 
     const igAccounts = accounts.filter(a => a.platform === 'instagram');
 
@@ -71,15 +74,43 @@ export default function InstagramPage() {
         }
     };
 
+    const handlePostSuccess = () => {
+        // Refresh content after posting
+        handleRefresh();
+    };
+
     return (
-        <PlatformPageLayout
-            platform="instagram"
-            accounts={igAccounts}
-            metrics={metrics}
-            content={content}
-            loading={loading || accountsLoading}
-            refreshing={refreshing}
-            onRefresh={handleRefresh}
-        />
+        <>
+            <PlatformPageLayout
+                platform="instagram"
+                accounts={igAccounts}
+                metrics={metrics}
+                content={content}
+                loading={loading || accountsLoading}
+                refreshing={refreshing}
+                onRefresh={handleRefresh}
+            >
+                {/* Create Post Button */}
+                {igAccounts.length > 0 && (
+                    <div className="mb-6">
+                        <button
+                            onClick={() => setShowCreatePost(true)}
+                            className="inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-purple-500 via-pink-500 to-orange-400 text-white rounded-xl font-medium shadow-lg hover:shadow-xl transition-all hover:scale-105"
+                        >
+                            <Plus className="w-5 h-5" />
+                            Create Post
+                        </button>
+                    </div>
+                )}
+            </PlatformPageLayout>
+
+            {/* Create Post Modal */}
+            <CreateInstagramPost
+                isOpen={showCreatePost}
+                onClose={() => setShowCreatePost(false)}
+                account={igAccounts[0]}
+                onSuccess={handlePostSuccess}
+            />
+        </>
     );
 }

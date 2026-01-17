@@ -148,6 +148,13 @@ export const instagramAPI = {
     publishByUrl: (igUserId, { mediaType, url, caption }) => api.post(`/instagram/accounts/${igUserId}/publish-by-url`, { mediaType, url, caption }),
     // Get detailed insights for a specific media post
     getMediaInsights: (mediaId) => api.get(`/instagram-insights/media/${mediaId}/insights`),
+    // Auto-reply rules
+    getAutoReplyRules: () => api.get('/instagram-auto-reply/rules'),
+    getAutoReplyRule: (postId) => api.get(`/instagram-auto-reply/rules/post/${postId}`),
+    createAutoReplyRule: (data) => api.post('/instagram-auto-reply/rules', data),
+    updateAutoReplyRule: (ruleId, data) => api.put(`/instagram-auto-reply/rules/${ruleId}`, data),
+    deleteAutoReplyRule: (ruleId) => api.delete(`/instagram-auto-reply/rules/${ruleId}`),
+    toggleAutoReplyRule: (ruleId) => api.patch(`/instagram-auto-reply/rules/${ruleId}/toggle`),
 };
 export const uploadAPI = {
     // Get user's uploaded media
