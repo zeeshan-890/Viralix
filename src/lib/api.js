@@ -232,6 +232,8 @@ export const youtubeAPI = {
     disconnect: (accountId) => api.delete(`/youtube-oauth/disconnect/${accountId}`),
     // Refresh access token
     refresh: (accountId) => api.post(`/youtube-oauth/refresh/${accountId}`),
+    // Get live video insights
+    getVideoInsights: (videoId) => api.get(`/youtube-oauth/video/insights/${videoId}`),
     // Get user's videos
     videos: (accountId, params = {}) => api.get(`/youtube-oauth/videos/${accountId}`, { params }),
     // Publish video
