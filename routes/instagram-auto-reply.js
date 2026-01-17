@@ -333,7 +333,9 @@ router.post('/webhook', async (req, res) => {
 
                                 console.log(`[Webhook Fallback] API Response for ${accountId}:`, JSON.stringify(verifyRes.data));
 
-                                if (verifyRes.data.id === accountId) {
+                                // Instagram returns the User ID (ASID) when querying by Business ID.
+                                // So we compare the response ID with our stored platformAccountId.
+                                if (verifyRes.data.id === candidate.platformAccountId) {
                                     console.log(`[Webhook] Matched account ${candidate.accountName} via API verification!`);
                                     account = candidate;
                                     account.accessToken = token;
