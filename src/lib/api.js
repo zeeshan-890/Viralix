@@ -138,6 +138,8 @@ export const facebookAPI = {
         if (description) form.append('description', description);
         return api.post(`/facebook/pages/${pageId}/video-upload`, form, { headers: { 'Content-Type': 'multipart/form-data' } });
     },
+    // Detailed post insights
+    getPostInsights: (postId) => api.get(`/facebook/post/${postId}/insights`),
 };
 // Instagram API helpers
 export const instagramAPI = {
