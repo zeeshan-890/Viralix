@@ -196,6 +196,7 @@ async function processComment(commentData, accessToken) {
             const dmResult = await sendInstagramDM(
                 rule.accountId,
                 commenterId,
+                commentId, // Pass comment ID for Private Reply
                 rule.replyContent,
                 accessToken
             );
@@ -222,12 +223,13 @@ async function processComment(commentData, accessToken) {
     }
 }
 
-// Send Instagram DM
-async function sendInstagramDM(igAccountId, recipientId, content, accessToken) {
+// Send Instagram DM using Private Reply (responds to a comment)
+async function sendInstagramDM(igAccountId, recipientId, commentId, content, accessToken) {
     try {
-        // Instagram Messaging API
+        // Use Private Reply API - reply to the comment directly
+        // This bypasses the 24-hour messaging window restriction
         const messagePayload = {
-            recipient: { id: recipientId },
+            recipient: { comment_id: commentId }, // Private Reply format
             message: { text: content.message }
         };
 
