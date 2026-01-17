@@ -305,39 +305,62 @@ async function syncYouTube(userId, account) {
 async function syncFacebook(userId, account) {
     const content = [];
     try {
-        // Facebook page feed
-        const response = await axios.get(`https://graph.facebook.com/v19.0/${account.platformAccountId}/feed`, {
-            params: {
-                fields: 'id,message,full_picture,created_time,permalink_url,shares,reactions.summary(true),comments.summary(true)',
-                limit: 50,
-                access_token: account.accessToken
+        // Get the user's Facebook Pages from settings (each page has its own access token)
+        const User = require('../models/User');
+        const user = await User.findById(userId);
+        const pages = user?.settings?.facebookPages || [];
+
+        if (pages.length === 0) {
+            console.log('[Sync Facebook] No Facebook Pages found for user');
+            return { synced: 0, content: [] };
+        }
+
+        for (const page of pages) {
+            if (!page.id || !page.accessToken) {
+                console.log(`[Sync Facebook] Skipping page without ID or token: ${page.name}`);
+                continue;
             }
-        });
 
-        const posts = response.data?.data || [];
+            try {
+                // Fetch feed for this specific page using its Page Access Token
+                const response = await axios.get(`https://graph.facebook.com/v19.0/${page.id}/feed`, {
+                    params: {
+                        fields: 'id,message,full_picture,created_time,permalink_url,shares,reactions.summary(true),comments.summary(true)',
+                        limit: 25,
+                        access_token: page.accessToken
+                    }
+                });
 
-        for (const post of posts) {
-            const doc = await PlatformContent.findOneAndUpdate(
-                { userId, platform: 'facebook', platformContentId: post.id },
-                {
-                    userId,
-                    platform: 'facebook',
-                    platformContentId: post.id,
-                    accountId: account.platformAccountId,
-                    title: post.message?.substring(0, 100) || '',
-                    description: post.message || '',
-                    thumbnail: post.full_picture,
-                    mediaType: post.full_picture ? 'image' : 'text',
-                    permalink: post.permalink_url,
-                    likes: post.reactions?.summary?.total_count || 0,
-                    comments: post.comments?.summary?.total_count || 0,
-                    shares: post.shares?.count || 0,
-                    publishedAt: new Date(post.created_time),
-                    lastSyncedAt: new Date()
-                },
-                { upsert: true, new: true }
-            );
-            content.push(doc);
+                const posts = response.data?.data || [];
+
+                for (const post of posts) {
+                    const doc = await PlatformContent.findOneAndUpdate(
+                        { userId, platform: 'facebook', platformContentId: post.id },
+                        {
+                            userId,
+                            platform: 'facebook',
+                            platformContentId: post.id,
+                            accountId: page.id,
+                            title: post.message?.substring(0, 100) || '',
+                            description: post.message || '',
+                            thumbnail: post.full_picture,
+                            mediaType: post.full_picture ? 'image' : 'text',
+                            permalink: post.permalink_url,
+                            likes: post.reactions?.summary?.total_count || 0,
+                            comments: post.comments?.summary?.total_count || 0,
+                            shares: post.shares?.count || 0,
+                            publishedAt: new Date(post.created_time),
+                            lastSyncedAt: new Date()
+                        },
+                        { upsert: true, new: true }
+                    );
+                    content.push(doc);
+                }
+
+                console.log(`[Sync Facebook] Synced ${posts.length} posts from page: ${page.name}`);
+            } catch (pageError) {
+                console.error(`[Sync Facebook] Error syncing page ${page.name}:`, pageError.response?.data?.error?.message || pageError.message);
+            }
         }
 
         return { synced: content.length, content };
