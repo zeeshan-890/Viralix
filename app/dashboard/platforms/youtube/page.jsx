@@ -1,7 +1,7 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { useAccounts } from '@/hooks/useAccounts';
-import { analyticsAPI, youtubeAPI } from '@/lib/api';
+import { platformSyncAPI } from '@/lib/api';
 import PlatformPageLayout from '../components/PlatformPageLayout';
 
 export default function YouTubePage() {
@@ -26,50 +26,29 @@ export default function YouTubePage() {
         }
 
         try {
-            // Load platform analytics
-            const analyticsRes = await analyticsAPI.getPlatformMetrics('youtube');
-            const analyticsData = analyticsRes.data || {};
-
-            // Calculate metrics from posts
-            let totalViews = 0, totalLikes = 0, totalComments = 0;
-            (analyticsData.posts || []).forEach(post => {
-                post.platforms?.forEach(p => {
-                    if (p.name === 'youtube' && p.engagement) {
-                        totalViews += p.engagement.views || 0;
-                        totalLikes += p.engagement.likes || 0;
-                        totalComments += p.engagement.comments || 0;
-                    }
-                });
-            });
+            // Load content from database
+            const response = await platformSyncAPI.getContent('youtube', { limit: 50 });
+            const data = response.data || {};
 
             setMetrics({
-                totalViews,
-                totalLikes,
-                totalComments,
-                totalPosts: analyticsData.metrics?.totalPosts || 0
+                totalViews: data.metrics?.totalViews || 0,
+                totalLikes: data.metrics?.totalLikes || 0,
+                totalComments: data.metrics?.totalComments || 0,
+                totalPosts: data.metrics?.count || 0
             });
 
-            // Load videos for connected accounts
-            const contentItems = [];
-            for (const acc of ytAccounts) {
-                try {
-                    const videosRes = await youtubeAPI.videos(acc.platformAccountId, { limit: 12 });
-                    const videos = videosRes.data?.videos || [];
-                    videos.forEach(video => {
-                        contentItems.push({
-                            id: video.id,
-                            title: video.snippet?.title || 'YouTube Video',
-                            thumbnail: video.snippet?.thumbnails?.medium?.url || video.snippet?.thumbnails?.default?.url,
-                            type: 'video',
-                            views: parseInt(video.statistics?.viewCount || 0),
-                            likes: parseInt(video.statistics?.likeCount || 0),
-                            accountId: acc.platformAccountId
-                        });
-                    });
-                } catch (e) {
-                    console.warn('Failed to load YouTube videos:', e.message);
-                }
-            }
+            // Transform content for display
+            const contentItems = (data.content || []).map(item => ({
+                id: item.platformContentId,
+                title: item.title || 'YouTube Video',
+                thumbnail: item.thumbnail,
+                type: 'video',
+                views: item.views || 0,
+                likes: item.likes || 0,
+                comments: item.comments || 0,
+                permalink: item.permalink
+            }));
+
             setContent(contentItems);
         } catch (e) {
             console.error('Failed to load YouTube data:', e);
@@ -81,8 +60,12 @@ export default function YouTubePage() {
     const handleRefresh = async () => {
         setRefreshing(true);
         try {
-            await analyticsAPI.refresh();
+            // Sync from platform to database
+            await platformSyncAPI.sync('youtube');
+            // Reload data from database
             await loadData();
+        } catch (e) {
+            console.error('Sync failed:', e);
         } finally {
             setRefreshing(false);
         }
@@ -98,10 +81,10 @@ export default function YouTubePage() {
             refreshing={refreshing}
             onRefresh={handleRefresh}
         >
-            {/* YouTube-specific section for channel info */}
-            {ytAccounts.length > 0 && ytAccounts[0].metadata && (
+            {/* YouTube-specific subscriber stats */}
+            {ytAccounts.length > 0 && (
                 <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm mb-8">
-                    <h2 className="text-lg font-semibold mb-4" style={{ color: '#354F52' }}>Channel Statistics</h2>
+                    <h2 className="text-lg font-semibold mb-4" style={{ color: '#354F52' }}>Channel Overview</h2>
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                         <div className="text-center p-4 bg-red-50 rounded-xl">
                             <p className="text-2xl font-bold text-red-600">

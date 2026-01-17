@@ -1,7 +1,7 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { useAccounts } from '@/hooks/useAccounts';
-import { analyticsAPI, tiktokAPI } from '@/lib/api';
+import { platformSyncAPI } from '@/lib/api';
 import PlatformPageLayout from '../components/PlatformPageLayout';
 
 export default function TikTokPage() {
@@ -26,50 +26,31 @@ export default function TikTokPage() {
         }
 
         try {
-            // Load platform analytics
-            const analyticsRes = await analyticsAPI.getPlatformMetrics('tiktok');
-            const analyticsData = analyticsRes.data || {};
-
-            // Calculate metrics from posts
-            let totalViews = 0, totalLikes = 0, totalComments = 0;
-            (analyticsData.posts || []).forEach(post => {
-                post.platforms?.forEach(p => {
-                    if (p.name === 'tiktok' && p.engagement) {
-                        totalViews += p.engagement.views || 0;
-                        totalLikes += p.engagement.likes || 0;
-                        totalComments += p.engagement.comments || 0;
-                    }
-                });
-            });
+            // Load content from database
+            const response = await platformSyncAPI.getContent('tiktok', { limit: 50 });
+            const data = response.data || {};
 
             setMetrics({
-                totalViews,
-                totalLikes,
-                totalComments,
-                totalPosts: analyticsData.metrics?.totalPosts || 0
+                totalViews: data.metrics?.totalViews || 0,
+                totalLikes: data.metrics?.totalLikes || 0,
+                totalComments: data.metrics?.totalComments || 0,
+                totalShares: data.metrics?.totalShares || 0,
+                totalPosts: data.metrics?.count || 0
             });
 
-            // Load videos for connected accounts
-            const contentItems = [];
-            for (const acc of ttAccounts) {
-                try {
-                    const videosRes = await tiktokAPI.videos(acc.platformAccountId, { limit: 12 });
-                    const videos = videosRes.data?.videos || [];
-                    videos.forEach(video => {
-                        contentItems.push({
-                            id: video.id,
-                            title: video.title || 'TikTok Video',
-                            thumbnail: video.cover_image_url,
-                            type: 'video',
-                            views: video.view_count || 0,
-                            likes: video.like_count || 0,
-                            accountId: acc.platformAccountId
-                        });
-                    });
-                } catch (e) {
-                    console.warn('Failed to load TikTok videos:', e.message);
-                }
-            }
+            // Transform content for display
+            const contentItems = (data.content || []).map(item => ({
+                id: item.platformContentId,
+                title: item.title || 'TikTok Video',
+                thumbnail: item.thumbnail,
+                type: 'video',
+                views: item.views || 0,
+                likes: item.likes || 0,
+                comments: item.comments || 0,
+                shares: item.shares || 0,
+                permalink: item.permalink
+            }));
+
             setContent(contentItems);
         } catch (e) {
             console.error('Failed to load TikTok data:', e);
@@ -81,8 +62,12 @@ export default function TikTokPage() {
     const handleRefresh = async () => {
         setRefreshing(true);
         try {
-            await analyticsAPI.refresh();
+            // Sync from platform to database
+            await platformSyncAPI.sync('tiktok');
+            // Reload data from database
             await loadData();
+        } catch (e) {
+            console.error('Sync failed:', e);
         } finally {
             setRefreshing(false);
         }

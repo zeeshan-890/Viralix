@@ -1,7 +1,7 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { useAccounts } from '@/hooks/useAccounts';
-import { analyticsAPI, instagramAPI } from '@/lib/api';
+import { platformSyncAPI } from '@/lib/api';
 import PlatformPageLayout from '../components/PlatformPageLayout';
 
 export default function InstagramPage() {
@@ -26,50 +26,29 @@ export default function InstagramPage() {
         }
 
         try {
-            // Load platform analytics
-            const analyticsRes = await analyticsAPI.getPlatformMetrics('instagram');
-            const analyticsData = analyticsRes.data || {};
-
-            // Calculate metrics from posts
-            let totalViews = 0, totalLikes = 0, totalComments = 0;
-            (analyticsData.posts || []).forEach(post => {
-                post.platforms?.forEach(p => {
-                    if (p.name === 'instagram' && p.engagement) {
-                        totalViews += p.engagement.views || 0;
-                        totalLikes += p.engagement.likes || 0;
-                        totalComments += p.engagement.comments || 0;
-                    }
-                });
-            });
+            // Load content from database
+            const response = await platformSyncAPI.getContent('instagram', { limit: 50 });
+            const data = response.data || {};
 
             setMetrics({
-                totalViews,
-                totalLikes,
-                totalComments,
-                totalPosts: analyticsData.metrics?.totalPosts || 0
+                totalViews: data.metrics?.totalViews || 0,
+                totalLikes: data.metrics?.totalLikes || 0,
+                totalComments: data.metrics?.totalComments || 0,
+                totalPosts: data.metrics?.count || 0
             });
 
-            // Load content feed for connected accounts
-            const contentItems = [];
-            for (const acc of igAccounts) {
-                try {
-                    const feedRes = await instagramAPI.feed(acc.platformAccountId, 12);
-                    const feedData = feedRes.data?.data || [];
-                    feedData.forEach(item => {
-                        contentItems.push({
-                            id: item.id,
-                            title: item.caption?.substring(0, 50) || 'Instagram Post',
-                            thumbnail: item.media_url || item.thumbnail_url,
-                            type: item.media_type === 'VIDEO' ? 'video' : 'image',
-                            views: 0,
-                            likes: item.like_count || 0,
-                            accountId: acc.platformAccountId
-                        });
-                    });
-                } catch (e) {
-                    console.warn('Failed to load Instagram feed:', e.message);
-                }
-            }
+            // Transform content for display
+            const contentItems = (data.content || []).map(item => ({
+                id: item.platformContentId,
+                title: item.title || 'Instagram Post',
+                thumbnail: item.thumbnail || item.mediaUrl,
+                type: item.mediaType || 'image',
+                views: item.views || 0,
+                likes: item.likes || 0,
+                comments: item.comments || 0,
+                permalink: item.permalink
+            }));
+
             setContent(contentItems);
         } catch (e) {
             console.error('Failed to load Instagram data:', e);
@@ -81,8 +60,12 @@ export default function InstagramPage() {
     const handleRefresh = async () => {
         setRefreshing(true);
         try {
-            await analyticsAPI.refresh();
+            // Sync from platform to database
+            await platformSyncAPI.sync('instagram');
+            // Reload data from database
             await loadData();
+        } catch (e) {
+            console.error('Sync failed:', e);
         } finally {
             setRefreshing(false);
         }

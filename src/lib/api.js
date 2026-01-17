@@ -232,3 +232,13 @@ export const youtubeAPI = {
             madeForKids
         }),
 };
+
+// Platform Sync API helpers
+export const platformSyncAPI = {
+    // Sync all platforms
+    syncAll: () => api.post('/platform-sync/sync-all'),
+    // Sync specific platform
+    sync: (platform) => api.post(`/platform-sync/sync/${platform}`),
+    // Get synced content for platform
+    getContent: (platform, params = {}) => api.get(`/platform-sync/content/${platform}`, { params }),
+};
