@@ -34,7 +34,11 @@ export default function CreateInstagramPost({ isOpen, onClose, account, onSucces
     const [replyMessage, setReplyMessage] = useState('');
     const [attachmentType, setAttachmentType] = useState('none'); // 'none', 'image', 'link', 'file'
     const [attachmentUrl, setAttachmentUrl] = useState('');
+    const [attachmentPreview, setAttachmentPreview] = useState('');
+    const [attachmentFileName, setAttachmentFileName] = useState('');
+    const [uploadingAttachment, setUploadingAttachment] = useState(false);
     const [linkUrl, setLinkUrl] = useState('');
+    const attachmentInputRef = useRef(null);
 
     const handleFileChange = async (e) => {
         const file = e.target.files?.[0];
@@ -74,6 +78,33 @@ export default function CreateInstagramPost({ isOpen, onClose, account, onSucces
         setKeywords(keywords.filter(k => k !== kw));
     };
 
+    const handleAttachmentUpload = async (e) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        setUploadingAttachment(true);
+
+        try {
+            // Create preview for images
+            if (file.type.startsWith('image/')) {
+                const reader = new FileReader();
+                reader.onload = (ev) => setAttachmentPreview(ev.target.result);
+                reader.readAsDataURL(file);
+            }
+
+            setAttachmentFileName(file.name);
+
+            // Upload file
+            const uploadRes = await uploadAPI.uploadFile(file);
+            const uploadedUrl = uploadRes.data?.files?.[0]?.url || uploadRes.data?.url;
+            setAttachmentUrl(uploadedUrl);
+        } catch (err) {
+            setError('Failed to upload attachment: ' + err.message);
+        } finally {
+            setUploadingAttachment(false);
+        }
+    };
+
     const handlePublish = async () => {
         if (!mediaUrl) {
             setError('Please upload media first');
@@ -108,7 +139,8 @@ export default function CreateInstagramPost({ isOpen, onClose, account, onSucces
                     replyContent: {
                         message: replyMessage,
                         attachmentType,
-                        attachmentUrl: attachmentType === 'image' ? attachmentUrl : undefined,
+                        attachmentUrl: (attachmentType === 'image' || attachmentType === 'file') ? attachmentUrl : undefined,
+                        attachmentFileName: attachmentType === 'file' ? attachmentFileName : undefined,
                         linkUrl: attachmentType === 'link' ? linkUrl : undefined
                     },
                     enabled: true
@@ -164,10 +196,10 @@ export default function CreateInstagramPost({ isOpen, onClose, account, onSucces
                             key={label}
                             onClick={() => setStep(idx + 1)}
                             className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-all ${step === idx + 1
-                                    ? 'bg-pink-500 text-white'
-                                    : step > idx + 1
-                                        ? 'bg-pink-100 text-pink-600'
-                                        : 'bg-gray-200 text-gray-500'
+                                ? 'bg-pink-500 text-white'
+                                : step > idx + 1
+                                    ? 'bg-pink-100 text-pink-600'
+                                    : 'bg-gray-200 text-gray-500'
                                 }`}
                         >
                             {label}
@@ -361,7 +393,7 @@ export default function CreateInstagramPost({ isOpen, onClose, account, onSucces
                                             ].map(opt => (
                                                 <button
                                                     key={opt.type}
-                                                    onClick={() => setAttachmentType(opt.type)}
+                                                    onClick={() => { setAttachmentType(opt.type); setAttachmentUrl(''); setAttachmentPreview(''); setAttachmentFileName(''); }}
                                                     className={`p-2 rounded-xl border-2 text-center transition-all ${attachmentType === opt.type ? 'border-purple-500 bg-purple-50' : 'border-gray-200'}`}
                                                 >
                                                     <opt.icon className={`w-5 h-5 mx-auto mb-1 ${attachmentType === opt.type ? 'text-purple-600' : 'text-gray-400'}`} />
@@ -379,14 +411,91 @@ export default function CreateInstagramPost({ isOpen, onClose, account, onSucces
                                                 className="w-full p-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-400"
                                             />
                                         )}
+
                                         {attachmentType === 'image' && (
-                                            <input
-                                                type="url"
-                                                value={attachmentUrl}
-                                                onChange={(e) => setAttachmentUrl(e.target.value)}
-                                                placeholder="https://example.com/image.jpg"
-                                                className="w-full p-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-400"
-                                            />
+                                            <div>
+                                                {attachmentPreview ? (
+                                                    <div className="relative w-full h-40 rounded-xl overflow-hidden bg-gray-100 mb-2">
+                                                        <Image src={attachmentPreview} alt="Attachment" fill className="object-contain" />
+                                                        <button
+                                                            onClick={() => { setAttachmentUrl(''); setAttachmentPreview(''); }}
+                                                            className="absolute top-2 right-2 p-1.5 bg-black/50 text-white rounded-full hover:bg-black/70"
+                                                        >
+                                                            <Trash2 className="w-4 h-4" />
+                                                        </button>
+                                                    </div>
+                                                ) : (
+                                                    <button
+                                                        onClick={() => attachmentInputRef.current?.click()}
+                                                        disabled={uploadingAttachment}
+                                                        className="w-full p-6 border-2 border-dashed border-gray-300 rounded-xl flex flex-col items-center gap-2 hover:border-purple-400 hover:bg-purple-50/50 transition-all"
+                                                    >
+                                                        {uploadingAttachment ? (
+                                                            <>
+                                                                <div className="w-6 h-6 border-2 border-purple-500/30 border-t-purple-500 rounded-full animate-spin" />
+                                                                <span className="text-sm text-gray-500">Uploading...</span>
+                                                            </>
+                                                        ) : (
+                                                            <>
+                                                                <Upload className="w-8 h-8 text-gray-400" />
+                                                                <span className="text-sm text-gray-600">Click to upload image</span>
+                                                            </>
+                                                        )}
+                                                    </button>
+                                                )}
+                                                <input
+                                                    ref={attachmentInputRef}
+                                                    type="file"
+                                                    accept="image/*"
+                                                    onChange={handleAttachmentUpload}
+                                                    className="hidden"
+                                                />
+                                            </div>
+                                        )}
+
+                                        {attachmentType === 'file' && (
+                                            <div>
+                                                {attachmentFileName ? (
+                                                    <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl border border-gray-200">
+                                                        <FileText className="w-8 h-8 text-purple-500" />
+                                                        <div className="flex-1 min-w-0">
+                                                            <p className="font-medium text-sm truncate">{attachmentFileName}</p>
+                                                            <p className="text-xs text-gray-500">Ready to send</p>
+                                                        </div>
+                                                        <button
+                                                            onClick={() => { setAttachmentUrl(''); setAttachmentFileName(''); }}
+                                                            className="p-1.5 text-gray-400 hover:text-red-500"
+                                                        >
+                                                            <Trash2 className="w-4 h-4" />
+                                                        </button>
+                                                    </div>
+                                                ) : (
+                                                    <button
+                                                        onClick={() => attachmentInputRef.current?.click()}
+                                                        disabled={uploadingAttachment}
+                                                        className="w-full p-6 border-2 border-dashed border-gray-300 rounded-xl flex flex-col items-center gap-2 hover:border-purple-400 hover:bg-purple-50/50 transition-all"
+                                                    >
+                                                        {uploadingAttachment ? (
+                                                            <>
+                                                                <div className="w-6 h-6 border-2 border-purple-500/30 border-t-purple-500 rounded-full animate-spin" />
+                                                                <span className="text-sm text-gray-500">Uploading...</span>
+                                                            </>
+                                                        ) : (
+                                                            <>
+                                                                <Upload className="w-8 h-8 text-gray-400" />
+                                                                <span className="text-sm text-gray-600">Click to upload file (PDF, DOC, etc.)</span>
+                                                            </>
+                                                        )}
+                                                    </button>
+                                                )}
+                                                <input
+                                                    ref={attachmentInputRef}
+                                                    type="file"
+                                                    accept=".pdf,.doc,.docx,.txt,.zip"
+                                                    onChange={handleAttachmentUpload}
+                                                    className="hidden"
+                                                />
+                                            </div>
                                         )}
                                     </div>
                                 </div>
