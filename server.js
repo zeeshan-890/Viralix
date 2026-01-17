@@ -170,6 +170,13 @@ try {
 } catch (e) {
     console.warn('Platform sync routes not mounted:', e.message);
 }
+
+try {
+    app.use('/api/facebook', require('./routes/facebook-insights'));
+    console.log('📘 Facebook Insights routes mounted');
+} catch (e) {
+    console.warn('Facebook Insights routes not mounted:', e.message);
+}
 // app.use('/api/social', require('./routes/social'));
 // app.use('/api/analytics', require('./routes/analytics'));
 // app.use('/api/engagement', require('./routes/engagement'));
