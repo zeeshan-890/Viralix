@@ -252,13 +252,13 @@ export default function PlatformPageLayout({
                                         </>
                                     );
 
-                                    // Only Instagram has detail pages for now
-                                    if (platform === 'instagram' && item.id) {
+                                    // Instagram and Facebook have detail pages
+                                    if ((platform === 'instagram' || platform === 'facebook') && item.id) {
                                         return (
                                             <Link
                                                 key={item.id || index}
-                                                href={`/dashboard/platforms/instagram/post/${item.id}`}
-                                                className="group relative aspect-square rounded-xl overflow-hidden bg-gray-100 border border-gray-200 cursor-pointer hover:ring-2 hover:ring-pink-400 transition-all"
+                                                href={`/dashboard/platforms/${platform}/post/${item.id}`}
+                                                className={`group relative aspect-square rounded-xl overflow-hidden bg-gray-100 border border-gray-200 cursor-pointer hover:ring-2 ${platform === 'instagram' ? 'hover:ring-pink-400' : 'hover:ring-blue-400'} transition-all`}
                                             >
                                                 {itemContent}
                                             </Link>
