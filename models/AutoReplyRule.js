@@ -9,7 +9,7 @@ const autoReplyRuleSchema = new mongoose.Schema({
     },
     platform: {
         type: String,
-        enum: ['instagram'],
+        enum: ['instagram', 'facebook'],
         default: 'instagram'
     },
     postId: {
