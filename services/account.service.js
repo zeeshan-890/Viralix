@@ -109,6 +109,26 @@ class AccountService {
     }
 
     /**
+     * Update account metadata (e.g., follower count)
+     */
+    static async updateAccountMetadata(userId, accountId, updates) {
+        const updateObj = {};
+        if (updates.followerCount !== undefined) {
+            updateObj.followerCount = updates.followerCount;
+        }
+        if (updates.avatarUrl !== undefined) {
+            updateObj.avatarUrl = updates.avatarUrl;
+        }
+        if (Object.keys(updateObj).length === 0) return null;
+
+        return await SocialAccount.findOneAndUpdate(
+            { userId, _id: accountId },
+            { $set: updateObj },
+            { new: true }
+        );
+    }
+
+    /**
      * Disconnect an account (soft delete)
      */
     static async disconnectAccount(userId, accountId) {
