@@ -123,7 +123,7 @@ router.get('/content/:platform', auth, async (req, res) => {
 async function syncInstagram(userId, account) {
     const content = [];
     try {
-        // Fetch media from Instagram
+        // Fetch media from Instagram - include video_views for Reels
         const response = await axios.get(`${INSTAGRAM_GRAPH_URL}/${account.platformAccountId}/media`, {
             params: {
                 fields: 'id,caption,media_type,media_url,thumbnail_url,permalink,timestamp,like_count,comments_count',
@@ -135,6 +135,23 @@ async function syncInstagram(userId, account) {
         const media = response.data?.data || [];
 
         for (const item of media) {
+            // For video content, try to get insights for views
+            let viewCount = 0;
+            if (item.media_type === 'VIDEO' || item.media_type === 'REELS') {
+                try {
+                    const insightsRes = await axios.get(`${INSTAGRAM_GRAPH_URL}/${item.id}/insights`, {
+                        params: {
+                            metric: 'plays',
+                            access_token: account.accessToken
+                        }
+                    });
+                    const playsData = insightsRes.data?.data?.find(m => m.name === 'plays');
+                    viewCount = playsData?.values?.[0]?.value || 0;
+                } catch (e) {
+                    // Insights may not be available for all content
+                }
+            }
+
             const doc = await PlatformContent.findOneAndUpdate(
                 { userId, platform: 'instagram', platformContentId: item.id },
                 {
@@ -148,6 +165,7 @@ async function syncInstagram(userId, account) {
                     mediaUrl: item.media_url,
                     mediaType: item.media_type === 'VIDEO' ? 'video' : 'image',
                     permalink: item.permalink,
+                    views: viewCount,
                     likes: item.like_count || 0,
                     comments: item.comments_count || 0,
                     publishedAt: new Date(item.timestamp),
