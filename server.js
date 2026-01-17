@@ -144,6 +144,7 @@ try {
     app.use('/api/instagram-oauth', require('./routes/instagram-oauth'));
     app.use('/api/instagram-insights', require('./routes/instagram-insights'));
     app.use('/api/instagram-auto-reply', require('./routes/instagram-auto-reply'));
+    app.use('/api/facebook-auto-reply', require('./routes/facebook-auto-reply'));
 } catch (e) {
     console.warn('Instagram routes not mounted yet:', e.message);
 }
