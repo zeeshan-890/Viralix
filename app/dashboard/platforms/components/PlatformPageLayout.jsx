@@ -219,36 +219,58 @@ export default function PlatformPageLayout({
                         <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
                             <h2 className="text-xl font-semibold mb-6" style={{ color: '#354F52' }}>Recent Content</h2>
                             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                                {content.map((item, index) => (
-                                    <div key={item.id || index} className="group relative aspect-square rounded-xl overflow-hidden bg-gray-100 border border-gray-200">
-                                        {item.thumbnail ? (
-                                            <Image
-                                                src={item.thumbnail}
-                                                alt={item.title || 'Content'}
-                                                fill
-                                                className="object-cover group-hover:scale-105 transition-transform duration-300"
-                                            />
-                                        ) : (
-                                            <div className="w-full h-full flex items-center justify-center">
-                                                <span className="text-4xl">📷</span>
-                                            </div>
-                                        )}
-                                        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
-                                            <div className="absolute bottom-0 left-0 right-0 p-3 text-white">
-                                                <p className="text-sm font-medium truncate">{item.title || 'Untitled'}</p>
-                                                <div className="flex items-center gap-3 text-xs mt-1">
-                                                    <span>👁️ {formatNumber(item.views || 0)}</span>
-                                                    <span>❤️ {formatNumber(item.likes || 0)}</span>
+                                {content.map((item, index) => {
+                                    // Create clickable link for Instagram posts
+                                    const itemContent = (
+                                        <>
+                                            {item.thumbnail ? (
+                                                <Image
+                                                    src={item.thumbnail}
+                                                    alt={item.title || 'Content'}
+                                                    fill
+                                                    className="object-cover group-hover:scale-105 transition-transform duration-300"
+                                                />
+                                            ) : (
+                                                <div className="w-full h-full flex items-center justify-center">
+                                                    <span className="text-4xl">📷</span>
+                                                </div>
+                                            )}
+                                            <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
+                                                <div className="absolute bottom-0 left-0 right-0 p-3 text-white">
+                                                    <p className="text-sm font-medium truncate">{item.title || 'Untitled'}</p>
+                                                    <div className="flex items-center gap-3 text-xs mt-1">
+                                                        <span>👁️ {formatNumber(item.views || 0)}</span>
+                                                        <span>❤️ {formatNumber(item.likes || 0)}</span>
+                                                    </div>
                                                 </div>
                                             </div>
+                                            {item.type === 'video' && (
+                                                <div className="absolute top-2 right-2 bg-black/60 text-white text-xs px-2 py-1 rounded">
+                                                    🎬 Video
+                                                </div>
+                                            )}
+                                        </>
+                                    );
+
+                                    // Only Instagram has detail pages for now
+                                    if (platform === 'instagram' && item.id) {
+                                        return (
+                                            <Link
+                                                key={item.id || index}
+                                                href={`/dashboard/platforms/instagram/post/${item.id}`}
+                                                className="group relative aspect-square rounded-xl overflow-hidden bg-gray-100 border border-gray-200 cursor-pointer hover:ring-2 hover:ring-pink-400 transition-all"
+                                            >
+                                                {itemContent}
+                                            </Link>
+                                        );
+                                    }
+
+                                    return (
+                                        <div key={item.id || index} className="group relative aspect-square rounded-xl overflow-hidden bg-gray-100 border border-gray-200">
+                                            {itemContent}
                                         </div>
-                                        {item.type === 'video' && (
-                                            <div className="absolute top-2 right-2 bg-black/60 text-white text-xs px-2 py-1 rounded">
-                                                🎬 Video
-                                            </div>
-                                        )}
-                                    </div>
-                                ))}
+                                    );
+                                })}
                             </div>
                         </div>
                     )}

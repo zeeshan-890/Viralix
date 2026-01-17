@@ -146,6 +146,8 @@ export const instagramAPI = {
     feed: (igUserId, limit) => api.get(`/instagram/accounts/${igUserId}/feed`, { params: { limit } }),
     insights: (igUserId) => api.get(`/instagram/accounts/${igUserId}/insights`),
     publishByUrl: (igUserId, { mediaType, url, caption }) => api.post(`/instagram/accounts/${igUserId}/publish-by-url`, { mediaType, url, caption }),
+    // Get detailed insights for a specific media post
+    getMediaInsights: (mediaId) => api.get(`/instagram-insights/media/${mediaId}/insights`),
 };
 export const uploadAPI = {
     // Get user's uploaded media
