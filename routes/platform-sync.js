@@ -137,18 +137,33 @@ async function syncInstagram(userId, account) {
         for (const item of media) {
             // For video content, try to get insights for views
             let viewCount = 0;
-            if (item.media_type === 'VIDEO' || item.media_type === 'REELS') {
+            // Instagram returns 'VIDEO' for videos and 'REEL' for reels (not 'REELS')
+            if (item.media_type === 'VIDEO' || item.media_type === 'REEL') {
                 try {
+                    // Try 'views' metric first (newer API), fallback to 'plays'
                     const insightsRes = await axios.get(`${INSTAGRAM_GRAPH_URL}/${item.id}/insights`, {
                         params: {
-                            metric: 'plays',
+                            metric: 'views',
                             access_token: account.accessToken
                         }
                     });
-                    const playsData = insightsRes.data?.data?.find(m => m.name === 'plays');
-                    viewCount = playsData?.values?.[0]?.value || 0;
+                    const viewsData = insightsRes.data?.data?.find(m => m.name === 'views');
+                    viewCount = viewsData?.values?.[0]?.value || 0;
                 } catch (e) {
-                    // Insights may not be available for all content
+                    // Fallback to 'plays' metric
+                    try {
+                        const playsRes = await axios.get(`${INSTAGRAM_GRAPH_URL}/${item.id}/insights`, {
+                            params: {
+                                metric: 'plays',
+                                access_token: account.accessToken
+                            }
+                        });
+                        const playsData = playsRes.data?.data?.find(m => m.name === 'plays');
+                        viewCount = playsData?.values?.[0]?.value || 0;
+                    } catch (e2) {
+                        // Insights may not be available
+                        console.log(`[Instagram Sync] Could not fetch views for ${item.id}: ${e2.response?.data?.error?.message || e2.message}`);
+                    }
                 }
             }
 
