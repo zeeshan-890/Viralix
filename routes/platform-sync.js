@@ -1,4 +1,5 @@
 const express = require('express');
+const mongoose = require('mongoose');
 const auth = require('../middleware/auth');
 const AccountService = require('../services/account.service');
 const PlatformContent = require('../models/PlatformContent');
@@ -96,7 +97,7 @@ router.get('/content/:platform', auth, async (req, res) => {
 
         // Calculate totals
         const totals = await PlatformContent.aggregate([
-            { $match: { userId: require('mongoose').Types.ObjectId(req.user.id), platform } },
+            { $match: { userId: new mongoose.Types.ObjectId(req.user.id), platform } },
             {
                 $group: {
                     _id: null,
