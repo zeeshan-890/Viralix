@@ -142,6 +142,7 @@ app.use('/api/upload', require('./routes/upload'));
 try {
     app.use('/api/instagram', require('./routes/instagram'));
     app.use('/api/instagram-oauth', require('./routes/instagram-oauth'));
+    app.use('/api/instagram-insights', require('./routes/instagram-insights'));
 } catch (e) {
     console.warn('Instagram routes not mounted yet:', e.message);
 }
