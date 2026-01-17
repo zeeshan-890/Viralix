@@ -3,6 +3,8 @@ const axios = require('axios');
 const auth = require('../middleware/auth');
 const AutoReplyRule = require('../models/AutoReplyRule');
 const AccountService = require('../services/account.service');
+const SocialAccount = require('../models/SocialAccount');
+const { decrypt } = require('../utils/encryption');
 
 const router = express.Router();
 const INSTAGRAM_GRAPH_URL = 'https://graph.instagram.com';
@@ -286,10 +288,13 @@ router.get('/webhook', (req, res) => {
 
 // Webhook endpoint for Instagram comments (to be called by Facebook webhook)
 router.post('/webhook', async (req, res) => {
+    console.log('[Webhook] Received POST payload:', JSON.stringify(req.body, null, 2));
+
     const { object, entry } = req.body;
 
     // Verify it's an Instagram webhook
     if (object !== 'instagram') {
+        console.log('[Webhook] Invalid object type:', object);
         return res.sendStatus(404);
     }
 
@@ -304,7 +309,42 @@ router.post('/webhook', async (req, res) => {
                 // Get access token for this account
                 try {
                     // Find the account that OWNS this business ID
-                    const account = await AccountService.getAccountByPlatformId('instagram', accountId);
+                    let account = await AccountService.getAccountByPlatformId('instagram', accountId);
+
+                    // Fallback: Search all active IG accounts if exact match fails
+                    if (!account) {
+                        const activeAccounts = await SocialAccount.find({ platform: 'instagram', isActive: true }).select('+accessToken +metadata');
+                        for (const candidate of activeAccounts) {
+                            // Quick check: if we already saved the business ID in metadata
+                            if (candidate.metadata?.businessAccountId === accountId) {
+                                account = candidate;
+                                if (account.accessToken) account.accessToken = decrypt(account.accessToken);
+                                break;
+                            }
+
+                            try {
+                                const token = decrypt(candidate.accessToken);
+                                // Try to fetch the Webhook ID using this token.
+                                const verifyRes = await axios.get(`${INSTAGRAM_GRAPH_URL}/${accountId}`, {
+                                    params: { fields: 'id', access_token: token }
+                                });
+
+                                if (verifyRes.data.id === accountId) {
+                                    console.log(`[Webhook] Matched account ${candidate.accountName} via API verification!`);
+                                    account = candidate;
+                                    account.accessToken = token;
+
+                                    // Save this Business ID to metadata for future speed
+                                    candidate.metadata = candidate.metadata || {};
+                                    candidate.metadata.businessAccountId = accountId;
+                                    await candidate.save();
+                                    break;
+                                }
+                            } catch (e) {
+                                // Token invalid or unauthorized for this ID
+                            }
+                        }
+                    }
 
                     if (account) {
                         await processComment({
