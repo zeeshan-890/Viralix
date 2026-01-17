@@ -44,7 +44,7 @@ router.get('/post/:postId/insights', auth, async (req, res) => {
         try {
             const insightsRes = await axios.get(`${FACEBOOK_GRAPH_URL}/${postId}/insights`, {
                 params: {
-                    metric: 'post_impressions,post_impressions_unique,post_engaged_users,post_clicks,post_reactions_by_type_total',
+                    metric: 'post_impressions,post_impressions_unique,post_engaged_users',
                     access_token: page.accessToken
                 }
             });
