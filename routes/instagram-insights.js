@@ -31,6 +31,8 @@ router.get('/media/:mediaId/insights', auth, async (req, res) => {
 
         // Fetch insights based on media type
         let insights = {};
+        console.log(`[IG Insights] Media type: ${media.media_type}`);
+
         try {
             // For Reels/Videos - try views metric first (newer API), then plays
             if (media.media_type === 'VIDEO' || media.media_type === 'REELS') {
@@ -42,12 +44,13 @@ router.get('/media/:mediaId/insights', auth, async (req, res) => {
                             access_token: igAccount.accessToken
                         }
                     });
+                    console.log('[IG Insights] Views response:', JSON.stringify(viewsRes.data));
                     const viewsData = viewsRes.data?.data?.find(m => m.name === 'views');
                     if (viewsData) {
                         insights.views = viewsData.values?.[0]?.value || 0;
                     }
                 } catch (e) {
-                    // views metric may not be available, try plays
+                    console.log('[IG Insights] Views metric not available:', e.response?.data?.error?.message || e.message);
                 }
 
                 // Fallback to plays if views not available
@@ -59,9 +62,12 @@ router.get('/media/:mediaId/insights', auth, async (req, res) => {
                                 access_token: igAccount.accessToken
                             }
                         });
+                        console.log('[IG Insights] Plays response:', JSON.stringify(playsRes.data));
                         const playsData = playsRes.data?.data?.find(m => m.name === 'plays');
                         insights.plays = playsData?.values?.[0]?.value || 0;
-                    } catch (e) { }
+                    } catch (e) {
+                        console.log('[IG Insights] Plays metric not available:', e.response?.data?.error?.message || e.message);
+                    }
                 }
 
                 // Get other reel metrics
@@ -72,10 +78,13 @@ router.get('/media/:mediaId/insights', auth, async (req, res) => {
                             access_token: igAccount.accessToken
                         }
                     });
+                    console.log('[IG Insights] Reel metrics:', JSON.stringify(reelRes.data));
                     (reelRes.data?.data || []).forEach(metric => {
                         insights[metric.name] = metric.values?.[0]?.value || 0;
                     });
-                } catch (e) { }
+                } catch (e) {
+                    console.log('[IG Insights] Reel metrics error:', e.response?.data?.error?.message || e.message);
+                }
             } else {
                 // For images/carousels
                 try {
@@ -85,14 +94,19 @@ router.get('/media/:mediaId/insights', auth, async (req, res) => {
                             access_token: igAccount.accessToken
                         }
                     });
+                    console.log('[IG Insights] Image metrics:', JSON.stringify(imgRes.data));
                     (imgRes.data?.data || []).forEach(metric => {
                         insights[metric.name] = metric.values?.[0]?.value || 0;
                     });
-                } catch (e) { }
+                } catch (e) {
+                    console.log('[IG Insights] Image metrics error:', e.response?.data?.error?.message || e.message);
+                }
             }
         } catch (e) {
             console.warn('[IG Insights] Error fetching insights:', e.response?.data?.error?.message || e.message);
         }
+
+        console.log('[IG Insights] Final insights object:', JSON.stringify(insights));
 
         // Fetch comments
         let comments = [];
