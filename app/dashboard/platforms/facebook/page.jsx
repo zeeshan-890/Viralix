@@ -1,7 +1,7 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { useAccounts } from '@/hooks/useAccounts';
-import { analyticsAPI, facebookAPI } from '@/lib/api';
+import { platformSyncAPI, facebookAPI } from '@/lib/api';
 import PlatformPageLayout from '../components/PlatformPageLayout';
 import Link from 'next/link';
 
@@ -28,57 +28,37 @@ export default function FacebookPage() {
         }
 
         try {
-            // Load platform analytics
-            const analyticsRes = await analyticsAPI.getPlatformMetrics('facebook');
-            const analyticsData = analyticsRes.data || {};
-
-            // Calculate metrics from posts
-            let totalViews = 0, totalLikes = 0, totalComments = 0;
-            (analyticsData.posts || []).forEach(post => {
-                post.platforms?.forEach(p => {
-                    if (p.name === 'facebook' && p.engagement) {
-                        totalViews += p.engagement.views || 0;
-                        totalLikes += p.engagement.likes || 0;
-                        totalComments += p.engagement.comments || 0;
-                    }
-                });
-            });
+            // Load content from database
+            const response = await platformSyncAPI.getContent('facebook', { limit: 50 });
+            const data = response.data || {};
 
             setMetrics({
-                totalViews,
-                totalLikes,
-                totalComments,
-                totalPosts: analyticsData.metrics?.totalPosts || 0
+                totalViews: data.metrics?.totalViews || 0,
+                totalLikes: data.metrics?.totalLikes || 0,
+                totalComments: data.metrics?.totalComments || 0,
+                totalShares: data.metrics?.totalShares || 0,
+                totalPosts: data.metrics?.count || 0
             });
 
-            // Load Facebook status to get pages
+            // Transform content for display
+            const contentItems = (data.content || []).map(item => ({
+                id: item.platformContentId,
+                title: item.title || 'Facebook Post',
+                thumbnail: item.thumbnail,
+                type: item.mediaType || 'image',
+                views: item.views || 0,
+                likes: item.likes || 0,
+                comments: item.comments || 0,
+                shares: item.shares || 0,
+                permalink: item.permalink
+            }));
+
+            setContent(contentItems);
+
+            // Also load Facebook pages info
             try {
                 const statusRes = await facebookAPI.status();
-                const fbPages = statusRes.data?.pages || [];
-                setPages(fbPages);
-
-                // Load feed for each page
-                const contentItems = [];
-                for (const page of fbPages.slice(0, 3)) {
-                    try {
-                        const feedRes = await facebookAPI.getPageFeed(page.id, 8);
-                        const feedData = feedRes.data?.data || [];
-                        feedData.forEach(item => {
-                            contentItems.push({
-                                id: item.id,
-                                title: item.message?.substring(0, 50) || 'Facebook Post',
-                                thumbnail: item.full_picture,
-                                type: item.type === 'video' ? 'video' : 'image',
-                                views: 0,
-                                likes: 0,
-                                pageName: page.name
-                            });
-                        });
-                    } catch (e) {
-                        console.warn('Failed to load Facebook feed for page:', page.name, e.message);
-                    }
-                }
-                setContent(contentItems);
+                setPages(statusRes.data?.pages || []);
             } catch (e) {
                 console.warn('Failed to load Facebook pages:', e.message);
             }
@@ -92,8 +72,12 @@ export default function FacebookPage() {
     const handleRefresh = async () => {
         setRefreshing(true);
         try {
-            await analyticsAPI.refresh();
+            // Sync from platform to database
+            await platformSyncAPI.sync('facebook');
+            // Reload data from database
             await loadData();
+        } catch (e) {
+            console.error('Sync failed:', e);
         } finally {
             setRefreshing(false);
         }
