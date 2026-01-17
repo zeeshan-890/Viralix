@@ -254,6 +254,5 @@ export default function FacebookPostDetailPage() {
                 </div>
             </div>
         </div>
-        </div >
     );
 }
