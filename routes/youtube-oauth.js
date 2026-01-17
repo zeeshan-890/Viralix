@@ -4,6 +4,7 @@ const User = require('../models/User');
 const auth = require('../middleware/auth');
 const youtubeService = require('../services/youtube');
 const AccountService = require('../services/account.service');
+const PlatformContent = require('../models/PlatformContent');
 
 const router = express.Router();
 
@@ -216,6 +217,57 @@ router.post('/publish/:accountId', auth, async (req, res) => {
         res.json(result);
     } catch (error) {
         res.status(500).json({ message: error.message });
+    }
+});
+
+
+
+// GET /video/insights/:videoId
+router.get('/video/insights/:videoId', auth, async (req, res) => {
+    try {
+        const { videoId } = req.params;
+
+        // Find the content to identify which account needed
+        const content = await PlatformContent.findOne({
+            userId: req.user.id,
+            platform: 'youtube',
+            platformContentId: videoId
+        });
+
+        if (!content) {
+            return res.status(404).json({ message: 'Video not found in your library. Please sync first.' });
+        }
+
+        const account = await AccountService.getAccount(req.user.id, 'youtube', content.accountId);
+        if (!account) return res.status(404).json({ message: 'Linked YouTube account not found' });
+
+        // Fetch fresh details from YouTube
+        const video = await youtubeService.getVideoDetails(account.accessToken, videoId);
+
+        if (!video) {
+            return res.status(404).json({ message: 'Video not found on YouTube' });
+        }
+
+        res.json({
+            id: video.id,
+            title: video.snippet?.title || '',
+            description: video.snippet?.description || '',
+            thumbnail: video.snippet?.thumbnails?.high?.url || video.snippet?.thumbnails?.medium?.url,
+            mediaType: 'video',
+            createdTime: video.snippet?.publishedAt,
+            permalink: `https://youtube.com/watch?v=${video.id}`,
+            metrics: {
+                views: parseInt(video.statistics?.viewCount || 0),
+                likes: parseInt(video.statistics?.likeCount || 0),
+                comments: parseInt(video.statistics?.commentCount || 0),
+                shares: 0, // YouTube API doesn't provide share count publicly
+                liveData: true
+            }
+        });
+
+    } catch (error) {
+        console.error('[YouTube Insights] Error:', error.message);
+        res.status(500).json({ message: 'Failed to fetch insights', error: error.message });
     }
 });
 
