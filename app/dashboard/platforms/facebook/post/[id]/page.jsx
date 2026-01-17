@@ -243,13 +243,7 @@ export default function FacebookPostDetailPage() {
                             <span className="text-gray-600">Published</span>
                             <span className="font-medium" style={{ color: '#354F52' }}>{formatDate(post?.createdTime)}</span>
                         </div>
-                        <div className="flex justify-between py-2">
-                            <span className="text-gray-600">Status</span>
-                            <span className="font-medium text-green-600 flex items-center gap-1">
-                                <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
-                                Live Data
-                            </span>
-                        </div>
+
                     </div>
                 </div>
             </div>
