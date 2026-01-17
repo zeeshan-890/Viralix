@@ -79,13 +79,13 @@ export default function PlatformsPage() {
                                 className="group bg-white rounded-2xl border border-gray-200 p-6 shadow-sm hover:shadow-lg transition-all duration-300 hover:border-gray-300"
                             >
                                 <div className="flex items-start gap-5">
-                                    <div className={`w-16 h-16 ${platform.bgColor} rounded-2xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300`}>
+                                    <div className={`w-16 h-16 ${platform.lightBg} rounded-2xl flex items-center justify-center shadow-sm group-hover:scale-110 transition-transform duration-300 border border-gray-100`}>
                                         <Image
                                             src={platform.icon}
                                             alt={platform.name}
-                                            width={32}
-                                            height={32}
-                                            className="brightness-0 invert"
+                                            width={40}
+                                            height={40}
+                                            className="object-contain"
                                         />
                                     </div>
                                     <div className="flex-1">
@@ -108,41 +108,18 @@ export default function PlatformsPage() {
 
                                         {isConnected ? (
                                             <div className="flex items-center gap-4">
-                                                <div className="flex -space-x-2">
-                                                    {platformAccounts.slice(0, 3).map((acc, idx) => (
-                                                        acc.avatarUrl ? (
-                                                            <Image
-                                                                key={acc.platformAccountId || idx}
-                                                                src={acc.avatarUrl}
-                                                                alt={acc.accountName}
-                                                                width={32}
-                                                                height={32}
-                                                                className="rounded-full border-2 border-white"
-                                                            />
-                                                        ) : (
-                                                            <div
-                                                                key={acc.platformAccountId || idx}
-                                                                className={`w-8 h-8 ${platform.lightBg} rounded-full border-2 border-white flex items-center justify-center`}
-                                                            >
-                                                                <Image src={platform.icon} alt="" width={16} height={16} />
-                                                            </div>
-                                                        )
-                                                    ))}
-                                                    {platformAccounts.length > 3 && (
-                                                        <div className="w-8 h-8 bg-gray-200 rounded-full border-2 border-white flex items-center justify-center text-xs font-medium text-gray-600">
-                                                            +{platformAccounts.length - 3}
-                                                        </div>
-                                                    )}
-                                                </div>
-                                                <div className="text-sm">
-                                                    <span className="font-semibold" style={{ color: '#354F52' }}>
-                                                        {formatNumber(totalFollowers)}
-                                                    </span>
-                                                    <span className="text-gray-500 ml-1">followers</span>
+                                                <div className="flex items-center gap-2">
+                                                    <Image src={platform.icon} alt="" width={20} height={20} className="object-contain" />
+                                                    <div className="text-sm">
+                                                        <span className="font-semibold" style={{ color: '#354F52' }}>
+                                                            {formatNumber(totalFollowers)}
+                                                        </span>
+                                                        <span className="text-gray-500 ml-1">followers</span>
+                                                    </div>
                                                 </div>
                                             </div>
                                         ) : (
-                                            <div className={`inline-flex items-center gap-2 text-sm font-medium ${platform.bgColor === 'bg-black' ? 'text-gray-700' : 'text-gray-600'}`}>
+                                            <div className="inline-flex items-center gap-2 text-sm font-medium text-gray-600">
                                                 <span className="group-hover:underline">Connect account →</span>
                                             </div>
                                         )}
