@@ -87,8 +87,8 @@ export default function PlatformPageLayout({
                 </Link>
                 <div className="flex items-center justify-between">
                     <div className="flex items-center gap-4">
-                        <div className={`w-16 h-16 ${config.bgColor} rounded-2xl flex items-center justify-center shadow-lg`}>
-                            <Image src={config.icon} alt={config.name} width={36} height={36} className="brightness-0 invert" />
+                        <div className={`w-16 h-16 ${config.lightBg} rounded-2xl flex items-center justify-center shadow-sm border border-gray-100`}>
+                            <Image src={config.icon} alt={config.name} width={40} height={40} className="object-contain" />
                         </div>
                         <div>
                             <h1 className="text-3xl font-bold" style={{ color: '#354F52' }}>{config.name}</h1>
@@ -140,12 +140,12 @@ export default function PlatformPageLayout({
                                         {account.avatarUrl ? (
                                             <Image src={account.avatarUrl} alt={account.accountName} width={56} height={56} className="rounded-full border-2 border-gray-100" />
                                         ) : (
-                                            <div className={`w-14 h-14 ${config.lightBg} rounded-full flex items-center justify-center`}>
-                                                <Image src={config.icon} alt={config.name} width={28} height={28} />
+                                            <div className={`w-14 h-14 ${config.lightBg} rounded-full flex items-center justify-center border border-gray-100`}>
+                                                <Image src={config.icon} alt={config.name} width={32} height={32} className="object-contain" />
                                             </div>
                                         )}
-                                        <div className={`absolute -bottom-1 -right-1 w-5 h-5 ${config.bgColor} rounded-full flex items-center justify-center`}>
-                                            <Image src={config.icon} alt="" width={12} height={12} className="brightness-0 invert" />
+                                        <div className={`absolute -bottom-1 -right-1 w-5 h-5 ${config.lightBg} rounded-full flex items-center justify-center border border-gray-200`}>
+                                            <Image src={config.icon} alt="" width={14} height={14} className="object-contain" />
                                         </div>
                                     </div>
                                     <div className="flex-1 min-w-0">
@@ -256,8 +256,8 @@ export default function PlatformPageLayout({
                     {/* Empty Content State */}
                     {content.length === 0 && (
                         <div className="bg-white rounded-xl border border-gray-200 p-12 text-center shadow-sm">
-                            <div className={`w-16 h-16 ${config.lightBg} rounded-2xl flex items-center justify-center mx-auto mb-4`}>
-                                <AlertCircle className={`w-8 h-8 ${config.textColor}`} />
+                            <div className={`w-16 h-16 ${config.lightBg} rounded-2xl flex items-center justify-center mx-auto mb-4 border border-gray-100`}>
+                                <Image src={config.icon} alt={config.name} width={32} height={32} className="object-contain" />
                             </div>
                             <h3 className="text-lg font-semibold mb-2" style={{ color: '#354F52' }}>No content yet</h3>
                             <p className="text-gray-600 mb-6">
