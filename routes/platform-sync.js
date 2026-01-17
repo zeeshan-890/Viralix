@@ -257,7 +257,42 @@ async function syncTikTok(userId, account) {
 async function syncYouTube(userId, account) {
     const content = [];
     try {
-        const videoData = await youtubeService.getMyVideos(account.accessToken, 50);
+        let videoData;
+        try {
+            videoData = await youtubeService.getMyVideos(account.accessToken, 50);
+        } catch (error) {
+            // Check if error is 401 Unauthorized and we have a refresh token
+            if (error.response?.status === 401 && account.refreshToken) {
+                console.log('[Sync YouTube] Token expired, refreshing...');
+                try {
+                    const tokens = await youtubeService.refreshAccessToken(
+                        account.refreshToken,
+                        process.env.GOOGLE_CLIENT_ID,
+                        process.env.GOOGLE_CLIENT_SECRET
+                    );
+
+                    // Update account with new tokens
+                    await AccountService.connectAccount(userId, {
+                        platform: 'youtube',
+                        accountId: account.platformAccountId,
+                        name: account.accountName,
+                        accessToken: tokens.access_token,
+                        refreshToken: tokens.refresh_token || account.refreshToken,
+                        expires: new Date(Date.now() + (tokens.expires_in * 1000)),
+                        metadata: account.metadata || {}
+                    });
+
+                    // Retry with new token
+                    videoData = await youtubeService.getMyVideos(tokens.access_token, 50);
+                } catch (refreshError) {
+                    console.error('[Sync YouTube] Token refresh failed:', refreshError.message);
+                    throw error; // Throw original error if refresh fails
+                }
+            } else {
+                throw error;
+            }
+        }
+
         const videos = videoData.videos || [];
 
         for (const video of videos) {
