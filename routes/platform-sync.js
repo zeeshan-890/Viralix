@@ -296,18 +296,21 @@ async function syncYouTube(userId, account) {
         const videos = videoData.videos || [];
 
         for (const video of videos) {
+            const videoId = video.snippet?.resourceId?.videoId;
+            if (!videoId) continue;
+
             const doc = await PlatformContent.findOneAndUpdate(
-                { userId, platform: 'youtube', platformContentId: video.id },
+                { userId, platform: 'youtube', platformContentId: videoId },
                 {
                     userId,
                     platform: 'youtube',
-                    platformContentId: video.id,
+                    platformContentId: videoId,
                     accountId: account.platformAccountId,
                     title: video.snippet?.title || '',
                     description: video.snippet?.description || '',
                     thumbnail: video.snippet?.thumbnails?.medium?.url || video.snippet?.thumbnails?.default?.url,
                     mediaType: 'video',
-                    permalink: `https://youtube.com/watch?v=${video.id}`,
+                    permalink: `https://youtube.com/watch?v=${videoId}`,
                     views: parseInt(video.statistics?.viewCount || 0),
                     likes: parseInt(video.statistics?.likeCount || 0),
                     comments: parseInt(video.statistics?.commentCount || 0),
