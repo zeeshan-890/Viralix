@@ -198,7 +198,7 @@ async function initializeVideoUploadFromUrl(accessToken, videoUrl, options = {})
     const payload = {
         post_info: {
             title: options.caption || '',
-            privacy_level: options.privacy_level || 'SELF_ONLY',
+            privacy_level: options.privacy_level || 'PUBLIC_TO_EVERYONE',
             disable_comment: options.disable_comment || false,
             disable_duet: options.disable_duet || false,
             disable_stitch: options.disable_stitch || false
