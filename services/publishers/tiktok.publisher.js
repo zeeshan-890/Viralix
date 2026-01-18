@@ -1,5 +1,5 @@
 const BasePublisher = require('./base.publisher');
-const { uploadVideoFromUrl, refreshAccessToken } = require('../tiktok');
+const { initializeVideoUploadFromUrl, refreshAccessToken } = require('../tiktok');
 const AccountService = require('../account.service');
 
 // TikTok App Credentials from Env
@@ -72,17 +72,30 @@ class TikTokPublisher extends BasePublisher {
     async publish(account, postData) {
         // Resolve auth (will auto-refresh if needed)
         const auth = await this.resolveAuth(account);
-        const { media } = postData;
+        const { media, title } = postData;
 
         const video = media.find(m => m.type === 'video');
         if (!video) {
             throw new Error('TikTok requires a video');
         }
 
-        const result = await uploadVideoFromUrl(auth.accessToken, video.url);
+        // Use PULL_FROM_URL for direct publishing (instead of FILE_UPLOAD to inbox)
+        // require initializeVideoUploadFromUrl to be imported at top if not present,
+        // but wait, I need to check imports.
+        // It currently imports { uploadVideoFromUrl, refreshAccessToken } from '../tiktok'
+        // I need to change the import too.
+
+        // I'll return the call here but I must also update the import in a separate edit or use multi-replace.
+        // Since I can only do one contiguous block here, I will just do the method body and assume I'll fix import next, 
+        // OR I should use multi_replace. Let's use multi_replace to be safe.
+
+        const result = await initializeVideoUploadFromUrl(auth.accessToken, video.url, {
+            caption: title || '',
+            privacy_level: 'PUBLIC_TO_EVERYONE'
+        });
 
         return this.formatResponse(result.publish_id, 'processing', {
-            message: 'Video sent to TikTok inbox'
+            message: 'Video publish initiated'
         });
     }
 }
