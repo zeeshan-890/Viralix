@@ -75,7 +75,55 @@ export default function PrivacyPolicyPage() {
             <h2>12. Changes</h2>
             <p>We may update this Privacy Policy. Material changes will be indicated via updated date or in-app notice. Continued use after changes = acceptance.</p>
 
-            <h2>13. Contact</h2>
+            <h2>13. Google API Services User Data Policy</h2>
+            <p>Our application, <strong>Autoreach AI</strong> (Viralix), accesses certain user data from your Google account via the YouTube Data API to provide our social media management services. We are committed to ensuring the privacy and security of your data.</p>
+
+            <h3>13.1 Data Accessed</h3>
+            <p>We request access to the following Google user data:</p>
+            <ul>
+                <li><strong>YouTube Channel Information:</strong> We access your channel's basic profile information (channel title, description, custom URL, and thumbnail) to display your connected account identity within our dashboard.</li>
+                <li><strong>YouTube Video Management:</strong> We access your video library to display your uploaded videos and their performance metrics (views, likes, comments).</li>
+                <li><strong>YouTube Upload Functionality:</strong> We request permission to upload videos directly to your YouTube channel as initiated by you through our platform.</li>
+            </ul>
+
+            <h3>13.2 Data Usage</h3>
+            <p>The Google user data we access is used solely for the following purposes:</p>
+            <ul>
+                <li><strong>Account Connection:</strong> To link your YouTube channel to your Autoreach AI dashboard, allowing you to manage your presence from a single interface.</li>
+                <li><strong>Content Publishing:</strong> To enable the "Direct Publishing" feature, allowing you to upload, schedule, and publish video content to your YouTube channel directly from our application.</li>
+                <li><strong>Analytics Display:</strong> To aggregate and display performance insights (such as view counts and engagement metrics) for your videos within our dashboard, helping you analyze your content strategy.</li>
+            </ul>
+            <p><strong>We do not use your Google user data for any other purpose, including advertising or surveillance.</strong></p>
+
+            <h3>13.3 Data Sharing</h3>
+            <p><strong>We do not share your Google user data with any third parties</strong>, except in the following limited circumstances:</p>
+            <ul>
+                <li><strong>Service Providers:</strong> We may share data with cloud infrastructure providers (e.g., database hosting) solely for the purpose of storing and retrieving your data to provide the application's functionality. These providers are bound by strict confidentiality and security obligations.</li>
+                <li><strong>Legal Requirements:</strong> If required by law, regulation, or legal process.</li>
+            </ul>
+            <p>We do <em>not</em> sell, rent, or trade your Google user data to any third parties.</p>
+
+            <h3>13.4 Data Storage and Protection</h3>
+            <p>Your data is stored securely in our encrypted database.</p>
+            <ul>
+                <li><strong>Encryption:</strong> All sensitive tokens (Access Tokens and Refresh Tokens) are encrypted at rest using industry-standard encryption protocols.</li>
+                <li><strong>Access Control:</strong> Access to our database is strictly limited to authorized engineering personnel and is protected by multi-factor authentication and strict firewall rules.</li>
+                <li><strong>Transmission:</strong> All data transmission between your browser, our servers, and Google's APIs occurs over secure HTTPS connections.</li>
+            </ul>
+
+            <h3>13.5 Data Retention and Deletion</h3>
+            <ul>
+                <li><strong>Retention:</strong> We retain your Google user data (access tokens and channel metadata) only for as long as you maintain a connected YouTube account on our platform.</li>
+                <li><strong>Deletion:</strong> You can revoke our access to your data at any time by:
+                    <ol>
+                        <li>Disconnecting your YouTube account from the "Connected Accounts" section of your Autoreach AI dashboard.</li>
+                        <li>Visiting <a href="https://myaccount.google.com/permissions" target="_blank" rel="noopener noreferrer">Google Security Settings</a> and revoking access for our app.</li>
+                    </ol>
+                </li>
+            </ul>
+            <p><strong>Upon disconnection, all your stored Google access tokens and related personal metadata are permanently deleted from our database immediately.</strong></p>
+
+            <h2>14. Contact</h2>
             <p>Questions or requests: <a href="mailto:privacy@autoreach.ai">privacy@autoreach.ai</a> (replace with your actual contact if different).</p>
         </main>
     );
