@@ -217,7 +217,47 @@ async function syncInstagram(userId, account) {
 async function syncTikTok(userId, account) {
     const content = [];
     try {
-        const videoData = await tiktokService.getVideoList(account.accessToken, 50, 0);
+        let videoData;
+        try {
+            videoData = await tiktokService.getVideoList(account.accessToken, 50, 0);
+        } catch (error) {
+            // Check if error is 401 and we have a refresh token
+            // TikTok errors: error.response.status === 401 or data.error.code === 40101/etc
+            const status = error.response?.status;
+            // TikTok standard "Access Token Expired" often returns status 401 or specific error code in body
+            const isAuthError = status === 401 || (error.response?.data?.error?.code && [40101, 40102].includes(error.response.data.error.code));
+
+            if (isAuthError && account.refreshToken) {
+                console.log('[Sync TikTok] Token expired, refreshing...');
+                try {
+                    const tokenData = await tiktokService.refreshAccessToken(
+                        account.refreshToken,
+                        process.env.TIKTOK_CLIENT_KEY,
+                        process.env.TIKTOK_CLIENT_SECRET
+                    );
+
+                    // Update account
+                    await AccountService.connectAccount(userId, {
+                        platform: 'tiktok',
+                        accountId: account.platformAccountId,
+                        name: account.accountName,
+                        accessToken: tokenData.access_token,
+                        refreshToken: tokenData.refresh_token,
+                        expires: new Date(Date.now() + (tokenData.expires_in * 1000)),
+                        metadata: account.metadata
+                    });
+
+                    // Retry with new token
+                    videoData = await tiktokService.getVideoList(tokenData.access_token, 50, 0);
+                } catch (refreshError) {
+                    console.error('[Sync TikTok] Token refresh failed:', refreshError.message);
+                    throw error; // Throw original error if refresh fails
+                }
+            } else {
+                throw error;
+            }
+        }
+
         const videos = videoData.videos || [];
 
         for (const video of videos) {
