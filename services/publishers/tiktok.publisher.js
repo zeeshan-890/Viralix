@@ -79,15 +79,13 @@ class TikTokPublisher extends BasePublisher {
             throw new Error('TikTok requires a video');
         }
 
-        // Use PROXY UPLOAD for direct publishing (bypasses domain whitelist)
-        // This downloads the video to server and uploads to TikTok directly
-        const result = await uploadVideoFromUrl(auth.accessToken, video.url, {
-            caption: title || '',
-            privacy_level: 'PUBLIC_TO_EVERYONE'
-        });
+        // Use PROXY UPLOAD for inbox publishing (for screen recording/drafts)
+        // This downloads the video to server and uploads to TikTok inbox
+        // Passing null/no options triggers the inbox mode in uploadVideoFromUrl
+        const result = await uploadVideoFromUrl(auth.accessToken, video.url);
 
         return this.formatResponse(result.publish_id, 'processing', {
-            message: 'Video upload initiated (Proxy)'
+            message: 'Video upload initiated to Inbox (Proxy)'
         });
     }
 }
