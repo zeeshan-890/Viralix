@@ -474,15 +474,75 @@ async function uploadVideoChunk(uploadUrl, chunkData, chunkIndex, startByte, end
 }
 
 /**
+ * Initialize FILE_UPLOAD for DIRECT PUBLISHING (no domain verification needed)
+ * This method uploads video directly to TikTok servers and publishes immediately
+ * 
+ * @param {string} accessToken - Valid access token
+ * @param {number} videoSize - Size of video file in bytes
+ * @param {number} chunkSize - Size of each chunk (default 10MB, max 64MB)
+ * @param {Object} options - Publish options (caption, privacy, etc.)
+ * @returns {Promise<Object>} Response with publish_id and upload_url
+ */
+async function initializeDirectFileUpload(accessToken, videoSize, chunkSize = 10 * 1024 * 1024, options = {}) {
+    console.log(`[TikTok] Initializing DIRECT FILE_UPLOAD - size: ${videoSize} bytes`);
+
+    const totalChunkCount = Math.ceil(videoSize / chunkSize);
+
+    const payload = {
+        post_info: {
+            title: options.caption || '',
+            privacy_level: options.privacy_level || 'PUBLIC_TO_EVERYONE',
+            disable_comment: options.disable_comment || false,
+            disable_duet: options.disable_duet || false,
+            disable_stitch: options.disable_stitch || false
+        },
+        source_info: {
+            source: 'FILE_UPLOAD',
+            video_size: videoSize,
+            chunk_size: chunkSize,
+            total_chunk_count: totalChunkCount
+        }
+    };
+
+    try {
+        const { data } = await axios.post(
+            `${TIKTOK_API_BASE}/post/publish/video/init/`,
+            payload,
+            {
+                headers: {
+                    'Authorization': `Bearer ${accessToken}`,
+                    'Content-Type': 'application/json'
+                }
+            }
+        );
+
+        if (data.error?.code && data.error.code !== 'ok') {
+            console.error('[TikTok] DIRECT FILE_UPLOAD init error:', JSON.stringify(data.error, null, 2));
+            throw new Error(data.error.message || 'Failed to initialize direct file upload');
+        }
+
+        console.log('[TikTok] DIRECT FILE_UPLOAD initialized, publish_id:', data.data?.publish_id);
+        return data.data;
+    } catch (error) {
+        if (error.response?.data) {
+            console.error('[TikTok] Init failed response:', JSON.stringify(error.response.data, null, 2));
+        }
+        throw error;
+    }
+}
+
+/**
  * Download video from URL and upload to TikTok using FILE_UPLOAD method
  * This bypasses the domain verification requirement
  * 
  * @param {string} accessToken - Valid access token
  * @param {string} videoUrl - URL of video to download (e.g., Cloudinary)
+ * @param {Object} options - Publish options (caption, privacy, etc.) - If present, uses DIRECT PUBLISH. If null, uses INBOX.
  * @returns {Promise<Object>} Response with publish_id
  */
-async function uploadVideoFromUrl(accessToken, videoUrl) {
-    console.log('[TikTok] Starting FILE_UPLOAD from URL:', videoUrl);
+async function uploadVideoFromUrl(accessToken, videoUrl, options = null) {
+    console.log('[TikTok] Starting PROXY UPLOAD from URL:', videoUrl);
+    console.log('[TikTok] Mode:', options ? 'DIRECT PUBLISH' : 'INBOX DRAFT');
 
     // Step 1: Download video to buffer
     console.log('[TikTok] Downloading video...');
@@ -496,29 +556,28 @@ async function uploadVideoFromUrl(accessToken, videoUrl) {
     const videoSize = videoBuffer.length;
     console.log(`[TikTok] Video downloaded: ${(videoSize / (1024 * 1024)).toFixed(2)} MB`);
 
-    // Step 2: Calculate chunk size based on TikTok requirements:
-    // - Minimum chunk: 5MB
-    // - Maximum chunk: 64MB  
-    // - Videos < 5MB: use video size as chunk size (single chunk)
-    // - Last chunk can be smaller than 5MB
+    // Step 2: Calculate chunk size
     let chunkSize;
     if (videoSize < 5 * 1024 * 1024) {
-        // Video is under 5MB - upload as single chunk
         chunkSize = videoSize;
-        console.log(`[TikTok] Small video, using single chunk of ${videoSize} bytes`);
     } else {
-        // Use 10MB chunks (within 5-64MB range)
         chunkSize = 10 * 1024 * 1024;
     }
 
-    const initResult = await initializeFileUpload(accessToken, videoSize, chunkSize);
+    // Step 3: Initialize Upload (Direct or Inbox)
+    let initResult;
+    if (options) {
+        initResult = await initializeDirectFileUpload(accessToken, videoSize, chunkSize, options);
+    } else {
+        initResult = await initializeFileUpload(accessToken, videoSize, chunkSize);
+    }
 
     const { publish_id, upload_url } = initResult;
     if (!upload_url) {
         throw new Error('No upload URL returned from TikTok');
     }
 
-    // Step 3: Upload in chunks
+    // Step 4: Upload in chunks
     const totalChunks = Math.ceil(videoSize / chunkSize);
     console.log(`[TikTok] Uploading ${totalChunks} chunk(s)...`);
 
@@ -547,6 +606,7 @@ module.exports = {
     // Video Publishing
     initializeVideoUploadFromUrl,
     initializeInboxVideoUpload,
+    initializeDirectFileUpload,
     initializeFileUpload,
     uploadVideoChunk,
     uploadVideoFromUrl,
