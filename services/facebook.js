@@ -19,7 +19,7 @@ function buildAuthUrl(state) {
             'pages_read_user_content',
             'pages_manage_metadata',
             'pages_manage_posts',
-            'pages_manage_engagement',
+            'pages_messaging', // Required for Private Replies
             'business_management',
             // Insights for pages metrics
             'read_insights',
