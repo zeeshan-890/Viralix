@@ -23,6 +23,13 @@ export default function CreateTikTokPost({ isOpen, onClose, accounts = [], onSuc
     // Account Selection
     const [selectedAccountId, setSelectedAccountId] = useState(accounts?.[0]?.platformAccountId || '');
 
+    // Auto-select first account when loaded
+    useEffect(() => {
+        if (!selectedAccountId && accounts?.length > 0) {
+            setSelectedAccountId(accounts[0].platformAccountId);
+        }
+    }, [accounts, selectedAccountId]);
+
     // Video state
     const [videoFile, setVideoFile] = useState(null);
     const [videoPreview, setVideoPreview] = useState('');
