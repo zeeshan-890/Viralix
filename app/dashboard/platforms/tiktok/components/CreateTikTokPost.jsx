@@ -1,8 +1,10 @@
 'use client';
-import { useState, useRef } from 'react';
+import { useState, useRef, useMemo } from 'react';
 import Image from 'next/image';
-import { X, Upload, Trash2, Video, Eye, EyeOff, MessageSquare, Users, Share2 } from 'lucide-react';
-import { tiktokAPI, uploadAPI } from '@/lib/api';
+import { X, Upload, Trash2, Video, Eye, EyeOff, MessageSquare, Users, Share2, Calendar, Clock, CheckCircle2 } from 'lucide-react';
+import { tiktokAPI, uploadAPI, postsAPI } from '@/lib/api';
+import TikTokSettings, { useTikTokSettingsValidation } from '../../upload/components/TikTokSettings';
+import { toast } from 'react-hot-toast';
 
 // TikTok icon component
 const TikTokIcon = () => (
@@ -12,7 +14,7 @@ const TikTokIcon = () => (
 );
 
 export default function CreateTikTokPost({ isOpen, onClose, accounts = [], onSuccess }) {
-    const [step, setStep] = useState(1); // 1: Upload Video, 2: Settings, 3: Review
+    const [step, setStep] = useState(1); // 1: Content, 2: Settings, 3: Schedule
     const [loading, setLoading] = useState(false);
     const [uploading, setUploading] = useState(false);
     const [uploadProgress, setUploadProgress] = useState(0);
@@ -25,15 +27,32 @@ export default function CreateTikTokPost({ isOpen, onClose, accounts = [], onSuc
     const [videoFile, setVideoFile] = useState(null);
     const [videoPreview, setVideoPreview] = useState('');
     const [videoUrl, setVideoUrl] = useState(''); // Cloudinary URL after upload
+    const [videoMeta, setVideoMeta] = useState({ filename: '', size: 0, mimetype: '' });
 
     // Content state
     const [caption, setCaption] = useState('');
-    const [privacyLevel, setPrivacyLevel] = useState('PUBLIC_TO_EVERYONE');
-    const [disableComment, setDisableComment] = useState(false);
-    const [disableDuet, setDisableDuet] = useState(false);
-    const [disableStitch, setDisableStitch] = useState(false);
+
+    // Shared TikTok Settings State
+    const [tiktokSettings, setTiktokSettings] = useState({
+        privacyLevel: '',
+        allowComment: false,
+        allowDuet: false,
+        allowStitch: false,
+        commercialDisclosure: false,
+        brandOrganic: false,
+        brandedContent: false,
+        creatorInfo: null
+    });
+
+    // Schedule State
+    const [scheduleType, setScheduleType] = useState('now'); // now | later
+    const [date, setDate] = useState('');
+    const [time, setTime] = useState('');
 
     const fileInputRef = useRef(null);
+
+    // Validation hook
+    const tiktokValidation = useTikTokSettingsValidation(tiktokSettings);
 
     const handleFileChange = async (e) => {
         const file = e.target.files?.[0];
@@ -57,9 +76,15 @@ export default function CreateTikTokPost({ isOpen, onClose, accounts = [], onSuc
             const res = await uploadAPI.uploadFile(file, (progress) => {
                 setUploadProgress(progress);
             });
-            const uploadedUrl = res.data?.files?.[0]?.url;
-            if (!uploadedUrl) throw new Error('Failed to upload video');
-            setVideoUrl(uploadedUrl);
+            const uploadedFile = res.data?.files?.[0];
+            if (!uploadedFile?.url) throw new Error('Failed to upload video');
+
+            setVideoUrl(uploadedFile.url);
+            setVideoMeta({
+                filename: uploadedFile.filename,
+                size: uploadedFile.size,
+                mimetype: uploadedFile.mimetype
+            });
         } catch (err) {
             console.error('Upload error:', err);
             setError('Failed to upload video: ' + (err.message || 'Unknown error'));
@@ -70,31 +95,81 @@ export default function CreateTikTokPost({ isOpen, onClose, accounts = [], onSuc
         }
     };
 
-    const handlePublish = async () => {
-        if (!selectedAccountId) {
-            setError('Please select an account');
-            return;
+    const computeScheduledIso = () => {
+        if (scheduleType !== 'later') return null;
+        try {
+            return new Date(`${date}T${time}:00`).toISOString();
+        } catch {
+            return null;
         }
-        if (!videoUrl) {
-            setError('Please upload a video first');
-            return;
+    };
+
+    const handlePublish = async () => {
+        if (!selectedAccountId) return setError('Please select an account');
+        if (!videoUrl) return setError('Please upload a video first');
+
+        // Final Validation check
+        if (!tiktokValidation.isValid) {
+            setStep(2); // Go back to settings if invalid
+            return setError('Please correct TikTok settings before publishing');
+        }
+
+        if (scheduleType === 'later' && (!date || !time)) {
+            return setError('Please select date and time for scheduling');
         }
 
         setLoading(true);
         setError('');
 
         try {
-            await tiktokAPI.publish(selectedAccountId, {
-                videoUrl,
-                caption,
-                privacyLevel,
-                disableComment,
-                disableDuet,
-                disableStitch
-            });
+            const isScheduled = scheduleType === 'later';
+            const scheduledDate = computeScheduledIso();
+
+            // 1. Create Post Record via Unified postsAPI
+            const postPayload = {
+                title: caption ? (caption.length > 50 ? caption.substring(0, 50) + '...' : caption) : 'TikTok Video',
+                content: caption || '',
+                platforms: [{ name: 'tiktok', accountId: selectedAccountId }],
+                media: [{
+                    type: 'video',
+                    url: videoUrl,
+                    filename: videoMeta.filename,
+                    size: videoMeta.size,
+                    mimetype: videoMeta.mimetype
+                }],
+                isScheduled,
+                scheduledDate: isScheduled ? scheduledDate : undefined,
+                tiktokSettings: {
+                    privacyLevel: tiktokSettings.privacyLevel,
+                    disableComment: !tiktokSettings.allowComment,
+                    disableDuet: !tiktokSettings.allowDuet,
+                    disableStitch: !tiktokSettings.allowStitch,
+                    brandOrganic: tiktokSettings.brandOrganic,
+                    brandedContent: tiktokSettings.brandedContent
+                }
+            };
+
+            const createRes = await postsAPI.create(postPayload);
+            const postId = createRes.data?._id;
+
+            if (!postId) throw new Error('Failed to create post record');
+
+            // 2. If 'Publish Now', trigger publication immediately
+            if (!isScheduled) {
+                await postsAPI.publishNow(postId);
+                toast.success("Published! Note: It may take a few minutes for content to appear on TikTok.", {
+                    duration: 5000,
+                    icon: '🚀'
+                });
+            } else {
+                toast.success("Post scheduled successfully!", {
+                    duration: 4000,
+                    icon: '📅'
+                });
+            }
 
             onSuccess?.();
-            onClose();
+            handleClose();
         } catch (err) {
             console.error('Publish error:', err);
             setError(err.response?.data?.message || err.message || 'Failed to publish');
@@ -108,11 +183,21 @@ export default function CreateTikTokPost({ isOpen, onClose, accounts = [], onSuc
         setVideoFile(null);
         setVideoPreview('');
         setVideoUrl('');
+        setVideoMeta({ filename: '', size: 0, mimetype: '' });
         setCaption('');
-        setPrivacyLevel('PUBLIC_TO_EVERYONE');
-        setDisableComment(false);
-        setDisableDuet(false);
-        setDisableStitch(false);
+        setTiktokSettings({
+            privacyLevel: '',
+            allowComment: false,
+            allowDuet: false,
+            allowStitch: false,
+            commercialDisclosure: false,
+            brandOrganic: false,
+            brandedContent: false,
+            creatorInfo: null
+        });
+        setScheduleType('now');
+        setDate('');
+        setTime('');
         setError('');
     };
 
@@ -122,13 +207,6 @@ export default function CreateTikTokPost({ isOpen, onClose, accounts = [], onSuc
     };
 
     if (!isOpen) return null;
-
-    const privacyOptions = [
-        { value: 'PUBLIC_TO_EVERYONE', label: 'Public', icon: Eye, desc: 'Everyone can view' },
-        { value: 'FOLLOWER_OF_CREATOR', label: 'Followers', icon: Users, desc: 'Only followers can view' },
-        { value: 'MUTUAL_FOLLOW_FRIENDS', label: 'Friends', icon: Users, desc: 'Mutual followers only' },
-        { value: 'SELF_ONLY', label: 'Private', icon: EyeOff, desc: 'Only you can view' },
-    ];
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
@@ -141,7 +219,11 @@ export default function CreateTikTokPost({ isOpen, onClose, accounts = [], onSuc
                         </div>
                         <div>
                             <h2 className="text-xl font-bold" style={{ color: '#354F52' }}>Create TikTok Post</h2>
-                            <p className="text-sm text-gray-500">Step {step} of 3</p>
+                            <p className="text-sm text-gray-500">
+                                {step === 1 && 'Step 1: Upload Content'}
+                                {step === 2 && 'Step 2: TikTok Settings'}
+                                {step === 3 && 'Step 3: Review & Schedule'}
+                            </p>
                         </div>
                     </div>
                     <button onClick={handleClose} className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
@@ -149,23 +231,12 @@ export default function CreateTikTokPost({ isOpen, onClose, accounts = [], onSuc
                     </button>
                 </div>
 
-                {/* Steps */}
-                <div className="flex items-center gap-2 px-5 py-3 bg-gray-50 border-b">
-                    {['Upload', 'Settings', 'Publish'].map((label, idx) => (
-                        <button
-                            key={label}
-                            onClick={() => videoUrl && setStep(idx + 1)}
-                            disabled={!videoUrl && idx > 0}
-                            className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-all ${step === idx + 1
-                                ? 'bg-gradient-to-r from-pink-500 to-red-500 text-white'
-                                : step > idx + 1
-                                    ? 'bg-pink-100 text-pink-600'
-                                    : 'bg-gray-200 text-gray-500'
-                                }`}
-                        >
-                            {label}
-                        </button>
-                    ))}
+                {/* Progress Bar */}
+                <div className="flex items-center h-1 bg-gray-100">
+                    <div
+                        className="h-full bg-gradient-to-r from-pink-500 to-red-500 transition-all duration-300"
+                        style={{ width: `${(step / 3) * 100}%` }}
+                    />
                 </div>
 
                 {/* Content */}
@@ -176,7 +247,7 @@ export default function CreateTikTokPost({ isOpen, onClose, accounts = [], onSuc
                         </div>
                     )}
 
-                    {/* Step 1: Upload Video */}
+                    {/* Step 1: Upload Content */}
                     {step === 1 && (
                         <div className="space-y-6">
                             {/* Account Selector */}
@@ -186,7 +257,7 @@ export default function CreateTikTokPost({ isOpen, onClose, accounts = [], onSuc
                                     <select
                                         value={selectedAccountId}
                                         onChange={(e) => setSelectedAccountId(e.target.value)}
-                                        className="w-full p-3 border border-gray-200 rounded-lg"
+                                        className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent outline-none"
                                     >
                                         {accounts.map(a => (
                                             <option key={a.accountId} value={a.accountId}>{a.accountName || a.accountId}</option>
@@ -197,20 +268,20 @@ export default function CreateTikTokPost({ isOpen, onClose, accounts = [], onSuc
 
                             {/* Video Upload */}
                             {videoPreview ? (
-                                <div className="relative aspect-[9/16] max-h-[400px] mx-auto rounded-xl overflow-hidden bg-black">
+                                <div className="relative aspect-[9/16] max-h-[400px] mx-auto rounded-xl overflow-hidden bg-black shadow-lg">
                                     <video src={videoPreview} controls className="w-full h-full object-contain" />
                                     {uploading && (
                                         <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
                                             <div className="text-center text-white">
                                                 <div className="w-16 h-16 border-4 border-white/30 border-t-white rounded-full animate-spin mx-auto mb-2" />
-                                                <p>Uploading... {uploadProgress}%</p>
+                                                <p className="font-medium">Uploading... {uploadProgress}%</p>
                                             </div>
                                         </div>
                                     )}
                                     {!uploading && (
                                         <button
                                             onClick={() => { setVideoFile(null); setVideoPreview(''); setVideoUrl(''); }}
-                                            className="absolute top-3 right-3 p-2 bg-black/50 text-white rounded-full hover:bg-black/70"
+                                            className="absolute top-3 right-3 p-2 bg-black/50 text-white rounded-full hover:bg-red-500/80 transition-colors backdrop-blur-sm"
                                         >
                                             <Trash2 className="w-4 h-4" />
                                         </button>
@@ -219,14 +290,16 @@ export default function CreateTikTokPost({ isOpen, onClose, accounts = [], onSuc
                             ) : (
                                 <button
                                     onClick={() => fileInputRef.current?.click()}
-                                    className="w-full aspect-[9/16] max-h-[400px] border-2 border-dashed border-gray-300 rounded-xl flex flex-col items-center justify-center gap-4 hover:border-pink-400 hover:bg-pink-50/50 transition-all cursor-pointer text-gray-500"
+                                    className="w-full aspect-[9/16] max-h-[400px] border-2 border-dashed border-gray-300 rounded-xl flex flex-col items-center justify-center gap-4 hover:border-pink-400 hover:bg-pink-50/50 transition-all cursor-pointer text-gray-500 bg-gray-50"
                                 >
-                                    <div className="w-16 h-16 bg-gradient-to-br from-pink-100 to-red-100 rounded-full flex items-center justify-center">
-                                        <Video className="w-8 h-8 text-pink-500" />
+                                    <div className="w-16 h-16 bg-white rounded-full shadow-sm flex items-center justify-center">
+                                        <div className="w-12 h-12 bg-gradient-to-br from-pink-100 to-red-100 rounded-full flex items-center justify-center">
+                                            <Video className="w-6 h-6 text-pink-500" />
+                                        </div>
                                     </div>
-                                    <div className="text-center">
-                                        <p className="font-medium text-gray-700">Upload Video</p>
-                                        <p className="text-sm text-gray-400">MP4 or WebM, max 10 min</p>
+                                    <div className="text-center px-4">
+                                        <p className="font-medium text-gray-700">Click to Upload Video</p>
+                                        <p className="text-sm text-gray-400 mt-1">MP4 or WebM (Max 10 min)</p>
                                     </div>
                                 </button>
                             )}
@@ -245,11 +318,14 @@ export default function CreateTikTokPost({ isOpen, onClose, accounts = [], onSuc
                                     value={caption}
                                     onChange={(e) => setCaption(e.target.value)}
                                     placeholder="Write a caption... #fyp #viral"
-                                    rows={3}
+                                    rows={4}
                                     maxLength={2200}
-                                    className="w-full p-4 border border-gray-200 rounded-xl focus:ring-2 focus:ring-pink-400 resize-none"
+                                    className="w-full p-4 border border-gray-200 rounded-xl focus:ring-2 focus:ring-pink-400 focus:border-transparent outline-none resize-none"
                                 />
-                                <p className="text-xs text-gray-400 mt-1 text-right">{caption.length}/2200</p>
+                                <div className="flex justify-between items-center mt-1">
+                                    <p className="text-xs text-gray-400">Add relevant hashtags for better reach</p>
+                                    <p className="text-xs text-gray-400">{caption.length}/2200</p>
+                                </div>
                             </div>
                         </div>
                     )}
@@ -257,127 +333,116 @@ export default function CreateTikTokPost({ isOpen, onClose, accounts = [], onSuc
                     {/* Step 2: Settings */}
                     {step === 2 && (
                         <div className="space-y-6">
-                            {/* Privacy Level */}
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-3">Who can view this video?</label>
-                                <div className="grid grid-cols-2 gap-3">
-                                    {privacyOptions.map(opt => (
-                                        <button
-                                            key={opt.value}
-                                            onClick={() => setPrivacyLevel(opt.value)}
-                                            className={`p-4 rounded-xl border-2 text-left transition-all ${privacyLevel === opt.value
-                                                ? 'border-pink-500 bg-pink-50'
-                                                : 'border-gray-200 hover:border-gray-300'
-                                                }`}
-                                        >
-                                            <div className="flex items-center gap-2 mb-1">
-                                                <opt.icon className={`w-4 h-4 ${privacyLevel === opt.value ? 'text-pink-500' : 'text-gray-400'}`} />
-                                                <span className="font-medium text-sm">{opt.label}</span>
-                                            </div>
-                                            <p className="text-xs text-gray-500">{opt.desc}</p>
-                                        </button>
-                                    ))}
-                                </div>
-                            </div>
+                            <TikTokSettings
+                                accountId={selectedAccountId}
+                                settings={tiktokSettings}
+                                onSettingsChange={setTiktokSettings}
+                                isPhotoPost={false}
+                            />
 
-                            {/* Toggles */}
-                            <div className="space-y-4">
-                                <label className="block text-sm font-medium text-gray-700 mb-2">Interaction Settings</label>
-
-                                <div className="flex items-center justify-between p-4 bg-gray-50 rounded-xl">
-                                    <div className="flex items-center gap-3">
-                                        <MessageSquare className="w-5 h-5 text-gray-500" />
-                                        <div>
-                                            <p className="font-medium text-sm">Allow Comments</p>
-                                            <p className="text-xs text-gray-500">Let others comment on your video</p>
-                                        </div>
-                                    </div>
-                                    <button
-                                        onClick={() => setDisableComment(!disableComment)}
-                                        className={`relative w-12 h-6 rounded-full transition-colors ${!disableComment ? 'bg-pink-500' : 'bg-gray-300'}`}
-                                    >
-                                        <div className={`absolute top-1 w-4 h-4 bg-white rounded-full shadow transition-transform ${!disableComment ? 'translate-x-7' : 'translate-x-1'}`} />
-                                    </button>
+                            {/* Validation Errors */}
+                            {tiktokValidation.errors.length > 0 && (
+                                <div className="bg-red-50 border-l-4 border-red-500 text-red-700 px-4 py-3 rounded-lg">
+                                    <p className="font-medium text-sm mb-1">Please fix the following issues:</p>
+                                    <ul className="list-disc list-inside text-xs">
+                                        {tiktokValidation.errors.map((err, idx) => (
+                                            <li key={idx}>{err}</li>
+                                        ))}
+                                    </ul>
                                 </div>
-
-                                <div className="flex items-center justify-between p-4 bg-gray-50 rounded-xl">
-                                    <div className="flex items-center gap-3">
-                                        <Users className="w-5 h-5 text-gray-500" />
-                                        <div>
-                                            <p className="font-medium text-sm">Allow Duet</p>
-                                            <p className="text-xs text-gray-500">Let others create duets with your video</p>
-                                        </div>
-                                    </div>
-                                    <button
-                                        onClick={() => setDisableDuet(!disableDuet)}
-                                        className={`relative w-12 h-6 rounded-full transition-colors ${!disableDuet ? 'bg-pink-500' : 'bg-gray-300'}`}
-                                    >
-                                        <div className={`absolute top-1 w-4 h-4 bg-white rounded-full shadow transition-transform ${!disableDuet ? 'translate-x-7' : 'translate-x-1'}`} />
-                                    </button>
-                                </div>
-
-                                <div className="flex items-center justify-between p-4 bg-gray-50 rounded-xl">
-                                    <div className="flex items-center gap-3">
-                                        <Share2 className="w-5 h-5 text-gray-500" />
-                                        <div>
-                                            <p className="font-medium text-sm">Allow Stitch</p>
-                                            <p className="text-xs text-gray-500">Let others stitch your video into theirs</p>
-                                        </div>
-                                    </div>
-                                    <button
-                                        onClick={() => setDisableStitch(!disableStitch)}
-                                        className={`relative w-12 h-6 rounded-full transition-colors ${!disableStitch ? 'bg-pink-500' : 'bg-gray-300'}`}
-                                    >
-                                        <div className={`absolute top-1 w-4 h-4 bg-white rounded-full shadow transition-transform ${!disableStitch ? 'translate-x-7' : 'translate-x-1'}`} />
-                                    </button>
-                                </div>
-                            </div>
+                            )}
                         </div>
                     )}
 
-                    {/* Step 3: Review */}
+                    {/* Step 3: Review & Schedule */}
                     {step === 3 && (
                         <div className="space-y-6">
-                            <h3 className="text-lg font-semibold" style={{ color: '#354F52' }}>Review & Publish</h3>
+                            <h3 className="text-lg font-semibold" style={{ color: '#354F52' }}>Final Review</h3>
 
-                            <div className="grid grid-cols-2 gap-4">
-                                {/* Video Preview */}
-                                <div className="aspect-[9/16] rounded-xl overflow-hidden bg-black">
-                                    <video src={videoPreview} className="w-full h-full object-contain" />
+                            <div className="flex gap-4 p-4 bg-gray-50 rounded-xl border border-gray-100">
+                                {/* Thumbnail */}
+                                <div className="w-24 h-32 bg-black rounded-lg overflow-hidden flex-shrink-0">
+                                    {videoPreview && (
+                                        <video src={videoPreview} className="w-full h-full object-cover" />
+                                    )}
                                 </div>
-
-                                {/* Details */}
-                                <div className="space-y-4 text-sm">
-                                    <div className="p-4 bg-gray-50 rounded-xl">
-                                        <p className="text-xs text-gray-500 uppercase mb-1">Account</p>
-                                        <p className="font-medium">{accounts.find(a => a.accountId === selectedAccountId)?.accountName || selectedAccountId}</p>
-                                    </div>
-
-                                    <div className="p-4 bg-gray-50 rounded-xl">
-                                        <p className="text-xs text-gray-500 uppercase mb-1">Privacy</p>
-                                        <p className="font-medium">{privacyOptions.find(p => p.value === privacyLevel)?.label}</p>
-                                    </div>
-
-                                    <div className="p-4 bg-gray-50 rounded-xl">
-                                        <p className="text-xs text-gray-500 uppercase mb-1">Caption</p>
-                                        <p className="text-gray-700 line-clamp-4">{caption || '(No caption)'}</p>
-                                    </div>
-
-                                    <div className="p-4 bg-gray-50 rounded-xl">
-                                        <p className="text-xs text-gray-500 uppercase mb-1">Settings</p>
-                                        <div className="flex flex-wrap gap-2 mt-1">
-                                            <span className={`px-2 py-1 rounded text-xs ${!disableComment ? 'bg-green-100 text-green-700' : 'bg-gray-200 text-gray-500'}`}>
-                                                Comments {!disableComment ? 'On' : 'Off'}
-                                            </span>
-                                            <span className={`px-2 py-1 rounded text-xs ${!disableDuet ? 'bg-green-100 text-green-700' : 'bg-gray-200 text-gray-500'}`}>
-                                                Duet {!disableDuet ? 'On' : 'Off'}
-                                            </span>
-                                            <span className={`px-2 py-1 rounded text-xs ${!disableStitch ? 'bg-green-100 text-green-700' : 'bg-gray-200 text-gray-500'}`}>
-                                                Stitch {!disableStitch ? 'On' : 'Off'}
+                                <div className="flex-1 min-w-0 py-1">
+                                    <p className="font-medium text-gray-900 line-clamp-2 mb-2">{caption || '(No Caption)'}</p>
+                                    <div className="space-y-1">
+                                        <div className="flex items-center gap-2 text-xs text-gray-500">
+                                            {tiktokSettings.privacyLevel === 'PUBLIC_TO_EVERYONE' ? <Eye className="w-3 h-3" /> :
+                                                tiktokSettings.privacyLevel === 'SELF_ONLY' ? <EyeOff className="w-3 h-3" /> : <Users className="w-3 h-3" />}
+                                            <span>
+                                                {tiktokSettings.privacyLevel === 'PUBLIC_TO_EVERYONE' ? 'Public' :
+                                                    tiktokSettings.privacyLevel === 'SELF_ONLY' ? 'Private' : 'Friends/Followers'}
                                             </span>
                                         </div>
+                                        {tiktokSettings.commercialDisclosure && (
+                                            <div className="flex items-center gap-2 text-xs text-orange-600">
+                                                <CheckCircle2 className="w-3 h-3" />
+                                                <span>Commercial Content</span>
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
+                            </div>
+
+                            {/* Scheduling Options */}
+                            <div className="bg-white rounded-xl border-2 border-gray-100 p-1">
+                                <div className="grid grid-cols-2 gap-1 p-1">
+                                    <button
+                                        onClick={() => setScheduleType('now')}
+                                        className={`flex items-center justify-center gap-2 py-3 rounded-lg text-sm font-medium transition-all ${scheduleType === 'now'
+                                                ? 'bg-pink-50 text-pink-600 shadow-sm'
+                                                : 'text-gray-500 hover:bg-gray-50'
+                                            }`}
+                                    >
+                                        <Upload className="w-4 h-4" />
+                                        Publish Now
+                                    </button>
+                                    <button
+                                        onClick={() => setScheduleType('later')}
+                                        className={`flex items-center justify-center gap-2 py-3 rounded-lg text-sm font-medium transition-all ${scheduleType === 'later'
+                                                ? 'bg-pink-50 text-pink-600 shadow-sm'
+                                                : 'text-gray-500 hover:bg-gray-50'
+                                            }`}
+                                    >
+                                        <Calendar className="w-4 h-4" />
+                                        Schedule
+                                    </button>
+                                </div>
+
+                                {scheduleType === 'later' && (
+                                    <div className="p-4 border-t border-gray-100 animate-in slide-in-from-top-2 fade-in duration-200">
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <div className="space-y-2">
+                                                <label className="text-xs font-medium text-gray-500">Date</label>
+                                                <div className="relative">
+                                                    <input
+                                                        type="date"
+                                                        value={date}
+                                                        min={new Date().toISOString().split('T')[0]}
+                                                        onChange={(e) => setDate(e.target.value)}
+                                                        className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-pink-500 outline-none"
+                                                    />
+                                                    <Calendar className="w-4 h-4 text-gray-400 absolute left-3 top-2.5" />
+                                                </div>
+                                            </div>
+                                            <div className="space-y-2">
+                                                <label className="text-xs font-medium text-gray-500">Time</label>
+                                                <div className="relative">
+                                                    <input
+                                                        type="time"
+                                                        value={time}
+                                                        onChange={(e) => setTime(e.target.value)}
+                                                        className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-pink-500 outline-none"
+                                                    />
+                                                    <Clock className="w-4 h-4 text-gray-400 absolute left-3 top-2.5" />
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
                             </div>
                         </div>
                     )}
@@ -387,7 +452,7 @@ export default function CreateTikTokPost({ isOpen, onClose, accounts = [], onSuc
                 <div className="flex items-center justify-between p-5 border-t border-gray-200 bg-gray-50">
                     <button
                         onClick={() => step > 1 ? setStep(step - 1) : handleClose()}
-                        className="px-5 py-2.5 text-gray-600 hover:bg-gray-200 rounded-xl transition-colors"
+                        className="px-5 py-2.5 text-gray-600 hover:bg-gray-200 rounded-xl transition-colors font-medium text-sm"
                     >
                         {step === 1 ? 'Cancel' : 'Back'}
                     </button>
@@ -395,24 +460,30 @@ export default function CreateTikTokPost({ isOpen, onClose, accounts = [], onSuc
                     {step < 3 ? (
                         <button
                             onClick={() => setStep(step + 1)}
-                            disabled={!videoUrl || uploading}
-                            className="px-6 py-2.5 bg-gradient-to-r from-pink-500 to-red-500 text-white rounded-xl font-medium hover:from-pink-600 hover:to-red-600 disabled:opacity-50 transition-colors"
+                            disabled={
+                                (step === 1 && (!videoUrl || uploading)) ||
+                                (step === 2 && !tiktokValidation.isValid)
+                            }
+                            className="px-6 py-2.5 bg-gradient-to-r from-pink-500 to-red-500 text-white rounded-xl font-medium hover:from-pink-600 hover:to-red-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-md hover:shadow-lg"
                         >
-                            Next
+                            Next Step
                         </button>
                     ) : (
                         <button
                             onClick={handlePublish}
-                            disabled={loading}
-                            className="px-6 py-2.5 bg-gradient-to-r from-pink-500 to-red-500 text-white rounded-xl font-medium hover:from-pink-600 hover:to-red-600 disabled:opacity-50 flex items-center gap-2"
+                            disabled={loading || (scheduleType === 'later' && (!date || !time))}
+                            className="px-8 py-2.5 bg-gradient-to-r from-pink-500 to-red-500 text-white rounded-xl font-medium hover:from-pink-600 hover:to-red-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-md hover:shadow-lg flex items-center gap-2"
                         >
                             {loading ? (
                                 <>
                                     <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                                    Publishing...
+                                    {scheduleType === 'now' ? 'Publishing...' : 'Scheduling...'}
                                 </>
                             ) : (
-                                'Publish Now'
+                                <>
+                                    {scheduleType === 'now' ? <Upload className="w-4 h-4" /> : <Calendar className="w-4 h-4" />}
+                                    {scheduleType === 'now' ? 'Publish Now' : 'Schedule Post'}
+                                </>
                             )}
                         </button>
                     )}
