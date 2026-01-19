@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
-import { ArrowLeft, Heart, MessageCircle, Eye, Bookmark, Share2, Users, ExternalLink, Play } from 'lucide-react';
+import { ArrowLeft, Heart, MessageCircle, Eye, Bookmark, Share2, Users, ExternalLink, Play, Sparkles, Zap, Tag, MessageSquare, ToggleLeft, ToggleRight } from 'lucide-react';
 import { instagramAPI } from '@/lib/api';
 
 export default function InstagramPostDetailPage() {
@@ -13,10 +13,13 @@ export default function InstagramPostDetailPage() {
     const [data, setData] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [autoReplyRule, setAutoReplyRule] = useState(null);
+    const [ruleLoading, setRuleLoading] = useState(false);
 
     useEffect(() => {
         if (mediaId) {
             loadInsights();
+            loadAutoReplyRule();
         }
     }, [mediaId]);
 
@@ -30,6 +33,20 @@ export default function InstagramPostDetailPage() {
             setError(e.response?.data?.message || e.message);
         } finally {
             setLoading(false);
+        }
+    };
+
+    const loadAutoReplyRule = async () => {
+        try {
+            setRuleLoading(true);
+            const response = await instagramAPI.getAutoReplyRule(mediaId);
+            setAutoReplyRule(response.data?.rule || null);
+        } catch (e) {
+            // No rule found is not an error
+            console.log('No auto-reply rule for this post');
+            setAutoReplyRule(null);
+        } finally {
+            setRuleLoading(false);
         }
     };
 
@@ -228,6 +245,107 @@ export default function InstagramPostDetailPage() {
                         )}
                     </div>
 
+                    {/* Auto-Reply Rules Section */}
+                    <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
+                        <div className="flex items-center gap-3 mb-4">
+                            <div className="w-10 h-10 bg-purple-100 rounded-xl flex items-center justify-center">
+                                <Sparkles className="w-5 h-5 text-purple-600" />
+                            </div>
+                            <div>
+                                <h2 className="text-lg font-semibold" style={{ color: '#354F52' }}>Auto-Reply DM</h2>
+                                <p className="text-xs text-gray-500">Automated responses for this post</p>
+                            </div>
+                        </div>
+
+                        {ruleLoading ? (
+                            <div className="text-center py-6">
+                                <div className="w-8 h-8 border-2 border-gray-200 border-t-purple-500 rounded-full animate-spin mx-auto mb-2" />
+                                <p className="text-sm text-gray-500">Loading rules...</p>
+                            </div>
+                        ) : autoReplyRule ? (
+                            <div className="space-y-4">
+                                {/* Status Badge */}
+                                <div className="flex items-center justify-between">
+                                    <span className="text-sm font-medium text-gray-600">Status</span>
+                                    <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-medium ${autoReplyRule.enabled
+                                            ? 'bg-green-100 text-green-700'
+                                            : 'bg-gray-100 text-gray-600'
+                                        }`}>
+                                        {autoReplyRule.enabled ? (
+                                            <><ToggleRight className="w-4 h-4" /> Active</>
+                                        ) : (
+                                            <><ToggleLeft className="w-4 h-4" /> Paused</>
+                                        )}
+                                    </span>
+                                </div>
+
+                                {/* Trigger Type */}
+                                <div className="p-4 bg-purple-50 rounded-xl">
+                                    <div className="flex items-center gap-2 mb-2">
+                                        <Zap className="w-4 h-4 text-purple-600" />
+                                        <span className="text-sm font-medium text-purple-700">Trigger</span>
+                                    </div>
+                                    <p className="text-sm text-gray-700">
+                                        {autoReplyRule.triggerType === 'keyword'
+                                            ? 'When comment contains specific keywords'
+                                            : 'On any comment'}
+                                    </p>
+                                </div>
+
+                                {/* Keywords */}
+                                {autoReplyRule.triggerType === 'keyword' && autoReplyRule.keywords?.length > 0 && (
+                                    <div className="p-4 bg-blue-50 rounded-xl">
+                                        <div className="flex items-center gap-2 mb-2">
+                                            <Tag className="w-4 h-4 text-blue-600" />
+                                            <span className="text-sm font-medium text-blue-700">Keywords</span>
+                                        </div>
+                                        <div className="flex flex-wrap gap-2">
+                                            {autoReplyRule.keywords.map((keyword, idx) => (
+                                                <span
+                                                    key={idx}
+                                                    className="px-2 py-1 bg-blue-100 text-blue-700 rounded-md text-xs font-medium"
+                                                >
+                                                    {keyword}
+                                                </span>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* Reply Message */}
+                                <div className="p-4 bg-gray-50 rounded-xl">
+                                    <div className="flex items-center gap-2 mb-2">
+                                        <MessageSquare className="w-4 h-4 text-gray-600" />
+                                        <span className="text-sm font-medium text-gray-700">Reply Message</span>
+                                    </div>
+                                    <p className="text-sm text-gray-600 italic">
+                                        "{autoReplyRule.replyContent?.message || 'No message configured'}"
+                                    </p>
+                                </div>
+
+                                {/* Stats */}
+                                {(autoReplyRule.stats?.sent > 0 || autoReplyRule.stats?.failed > 0) && (
+                                    <div className="flex gap-4 pt-2">
+                                        <div className="flex-1 p-3 bg-green-50 rounded-lg text-center">
+                                            <p className="text-xl font-bold text-green-600">{autoReplyRule.stats?.sent || 0}</p>
+                                            <p className="text-xs text-gray-600">DMs Sent</p>
+                                        </div>
+                                        <div className="flex-1 p-3 bg-red-50 rounded-lg text-center">
+                                            <p className="text-xl font-bold text-red-600">{autoReplyRule.stats?.failed || 0}</p>
+                                            <p className="text-xs text-gray-600">Failed</p>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        ) : (
+                            <div className="text-center py-6 text-gray-500">
+                                <Sparkles className="w-10 h-10 mx-auto mb-2 opacity-30" />
+                                <p className="font-medium">No Auto-Reply configured</p>
+                                <p className="text-sm">Create a new post with Auto-Reply to see rules here</p>
+                            </div>
+                        )}
+                    </div>
+
                     {/* Comments Section */}
                     <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
                         <h2 className="text-lg font-semibold mb-4" style={{ color: '#354F52' }}>
@@ -280,3 +398,4 @@ export default function InstagramPostDetailPage() {
         </div>
     );
 }
+
