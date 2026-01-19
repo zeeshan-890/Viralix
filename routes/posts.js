@@ -68,7 +68,7 @@ router.post(
         const errors = validationResult(req);
         if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
         try {
-            const { title, content, platforms, media = [], hashtags = [], mentions = [], scheduledDate, isScheduled } = req.body;
+            const { title, content, platforms, media = [], hashtags = [], mentions = [], scheduledDate, isScheduled, tiktokSettings } = req.body;
 
             // Debug logging
             console.log('[posts] Creating post with platforms:', JSON.stringify(platforms));
@@ -94,6 +94,8 @@ router.post(
                 scheduledDate: scheduledDate ? new Date(scheduledDate) : null,
                 isScheduled: !!isScheduled,
                 isDraft: !isScheduled,
+                // Store TikTok-specific settings if provided
+                tiktokSettings: tiktokSettings || null
             });
             const saved = await post.save();
             res.json(saved);
@@ -233,7 +235,8 @@ router.post('/:id/publish', auth, async (req, res) => {
             content: {
                 title: post.title,
                 body: post.content,
-                media: post.media
+                media: post.media,
+                tiktokSettings: post.tiktokSettings
             },
             status: 'queued'
         });
@@ -248,7 +251,8 @@ router.post('/:id/publish', auth, async (req, res) => {
             content: {
                 title: post.title,
                 body: post.content,
-                media: post.media
+                media: post.media,
+                tiktokSettings: post.tiktokSettings
             }
         });
 

@@ -178,6 +178,44 @@ async function getUserInfo(accessToken) {
 }
 
 /**
+ * Get creator info for Content Posting API
+ * Returns creator's posting capabilities, privacy options, and settings
+ * @param {string} accessToken - Valid access token
+ * @returns {Promise<Object>} Creator info with privacy_level_options, max_video_post_duration_sec, etc.
+ */
+async function getCreatorInfo(accessToken) {
+    console.log('[TikTok] Fetching creator info');
+
+    try {
+        const { data } = await axios.post(
+            `${TIKTOK_API_BASE}/post/publish/creator_info/query/`,
+            {},
+            {
+                headers: {
+                    'Authorization': `Bearer ${accessToken}`,
+                    'Content-Type': 'application/json'
+                }
+            }
+        );
+
+        if (data.error?.code && data.error.code !== 'ok') {
+            console.error('[TikTok] Get creator info error:', data.error);
+            throw new Error(data.error.message || 'Failed to get creator info');
+        }
+
+        console.log('[TikTok] Creator info retrieved:', data.data);
+        return data.data;
+    } catch (error) {
+        console.error('[TikTok] getCreatorInfo failed:', {
+            status: error.response?.status,
+            data: error.response?.data,
+            message: error.message
+        });
+        throw error;
+    }
+}
+
+/**
  * Initialize video upload using PULL_FROM_URL method
  * TikTok will pull the video from the provided URL (e.g., Cloudinary)
  * This sends video directly to user's TikTok inbox for final editing/posting
@@ -602,6 +640,7 @@ module.exports = {
 
     // User
     getUserInfo,
+    getCreatorInfo,
 
     // Video Publishing
     initializeVideoUploadFromUrl,
