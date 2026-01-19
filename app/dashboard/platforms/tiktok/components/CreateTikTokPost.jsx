@@ -3,7 +3,7 @@ import { useState, useRef, useMemo } from 'react';
 import Image from 'next/image';
 import { X, Upload, Trash2, Video, Eye, EyeOff, MessageSquare, Users, Share2, Calendar, Clock, CheckCircle2 } from 'lucide-react';
 import { tiktokAPI, uploadAPI, postsAPI } from '@/lib/api';
-import TikTokSettings, { useTikTokSettingsValidation } from '../../upload/components/TikTokSettings';
+import TikTokSettings, { useTikTokSettingsValidation } from '../../../upload/components/TikTokSettings';
 import { toast } from 'react-hot-toast';
 
 // TikTok icon component
@@ -393,8 +393,8 @@ export default function CreateTikTokPost({ isOpen, onClose, accounts = [], onSuc
                                     <button
                                         onClick={() => setScheduleType('now')}
                                         className={`flex items-center justify-center gap-2 py-3 rounded-lg text-sm font-medium transition-all ${scheduleType === 'now'
-                                                ? 'bg-pink-50 text-pink-600 shadow-sm'
-                                                : 'text-gray-500 hover:bg-gray-50'
+                                            ? 'bg-pink-50 text-pink-600 shadow-sm'
+                                            : 'text-gray-500 hover:bg-gray-50'
                                             }`}
                                     >
                                         <Upload className="w-4 h-4" />
@@ -403,8 +403,8 @@ export default function CreateTikTokPost({ isOpen, onClose, accounts = [], onSuc
                                     <button
                                         onClick={() => setScheduleType('later')}
                                         className={`flex items-center justify-center gap-2 py-3 rounded-lg text-sm font-medium transition-all ${scheduleType === 'later'
-                                                ? 'bg-pink-50 text-pink-600 shadow-sm'
-                                                : 'text-gray-500 hover:bg-gray-50'
+                                            ? 'bg-pink-50 text-pink-600 shadow-sm'
+                                            : 'text-gray-500 hover:bg-gray-50'
                                             }`}
                                     >
                                         <Calendar className="w-4 h-4" />
