@@ -76,7 +76,7 @@ router.post('/rules', auth, async (req, res) => {
     }
 });
 
-// Send Facebook Private Reply
+// Send Facebook Public Reply (Temporary Logic for Testing)
 async function sendFacebookPrivateReply(pageId, commentId, content, accessToken) {
     try {
         const messagePayload = {
@@ -87,13 +87,17 @@ async function sendFacebookPrivateReply(pageId, commentId, content, accessToken)
             messagePayload.message += `\n\n${content.linkUrl}`;
         }
 
+        // --- TEMPORARY CHANGE: PUBLIC REPLY INSTEAD OF PRIVATE ---
+        // '/private_replies' => '/comments'
+        console.log('[FB AutoReply] Attempting PUBLIC reply to test permissions...');
         const response = await axios.post(
-            `${FB_GRAPH_URL}/${commentId}/private_replies`,
+            `${FB_GRAPH_URL}/${commentId}/comments`, // Changed edge
             messagePayload,
             { params: { access_token: accessToken } }
         );
+        // ---------------------------------------------------------
 
-        console.log('[FB AutoReply] Private reply sent:', response.data);
+        console.log('[FB AutoReply] Public reply sent success:', response.data);
         return { success: true, data: response.data };
     } catch (error) {
         console.error('[FB AutoReply] Send error details:', error.response?.data);
@@ -131,7 +135,6 @@ router.post('/webhook', async (req, res) => {
     const body = req.body;
 
     if (body.object === 'page') {
-        // Prepare async tasks
         const tasks = [];
 
         for (const entry of body.entry) {
@@ -140,7 +143,7 @@ router.post('/webhook', async (req, res) => {
                 if (change.field === 'feed' && change.value.item === 'comment' && change.value.verb === 'add') {
                     // New comment on page post
                     const val = change.value;
-                    // Fire and forget, don't block response
+                    // Fire and forget
                     tasks.push(processComment({
                         postId: val.post_id,
                         commentId: val.comment_id,
@@ -152,7 +155,6 @@ router.post('/webhook', async (req, res) => {
             }
         }
 
-        // Execute tasks in background
         Promise.all(tasks).catch(err => console.error('Background task error:', err));
 
         res.status(200).send('EVENT_RECEIVED');
