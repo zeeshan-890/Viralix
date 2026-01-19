@@ -5,7 +5,8 @@ import { useRouter, usePathname } from 'next/navigation';
 
 export default function AuthInit() {
     const init = useAuthStore(s => s.init);
-    const { user, loading } = useAuthStore(s => ({ user: s.user, loading: s.loading }));
+    const user = useAuthStore(s => s.user);
+    const loading = useAuthStore(s => s.loading);
     const router = useRouter();
     const pathname = usePathname();
 
