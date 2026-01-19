@@ -25,12 +25,26 @@ router.get('/rules', auth, async (req, res) => {
 // Get rules for a specific post
 router.get('/rules/post/:postId', auth, async (req, res) => {
     try {
+        const { postId } = req.params;
+        console.log('[AutoReply] Looking for rule with postId:', postId);
+
         const rule = await AutoReplyRule.findOne({
             userId: req.user.id,
-            postId: req.params.postId
+            postId: postId
         }).lean();
-        res.json(rule);
+
+        console.log('[AutoReply] Found rule:', rule ? `Yes (${rule._id})` : 'No');
+
+        if (!rule) {
+            // Debug: List all rules for this user to check IDs
+            const allRules = await AutoReplyRule.find({ userId: req.user.id }).select('postId enabled triggerType').lean();
+            console.log('[AutoReply] Debug - All rules for user:', JSON.stringify(allRules, null, 2));
+        }
+
+        // Return in consistent format
+        res.json({ rule: rule || null });
     } catch (error) {
+        console.error('[AutoReply] Get rule by post error:', error);
         res.status(500).json({ message: error.message });
     }
 });
