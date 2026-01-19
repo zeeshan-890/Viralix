@@ -1,5 +1,5 @@
 'use client';
-import { useState, useRef, useMemo } from 'react';
+import { useState, useRef, useMemo, useEffect } from 'react';
 import Image from 'next/image';
 import { X, Upload, Trash2, Video, Eye, EyeOff, MessageSquare, Users, Share2, Calendar, Clock, CheckCircle2 } from 'lucide-react';
 import { tiktokAPI, uploadAPI, postsAPI } from '@/lib/api';
