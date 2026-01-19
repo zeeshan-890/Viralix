@@ -1,5 +1,6 @@
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import { Toaster } from "react-hot-toast";
 import ThemeInit from "../src/store/ThemeInit";
 import AuthInit from "../src/store/AuthInit";
 import QueryProvider from "../src/items/QueryProvider";
@@ -32,6 +33,7 @@ export default function RootLayout({ children, }) {
         <QueryProvider>
           <ThemeInit />
           <AuthInit />
+          <Toaster position="top-right" />
           {children}
         </QueryProvider>
       </body>

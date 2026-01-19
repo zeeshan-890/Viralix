@@ -1,6 +1,7 @@
 'use client';
 import { useState, useEffect, useMemo } from 'react';
 import { uploadAPI, postsAPI, facebookAPI, instagramAPI, tiktokAPI, youtubeAPI } from '@/lib/api';
+import { toast } from "react-hot-toast";
 import { useRouter } from 'next/navigation';
 import { useAccounts } from '@/hooks/useAccounts';
 import FileUpload from './components/FileUpload';
@@ -218,6 +219,10 @@ export default function UploadPage() {
             if (!postId) throw new Error('Post creation failed');
             // Publish immediately
             await postsAPI.publishNow(postId);
+            toast.success("After publishing, it may take a few minutes for content to appear on your profile", {
+                duration: 5000,
+                icon: '🚀'
+            });
             router.push('/dashboard');
         } catch (e) {
             setActionError(e?.response?.data?.message || e.message || 'Failed to publish now');
