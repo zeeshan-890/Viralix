@@ -23,11 +23,6 @@ function buildAuthUrl(state) {
             'business_management',
             // Insights for pages metrics
             'read_insights',
-            // Instagram management (access via Page linkage)
-            'instagram_basic',
-            'instagram_manage_insights',
-            'instagram_content_publish',
-            'instagram_manage_comments',
         ].join(','),
     };
     return `https://www.facebook.com/v19.0/dialog/oauth?${qs.stringify(params)}`;
