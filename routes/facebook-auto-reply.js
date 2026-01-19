@@ -83,16 +83,10 @@ async function sendFacebookPrivateReply(pageId, commentId, content, accessToken)
             message: content.message
         };
 
-        // Facebook Private Replies don't support attachments in the same way as IG/Messenger API 
-        // usually. But if it's via Messenger API it might.
-        // For comments private reply, typically just text is supported reliably.
-        // We'll append links if needed.
-
         if ((content.attachmentType === 'link' && content.linkUrl) || content.linkUrl) {
             messagePayload.message += `\n\n${content.linkUrl}`;
         }
 
-        // Note: '/private_replies' is the endpoint for replying to a comment privately
         const response = await axios.post(
             `${FB_GRAPH_URL}/${commentId}/private_replies`,
             messagePayload,
@@ -102,7 +96,7 @@ async function sendFacebookPrivateReply(pageId, commentId, content, accessToken)
         console.log('[FB AutoReply] Private reply sent:', response.data);
         return { success: true, data: response.data };
     } catch (error) {
-        console.error('[FB AutoReply] Send error:', error.response?.data || error.message);
+        console.error('[FB AutoReply] Send error details:', error.response?.data);
         return {
             success: false,
             error: error.response?.data?.error?.message || error.message
@@ -132,81 +126,35 @@ async function getPageAccessToken(pageId) {
     return page ? page.accessToken : null;
 }
 
-// Process Comment logic
-async function processComment(commentData) {
-    const { postId, commentId, message, fromId, pageId } = commentData;
-
-    try {
-        // Find rule
-        const rule = await AutoReplyRule.findOne({
-            postId: postId,
-            enabled: true,
-            platform: 'facebook'
-        });
-
-        if (!rule) return;
-
-        // Check already responded
-        // Facebook IDs are scoped, fromId is the user PSID
-        const alreadyResponded = rule.respondedUsers.some(u => u.igUserId === fromId); // Reusing igUserId field for FB ID
-        if (alreadyResponded) return;
-
-        // Keyword Match
-        if (rule.triggerType === 'keyword' && rule.keywords.length > 0) {
-            const lowerMsg = message.toLowerCase();
-            const matched = rule.keywords.some(kw => lowerMsg.includes(kw.toLowerCase()));
-            if (!matched) return;
-        }
-
-        // Get Token
-        const token = await getPageAccessToken(pageId);
-        if (!token) {
-            console.error('[FB AutoReply] No token found for page', pageId);
-            return;
-        }
-
-        // Send Reply
-        const result = await sendFacebookPrivateReply(pageId, commentId, rule.replyContent, token);
-
-        if (result.success) {
-            rule.stats.sent += 1;
-            rule.respondedUsers.push({
-                igUserId: fromId,
-                respondedAt: new Date()
-            });
-        } else {
-            rule.stats.failed += 1;
-        }
-
-        rule.stats.triggered += 1;
-        await rule.save();
-
-    } catch (e) {
-        console.error('[FB AutoReply] Process error:', e);
-    }
-}
-
 // Webhook handling
 router.post('/webhook', async (req, res) => {
     const body = req.body;
 
     if (body.object === 'page') {
+        // Prepare async tasks
+        const tasks = [];
+
         for (const entry of body.entry) {
             const pageId = entry.id;
             for (const change of entry.changes || []) {
                 if (change.field === 'feed' && change.value.item === 'comment' && change.value.verb === 'add') {
                     // New comment on page post
                     const val = change.value;
-                    await processComment({
+                    // Fire and forget, don't block response
+                    tasks.push(processComment({
                         postId: val.post_id,
                         commentId: val.comment_id,
                         message: val.message,
                         fromId: val.from.id,
                         pageId: pageId
-                    });
+                    }));
                 }
             }
         }
+
+        // Execute tasks in background
+        Promise.all(tasks).catch(err => console.error('Background task error:', err));
+
         res.status(200).send('EVENT_RECEIVED');
     } else {
         res.sendStatus(404);
@@ -256,4 +204,25 @@ async function processComment(commentData) {
         }
         console.log('[FB AutoReply] Found Page Token:', token.substring(0, 10) + '...');
 
-// Send Reply
+        // Send Reply
+        const result = await sendFacebookPrivateReply(pageId, commentId, rule.replyContent, token);
+
+        if (result.success) {
+            rule.stats.sent += 1;
+            rule.respondedUsers.push({
+                igUserId: fromId,
+                respondedAt: new Date()
+            });
+        } else {
+            rule.stats.failed += 1;
+        }
+
+        rule.stats.triggered += 1;
+        await rule.save();
+
+    } catch (e) {
+        console.error('[FB AutoReply] Process error:', e);
+    }
+}
+
+module.exports = router;
