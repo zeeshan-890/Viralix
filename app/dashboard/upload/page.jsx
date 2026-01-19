@@ -6,6 +6,7 @@ import { useAccounts } from '@/hooks/useAccounts';
 import FileUpload from './components/FileUpload';
 import TagsInput from './components/TagsInput';
 import MediaLibrary from './components/MediaLibrary';
+import TikTokSettings, { useTikTokSettingsValidation } from './components/TikTokSettings';
 import { Upload, Image as LucideImage, Video, Calendar, Clock, Send, Save, Eye, Sparkles, CheckCircle2, AlertCircle, Music2, Youtube } from 'lucide-react';
 import Image from 'next/image';
 
@@ -115,14 +116,37 @@ export default function UploadPage() {
     const requiresVideo = hasTT || hasYT; // TikTok and YouTube require video
     const hasVideo = useMemo(() => uploadedFiles.some(f => f.type === 'video'), [uploadedFiles]);
 
+    // TikTok-specific settings state
+    const [tiktokSettings, setTiktokSettings] = useState({
+        privacyLevel: '',
+        allowComment: false,
+        allowDuet: false,
+        allowStitch: false,
+        commercialDisclosure: false,
+        brandOrganic: false,
+        brandedContent: false,
+        creatorInfo: null
+    });
+
+    // Get selected TikTok account ID
+    const selectedTiktokAccount = useMemo(() => {
+        const ttPlatform = selectedPlatforms.find(p => p.name === 'tiktok');
+        return ttPlatform?.accountId || null;
+    }, [selectedPlatforms]);
+
+    // Use TikTok settings validation hook
+    const tiktokValidation = useTikTokSettingsValidation(tiktokSettings);
+
     const canSubmit = useMemo(() => {
         if (!contentForm.title || !contentForm.description) return false;
         if (selectedPlatforms.length === 0) return false;
         if (requiresMedia && uploadedFiles.length === 0) return false;
         if (requiresVideo && !hasVideo) return false; // TikTok needs video
         if (scheduleType === 'later' && (!date || !time)) return false;
+        // TikTok validation - must have privacy selected and valid commercial settings
+        if (hasTT && !tiktokValidation.isValid) return false;
         return true;
-    }, [contentForm, selectedPlatforms, uploadedFiles, requiresMedia, requiresVideo, hasVideo, scheduleType, date, time]);
+    }, [contentForm, selectedPlatforms, uploadedFiles, requiresMedia, requiresVideo, hasVideo, scheduleType, date, time, hasTT, tiktokValidation.isValid]);
 
     const buildMediaPayload = () => {
         return uploadedFiles.map(f => ({
@@ -180,6 +204,15 @@ export default function UploadPage() {
                 media: buildMediaPayload(),
                 hashtags: contentForm.tags,
                 isScheduled: false,
+                // Include TikTok-specific settings if TikTok is selected
+                tiktokSettings: hasTT ? {
+                    privacyLevel: tiktokSettings.privacyLevel,
+                    disableComment: !tiktokSettings.allowComment,
+                    disableDuet: !tiktokSettings.allowDuet,
+                    disableStitch: !tiktokSettings.allowStitch,
+                    brandOrganic: tiktokSettings.brandOrganic,
+                    brandedContent: tiktokSettings.brandedContent
+                } : undefined
             });
             const postId = createRes.data?._id;
             if (!postId) throw new Error('Post creation failed');
@@ -207,6 +240,15 @@ export default function UploadPage() {
                 hashtags: contentForm.tags,
                 scheduledDate,
                 isScheduled: true,
+                // Include TikTok-specific settings if TikTok is selected
+                tiktokSettings: hasTT ? {
+                    privacyLevel: tiktokSettings.privacyLevel,
+                    disableComment: !tiktokSettings.allowComment,
+                    disableDuet: !tiktokSettings.allowDuet,
+                    disableStitch: !tiktokSettings.allowStitch,
+                    brandOrganic: tiktokSettings.brandOrganic,
+                    brandedContent: tiktokSettings.brandedContent
+                } : undefined
             });
             router.push('/dashboard/schedule');
         } catch (e) {
@@ -474,6 +516,39 @@ export default function UploadPage() {
                                 </div>
                             )}
                         </div>
+
+                        {/* TikTok Settings Section - Only shown when TikTok is selected */}
+                        {hasTT && selectedTiktokAccount && (
+                            <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 md:p-8">
+                                <div className="flex items-center gap-3 mb-6">
+                                    <div className="w-12 h-12 rounded-xl flex items-center justify-center bg-gradient-to-br from-pink-100 to-purple-100">
+                                        <Image src="/tiktok.png" alt="TikTok" width={28} height={28} />
+                                    </div>
+                                    <div>
+                                        <h3 className="text-xl font-semibold" style={{ color: '#354F52' }}>TikTok Settings</h3>
+                                        <p className="text-sm text-gray-600">Configure privacy, interactions, and disclosures for TikTok</p>
+                                    </div>
+                                </div>
+
+                                <TikTokSettings
+                                    accountId={selectedTiktokAccount}
+                                    settings={tiktokSettings}
+                                    onSettingsChange={setTiktokSettings}
+                                    isPhotoPost={!hasVideo}
+                                />
+
+                                {/* Validation errors */}
+                                {tiktokValidation.errors.length > 0 && (
+                                    <div className="mt-4 bg-red-50 border-l-4 border-red-500 text-red-700 px-4 py-3 rounded-lg">
+                                        <ul className="list-disc list-inside text-sm">
+                                            {tiktokValidation.errors.map((err, idx) => (
+                                                <li key={idx}>{err}</li>
+                                            ))}
+                                        </ul>
+                                    </div>
+                                )}
+                            </div>
+                        )}
 
                         {/* Step 4: Schedule Section */}
                         <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 md:p-8">

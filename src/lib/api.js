@@ -203,14 +203,26 @@ export const tiktokAPI = {
     status: () => api.get('/tiktok-oauth/status'),
     // Get account profile with stats
     account: (accountId) => api.get(`/tiktok-oauth/account/${accountId}`),
+    // Get creator info for posting (privacy options, limits, settings)
+    creatorInfo: (accountId) => api.get(`/tiktok-oauth/creator-info/${accountId}`),
     // Disconnect account
     disconnect: (accountId) => api.delete(`/tiktok-oauth/disconnect/${accountId}`),
     // Refresh access token
     refresh: (accountId) => api.post(`/tiktok-oauth/refresh/${accountId}`),
     // Get user's videos
     videos: (accountId, params = {}) => api.get(`/tiktok-oauth/videos/${accountId}`, { params }),
-    // Publish video
-    publish: (accountId, { videoUrl, caption, privacyLevel, disableComment, disableDuet, disableStitch, useInbox }) =>
+    // Publish video with all TikTok settings
+    publish: (accountId, {
+        videoUrl,
+        caption,
+        privacyLevel,
+        disableComment,
+        disableDuet,
+        disableStitch,
+        useInbox,
+        brandOrganic,
+        brandedContent
+    }) =>
         api.post(`/tiktok-oauth/publish/${accountId}`, {
             videoUrl,
             caption,
@@ -218,7 +230,9 @@ export const tiktokAPI = {
             disableComment,
             disableDuet,
             disableStitch,
-            useInbox
+            useInbox,
+            brandOrganic,
+            brandedContent
         }),
     // Check publish status
     publishStatus: (accountId, publishId) => api.get(`/tiktok-oauth/publish-status/${accountId}/${publishId}`),
