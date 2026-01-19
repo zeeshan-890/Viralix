@@ -486,7 +486,7 @@ router.get('/facebook', (req, res) => {
     const facebookAuthUrl = `https://www.facebook.com/v18.0/dialog/oauth?` +
         `client_id=${process.env.FACEBOOK_APP_ID}&` +
         `redirect_uri=${encodeURIComponent(process.env.FACEBOOK_AUTH_REDIRECT_URI || 'https://viralix-b3ff86cb412f.herokuapp.com/api/auth/facebook/callback')}&` +
-        `scope=${encodeURIComponent('email,public_profile')}&` +
+        `scope=${encodeURIComponent('email,public_profile,pages_show_list')}&` +
         `response_type=code`;
 
     res.redirect(facebookAuthUrl);
