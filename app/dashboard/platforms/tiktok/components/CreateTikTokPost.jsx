@@ -21,7 +21,7 @@ export default function CreateTikTokPost({ isOpen, onClose, accounts = [], onSuc
     const [error, setError] = useState('');
 
     // Account Selection
-    const [selectedAccountId, setSelectedAccountId] = useState(accounts?.[0]?.accountId || '');
+    const [selectedAccountId, setSelectedAccountId] = useState(accounts?.[0]?.platformAccountId || '');
 
     // Video state
     const [videoFile, setVideoFile] = useState(null);
@@ -260,7 +260,7 @@ export default function CreateTikTokPost({ isOpen, onClose, accounts = [], onSuc
                                         className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent outline-none"
                                     >
                                         {accounts.map(a => (
-                                            <option key={a.accountId} value={a.accountId}>{a.accountName || a.accountId}</option>
+                                            <option key={a.platformAccountId} value={a.platformAccountId}>{a.accountName || a.platformAccountId}</option>
                                         ))}
                                     </select>
                                 </div>

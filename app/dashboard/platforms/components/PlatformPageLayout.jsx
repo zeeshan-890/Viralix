@@ -138,7 +138,7 @@ export default function PlatformPageLayout({
                                 <div className="flex items-center gap-4">
                                     <div className="relative">
                                         {account.avatarUrl ? (
-                                            <Image src={account.avatarUrl} alt={account.accountName} width={56} height={56} className="rounded-full border-2 border-gray-100" />
+                                            <img src={account.avatarUrl} alt={account.accountName} className="w-14 h-14 rounded-full border-2 border-gray-100 object-cover" />
                                         ) : (
                                             <div className={`w-14 h-14 ${config.lightBg} rounded-full flex items-center justify-center border border-gray-100`}>
                                                 <Image src={config.icon} alt={config.name} width={32} height={32} className="object-contain" />
@@ -224,11 +224,10 @@ export default function PlatformPageLayout({
                                     const itemContent = (
                                         <>
                                             {item.thumbnail ? (
-                                                <Image
+                                                <img
                                                     src={item.thumbnail}
                                                     alt={item.title || 'Content'}
-                                                    fill
-                                                    className="object-cover group-hover:scale-105 transition-transform duration-300"
+                                                    className="w-full h-full absolute inset-0 object-cover group-hover:scale-105 transition-transform duration-300"
                                                 />
                                             ) : (
                                                 <div className="w-full h-full flex items-center justify-center">
@@ -259,9 +258,9 @@ export default function PlatformPageLayout({
                                                 key={item.id || index}
                                                 href={`/dashboard/platforms/${platform}/post/${item.id}`}
                                                 className={`group relative aspect-square rounded-xl overflow-hidden bg-gray-100 border border-gray-200 cursor-pointer hover:ring-2 ${platform === 'instagram' ? 'hover:ring-pink-400' :
-                                                        platform === 'facebook' ? 'hover:ring-blue-400' :
-                                                            platform === 'youtube' ? 'hover:ring-red-600' :
-                                                                'hover:ring-black'
+                                                    platform === 'facebook' ? 'hover:ring-blue-400' :
+                                                        platform === 'youtube' ? 'hover:ring-red-600' :
+                                                            'hover:ring-black'
                                                     } transition-all`}
                                             >
                                                 {itemContent}
