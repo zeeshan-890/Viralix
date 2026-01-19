@@ -72,14 +72,39 @@ class TikTokPublisher extends BasePublisher {
     async publish(account, postData) {
         // Resolve auth (will auto-refresh if needed)
         const auth = await this.resolveAuth(account);
-        const { media, title } = postData;
+        const { media, title, tiktokSettings } = postData;
 
         const video = media.find(m => m.type === 'video');
         if (!video) {
             throw new Error('TikTok requires a video');
         }
 
-        // Use PROXY UPLOAD for inbox publishing (for screen recording/drafts)
+        // Check if we have TikTok-specific settings (for direct publish)
+        // If no settings provided, use inbox mode (draft)
+        if (tiktokSettings && tiktokSettings.privacyLevel) {
+            console.log('[TikTokPublisher] Publishing with custom settings:', tiktokSettings);
+
+            // Use direct publish with all settings
+            const { uploadVideoFromUrl } = require('../tiktok');
+            const result = await uploadVideoFromUrl(auth.accessToken, video.url, {
+                caption: title || '',
+                privacy_level: tiktokSettings.privacyLevel,
+                disable_comment: tiktokSettings.disableComment || false,
+                disable_duet: tiktokSettings.disableDuet || false,
+                disable_stitch: tiktokSettings.disableStitch || false,
+                // Commercial content disclosure
+                brand_content_toggle: tiktokSettings.brandOrganic || tiktokSettings.brandedContent || false,
+                brand_organic_toggle: tiktokSettings.brandOrganic || false,
+                is_branded_content: tiktokSettings.brandedContent || false
+            });
+
+            return this.formatResponse(result.publish_id, 'processing', {
+                message: 'Video publish initiated with custom settings',
+                privacyLevel: tiktokSettings.privacyLevel
+            });
+        }
+
+        // Fallback: Use PROXY UPLOAD for inbox publishing (for screen recording/drafts)
         // This downloads the video to server and uploads to TikTok inbox
         // Passing null/no options triggers the inbox mode in uploadVideoFromUrl
         const result = await uploadVideoFromUrl(auth.accessToken, video.url);

@@ -136,6 +136,50 @@ router.get('/account/:accountId', auth, async (req, res) => {
     }
 });
 
+// GET /creator-info/:accountId - Get creator posting capabilities
+router.get('/creator-info/:accountId', auth, async (req, res) => {
+    try {
+        const account = await AccountService.getAccount(req.user.id, 'tiktok', req.params.accountId);
+        if (!account) return res.status(404).json({ message: 'TikTok account not found' });
+
+        // Get creator info from TikTok API
+        const creatorInfo = await tiktokService.getCreatorInfo(account.accessToken);
+
+        // Get user info for display name
+        const userInfo = await tiktokService.getUserInfo(account.accessToken);
+
+        res.json({
+            accountId: account.platformAccountId,
+            accountName: account.accountName,
+            creatorNickname: userInfo?.display_name || account.accountName,
+            avatarUrl: userInfo?.avatar_url || account.metadata?.avatarUrl,
+            // Creator posting capabilities
+            privacyLevelOptions: creatorInfo.privacy_level_options || ['SELF_ONLY'],
+            maxVideoPostDurationSec: creatorInfo.max_video_post_duration_sec || 60,
+            // Interaction settings (true = disabled in app settings)
+            commentDisabled: creatorInfo.comment_disabled || false,
+            duetDisabled: creatorInfo.duet_disabled || false,
+            stitchDisabled: creatorInfo.stitch_disabled || false,
+            // Posting limits
+            canPost: true, // Will be false if rate limited
+            dailyPostLimit: creatorInfo.daily_post_limit || null,
+            postsRemainingToday: creatorInfo.posts_remaining_today || null
+        });
+    } catch (error) {
+        console.error('[TikTok Creator Info] Error:', error.message);
+
+        // Check if rate limited
+        if (error.message?.includes('rate') || error.response?.status === 429) {
+            return res.status(429).json({
+                message: 'Rate limited. Please try again later.',
+                canPost: false
+            });
+        }
+
+        res.status(500).json({ message: error.message });
+    }
+});
+
 // POST /refresh/:accountId
 router.post('/refresh/:accountId', auth, async (req, res) => {
     try {
@@ -203,11 +247,30 @@ router.get('/videos/:accountId', auth, async (req, res) => {
 // POST /publish/:accountId
 router.post('/publish/:accountId', auth, async (req, res) => {
     try {
-        const { videoUrl, caption, privacyLevel, disableComment, disableDuet, disableStitch, useInbox } = req.body;
+        const {
+            videoUrl,
+            caption,
+            privacyLevel,
+            disableComment,
+            disableDuet,
+            disableStitch,
+            useInbox,
+            // Commercial content disclosure fields
+            brandOrganic,      // Promoting self/own business
+            brandedContent     // Promoting third party (paid partnership)
+        } = req.body;
+
         if (!videoUrl) return res.status(400).json({ message: 'Video URL is required' });
 
         const account = await AccountService.getAccount(req.user.id, 'tiktok', req.params.accountId);
         if (!account) return res.status(404).json({ message: 'TikTok account not found' });
+
+        // Validate branded content can't be private
+        if (brandedContent && privacyLevel === 'SELF_ONLY') {
+            return res.status(400).json({
+                message: 'Branded content visibility cannot be set to private'
+            });
+        }
 
         let result;
         if (useInbox) {
@@ -218,7 +281,11 @@ router.post('/publish/:accountId', auth, async (req, res) => {
                 privacy_level: privacyLevel || 'SELF_ONLY',
                 disable_comment: disableComment || false,
                 disable_duet: disableDuet || false,
-                disable_stitch: disableStitch || false
+                disable_stitch: disableStitch || false,
+                // Commercial content disclosure
+                brand_content_toggle: brandOrganic || brandedContent || false,
+                brand_organic_toggle: brandOrganic || false,
+                is_branded_content: brandedContent || false
             });
         }
 
