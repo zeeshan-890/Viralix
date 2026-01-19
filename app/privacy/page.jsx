@@ -1,16 +1,16 @@
 export const metadata = {
-    title: 'Privacy Policy | AutoReach',
-    description: 'Privacy Policy describing how AutoReach collects, uses, and protects your data.'
+    title: 'Privacy Policy | Viralix',
+    description: 'Privacy Policy describing how Viralix collects, uses, and protects your data.'
 };
 
-const LAST_UPDATED = 'October 7, 2025';
+const LAST_UPDATED = 'January 19, 2026';
 
 export default function PrivacyPolicyPage() {
     return (
         <main className="mx-auto max-w-4xl px-6 py-12 prose prose-slate dark:prose-invert">
             <h1>Privacy Policy</h1>
             <p><strong>Last Updated:</strong> {LAST_UPDATED}</p>
-            <p>Thank you for using <strong>AutoReach</strong> ("AutoReach", "we", "our", or "us"). This Privacy Policy explains what information we collect, how we use it, how we share it, and the choices you have. By using our platform, you agree to the practices described here.</p>
+            <p>Thank you for using <strong>Viralix</strong> ("Viralix", "we", "our", or "us"). This Privacy Policy explains what information we collect, how we use it, how we share it, and the choices you have. By using our platform, you agree to the practices described here.</p>
 
             <h2>1. Information We Collect</h2>
             <h3>1.1 Account Information</h3>
@@ -76,7 +76,7 @@ export default function PrivacyPolicyPage() {
             <p>We may update this Privacy Policy. Material changes will be indicated via updated date or in-app notice. Continued use after changes = acceptance.</p>
 
             <h2>13. Google API Services User Data Policy</h2>
-            <p>Our application, <strong>Autoreach AI</strong> (Viralix), accesses certain user data from your Google account via the YouTube Data API to provide our social media management services. We are committed to ensuring the privacy and security of your data.</p>
+            <p>Our application, <strong>Viralix</strong>, accesses certain user data from your Google account via the YouTube Data API to provide our social media management services. We are committed to ensuring the privacy and security of your data.</p>
 
             <h3>13.1 Data Accessed</h3>
             <p>We request access to the following Google user data:</p>
@@ -89,7 +89,7 @@ export default function PrivacyPolicyPage() {
             <h3>13.2 Data Usage</h3>
             <p>The Google user data we access is used solely for the following purposes:</p>
             <ul>
-                <li><strong>Account Connection:</strong> To link your YouTube channel to your Autoreach AI dashboard, allowing you to manage your presence from a single interface.</li>
+                <li><strong>Account Connection:</strong> To link your YouTube channel to your Viralix dashboard, allowing you to manage your presence from a single interface.</li>
                 <li><strong>Content Publishing:</strong> To enable the "Direct Publishing" feature, allowing you to upload, schedule, and publish video content to your YouTube channel directly from our application.</li>
                 <li><strong>Analytics Display:</strong> To aggregate and display performance insights (such as view counts and engagement metrics) for your videos within our dashboard, helping you analyze your content strategy.</li>
             </ul>
@@ -116,7 +116,7 @@ export default function PrivacyPolicyPage() {
                 <li><strong>Retention:</strong> We retain your Google user data (access tokens and channel metadata) only for as long as you maintain a connected YouTube account on our platform.</li>
                 <li><strong>Deletion:</strong> You can revoke our access to your data at any time by:
                     <ol>
-                        <li>Disconnecting your YouTube account from the "Connected Accounts" section of your Autoreach AI dashboard.</li>
+                        <li>Disconnecting your YouTube account from the "Connected Accounts" section of your Viralix dashboard.</li>
                         <li>Visiting <a href="https://myaccount.google.com/permissions" target="_blank" rel="noopener noreferrer">Google Security Settings</a> and revoking access for our app.</li>
                     </ol>
                 </li>
@@ -124,7 +124,7 @@ export default function PrivacyPolicyPage() {
             <p><strong>Upon disconnection, all your stored Google access tokens and related personal metadata are permanently deleted from our database immediately.</strong></p>
 
             <h2>14. Contact</h2>
-            <p>Questions or requests: <a href="mailto:privacy@autoreach.ai">privacy@autoreach.ai</a> (replace with your actual contact if different).</p>
+            <p>Questions or requests: <a href="mailto:privacy@viralix.dev">privacy@viralix.dev</a></p>
         </main>
     );
 }

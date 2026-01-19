@@ -1,22 +1,22 @@
 export const metadata = {
-    title: 'Data Deletion Instructions | AutoReach',
-    description: 'How to request deletion of your data from AutoReach.'
+    title: 'Data Deletion Instructions | Viralix',
+    description: 'How to request deletion of your data from Viralix.'
 };
 
-const LAST_UPDATED = 'October 7, 2025';
+const LAST_UPDATED = 'January 19, 2026';
 
 export default function DataDeletionPage() {
     return (
         <main className="mx-auto max-w-3xl px-6 py-12 prose prose-slate dark:prose-invert">
             <h1>Data Deletion / Erasure Request</h1>
             <p><strong>Last Updated:</strong> {LAST_UPDATED}</p>
-            <p>This page explains how you can request deletion of your account and associated data from <strong>AutoReach</strong>. These instructions also satisfy Facebook / Instagram data deletion compliance requirements.</p>
+            <p>This page explains how you can request deletion of your account and associated data from <strong>Viralix</strong>. These instructions also satisfy Facebook / Instagram data deletion compliance requirements.</p>
 
             <h2>1. In-App Deletion (When Available)</h2>
             <p>If a self-service delete button is available in your account settings, using it will queue your account and associated data (posts, drafts, tokens, analytics snapshots) for deletion. Media stored in third-party storage (e.g. Cloudinary) is also removed where feasible.</p>
 
             <h2>2. Manual Deletion Request</h2>
-            <p>If self-service deletion is not present or fails, email us at <a href="mailto:privacy@autoreach.ai">privacy@autoreach.ai</a> with the subject <em>Account Deletion Request</em> from the email tied to your account. Include:</p>
+            <p>If self-service deletion is not present or fails, email us at <a href="mailto:privacy@viralix.dev">privacy@viralix.dev</a> with the subject <em>Account Deletion Request</em> from the email tied to your account. Include:</p>
             <ul>
                 <li>Your account email</li>
                 <li>Optional reason (for product improvement)</li>
@@ -49,7 +49,7 @@ export default function DataDeletionPage() {
             <p>For security, we may request email re-verification or additional proof of ownership before executing a deletion request.</p>
 
             <h2>8. Contact</h2>
-            <p>Data Protection / Privacy inquiries: <a href="mailto:privacy@autoreach.ai">privacy@autoreach.ai</a></p>
+            <p>Data Protection / Privacy inquiries: <a href="mailto:privacy@viralix.dev">privacy@viralix.dev</a></p>
 
             <p>We are committed to promptly honoring valid deletion requests in compliance with applicable data protection laws.</p>
         </main>
