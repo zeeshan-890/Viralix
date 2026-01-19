@@ -213,4 +213,47 @@ router.post('/webhook', async (req, res) => {
     }
 });
 
-module.exports = router;
+// Process Comment logic
+async function processComment(commentData) {
+    const { postId, commentId, message, fromId, pageId } = commentData;
+    console.log('[FB AutoReply] Processing comment:', { pageId, postId, commentId, fromId, message });
+
+    try {
+        // Find rule
+        const rule = await AutoReplyRule.findOne({
+            postId: postId,
+            enabled: true,
+            platform: 'facebook'
+        });
+
+        if (!rule) {
+            console.log('[FB AutoReply] No rule found for post:', postId);
+            return;
+        }
+
+        // Check already responded
+        const alreadyResponded = rule.respondedUsers.some(u => u.igUserId === fromId);
+        if (alreadyResponded) {
+            console.log('[FB AutoReply] Already responded to user:', fromId);
+            return;
+        }
+
+        // Keyword Match
+        if (rule.triggerType === 'keyword' && rule.keywords.length > 0) {
+            const lowerMsg = message.toLowerCase();
+            const matched = rule.keywords.some(kw => lowerMsg.includes(kw.toLowerCase()));
+            if (!matched) {
+                console.log('[FB AutoReply] Keyword not matched');
+                return;
+            }
+        }
+
+        // Get Token
+        const token = await getPageAccessToken(pageId);
+        if (!token) {
+            console.error('[FB AutoReply] No token found for page', pageId);
+            return;
+        }
+        console.log('[FB AutoReply] Found Page Token:', token.substring(0, 10) + '...');
+
+// Send Reply
