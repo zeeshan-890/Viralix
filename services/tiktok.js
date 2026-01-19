@@ -595,12 +595,11 @@ async function uploadVideoFromUrl(accessToken, videoUrl, options = null) {
     console.log(`[TikTok] Video downloaded: ${(videoSize / (1024 * 1024)).toFixed(2)} MB`);
 
     // Step 2: Calculate chunk size
-    let chunkSize;
-    if (videoSize < 5 * 1024 * 1024) {
-        chunkSize = videoSize;
-    } else {
-        chunkSize = 10 * 1024 * 1024;
-    }
+    // Step 2: Calculate chunk size
+    // Use 10MB chunks, but if video is smaller, use exact video size
+    // This ensures single-chunk uploads have matching chunk_size and video_size
+    const MAX_CHUNK_SIZE = 10 * 1024 * 1024;
+    const chunkSize = Math.min(videoSize, MAX_CHUNK_SIZE);
 
     // Step 3: Initialize Upload (Direct or Inbox)
     let initResult;
