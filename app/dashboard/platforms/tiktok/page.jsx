@@ -3,6 +3,8 @@ import { useState, useEffect } from 'react';
 import { useAccounts } from '@/hooks/useAccounts';
 import { platformSyncAPI } from '@/lib/api';
 import PlatformPageLayout from '../components/PlatformPageLayout';
+import CreateTikTokPost from './components/CreateTikTokPost';
+import { Plus } from 'lucide-react';
 
 export default function TikTokPage() {
     const { accounts, isLoading: accountsLoading } = useAccounts();
@@ -10,6 +12,7 @@ export default function TikTokPage() {
     const [content, setContent] = useState([]);
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
+    const [showCreateModal, setShowCreateModal] = useState(false);
 
     const ttAccounts = accounts.filter(a => a.platform === 'tiktok');
 
@@ -73,15 +76,44 @@ export default function TikTokPage() {
         }
     };
 
+    const handlePostSuccess = () => {
+        // Refresh data after successful post
+        handleRefresh();
+    };
+
     return (
-        <PlatformPageLayout
-            platform="tiktok"
-            accounts={ttAccounts}
-            metrics={metrics}
-            content={content}
-            loading={loading || accountsLoading}
-            refreshing={refreshing}
-            onRefresh={handleRefresh}
-        />
+        <>
+            <PlatformPageLayout
+                platform="tiktok"
+                accounts={ttAccounts}
+                metrics={metrics}
+                content={content}
+                loading={loading || accountsLoading}
+                refreshing={refreshing}
+                onRefresh={handleRefresh}
+            >
+                {/* Create Post Button */}
+                {ttAccounts.length > 0 && (
+                    <div className="mb-6">
+                        <button
+                            onClick={() => setShowCreateModal(true)}
+                            className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-pink-500 via-red-500 to-yellow-500 text-white rounded-xl font-medium hover:from-pink-600 hover:via-red-600 hover:to-yellow-600 transition-all shadow-lg hover:shadow-xl"
+                        >
+                            <Plus className="w-5 h-5" />
+                            Create TikTok Post
+                        </button>
+                    </div>
+                )}
+            </PlatformPageLayout>
+
+            {/* Create Post Modal */}
+            <CreateTikTokPost
+                isOpen={showCreateModal}
+                onClose={() => setShowCreateModal(false)}
+                accounts={ttAccounts}
+                onSuccess={handlePostSuccess}
+            />
+        </>
     );
 }
+
