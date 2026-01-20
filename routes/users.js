@@ -192,4 +192,53 @@ router.put('/subscription', auth, async (req, res) => {
     }
 });
 
+// @route   DELETE /api/users/account
+// @desc    Delete user account and all related data
+// @access  Private
+router.delete('/account', auth, async (req, res) => {
+    try {
+        const userId = req.user.id;
+
+        // Import all models that have user-related data
+        const SocialAccount = require('../models/SocialAccount');
+        const Post = require('../models/Post');
+        const PlatformContent = require('../models/PlatformContent');
+        const AutoReplyRule = require('../models/AutoReplyRule');
+        const PublishJob = require('../models/PublishJob');
+
+        console.log(`[Account Deletion] Starting deletion for user: ${userId}`);
+
+        // Delete all related data in parallel
+        const deletionResults = await Promise.allSettled([
+            SocialAccount.deleteMany({ userId }),
+            Post.deleteMany({ userId }),
+            PlatformContent.deleteMany({ userId }),
+            AutoReplyRule.deleteMany({ userId }),
+            PublishJob.deleteMany({ userId })
+        ]);
+
+        // Log deletion results
+        const collections = ['SocialAccount', 'Post', 'PlatformContent', 'AutoReplyRule', 'PublishJob'];
+        deletionResults.forEach((result, index) => {
+            if (result.status === 'fulfilled') {
+                console.log(`[Account Deletion] Deleted ${result.value.deletedCount} ${collections[index]} records`);
+            } else {
+                console.error(`[Account Deletion] Failed to delete ${collections[index]}:`, result.reason);
+            }
+        });
+
+        // Finally, delete the user
+        await User.findByIdAndDelete(userId);
+        console.log(`[Account Deletion] User ${userId} deleted successfully`);
+
+        res.json({
+            success: true,
+            message: 'Account and all related data deleted successfully'
+        });
+    } catch (error) {
+        console.error('[Account Deletion] Error:', error.message);
+        res.status(500).json({ success: false, message: 'Failed to delete account' });
+    }
+});
+
 module.exports = router;
