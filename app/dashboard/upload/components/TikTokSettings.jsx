@@ -288,52 +288,84 @@ export default function TikTokSettings({ accountId, settings, onSettingsChange, 
                 {settings.commercialDisclosure && (
                     <div className="space-y-3 pt-3 border-t border-gray-100">
                         {/* Your Brand */}
-                        <label className={`flex items-start gap-3 p-3 rounded-lg border transition-all cursor-pointer
-                            ${settings.brandOrganic ? 'bg-blue-50 border-blue-300' : 'bg-gray-50 border-gray-200 hover:border-gray-300'}`}
-                        >
-                            <input
-                                type="checkbox"
-                                checked={settings.brandOrganic}
-                                onChange={(e) => handleChange('brandOrganic', e.target.checked)}
-                                className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500 mt-0.5"
-                            />
-                            <div className="flex-1">
-                                <div className="flex items-center gap-2">
-                                    <Building2 className="w-4 h-4 text-blue-500" />
-                                    <span className="text-sm font-medium text-gray-700">Your Brand</span>
+                        <div>
+                            <label className={`flex items-start gap-3 p-3 rounded-lg border transition-all cursor-pointer
+                                ${settings.brandOrganic ? 'bg-blue-50 border-blue-300' : 'bg-gray-50 border-gray-200 hover:border-gray-300'}`}
+                            >
+                                <input
+                                    type="checkbox"
+                                    checked={settings.brandOrganic}
+                                    onChange={(e) => handleChange('brandOrganic', e.target.checked)}
+                                    className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500 mt-0.5"
+                                />
+                                <div className="flex-1">
+                                    <div className="flex items-center gap-2">
+                                        <Building2 className="w-4 h-4 text-blue-500" />
+                                        <span className="text-sm font-medium text-gray-700">Your Brand</span>
+                                    </div>
+                                    <p className="text-xs text-gray-500 mt-1">
+                                        You are promoting yourself or your own business.
+                                    </p>
                                 </div>
-                                <p className="text-xs text-gray-500 mt-1">
-                                    You are promoting yourself or your own business.
-                                </p>
-                            </div>
-                        </label>
+                            </label>
+                            {settings.brandOrganic && (
+                                <div className="mt-2 ml-7 px-3 py-2 bg-blue-100 border border-blue-200 rounded-lg text-sm text-blue-800 flex items-center gap-2">
+                                    <Tag className="w-4 h-4 flex-shrink-0" />
+                                    Your photo/video will be labeled as "Promotional content"
+                                </div>
+                            )}
+                        </div>
 
                         {/* Branded Content */}
-                        <label className={`flex items-start gap-3 p-3 rounded-lg border transition-all cursor-pointer
-                            ${settings.brandedContent ? 'bg-purple-50 border-purple-300' : 'bg-gray-50 border-gray-200 hover:border-gray-300'}`}
-                        >
-                            <input
-                                type="checkbox"
-                                checked={settings.brandedContent}
-                                onChange={(e) => handleChange('brandedContent', e.target.checked)}
-                                className="w-4 h-4 text-purple-600 rounded focus:ring-purple-500 mt-0.5"
-                            />
-                            <div className="flex-1">
-                                <div className="flex items-center gap-2">
-                                    <Handshake className="w-4 h-4 text-purple-500" />
-                                    <span className="text-sm font-medium text-gray-700">Branded Content</span>
+                        <div>
+                            <label
+                                className={`flex items-start gap-3 p-3 rounded-lg border transition-all
+                                    ${settings.privacyLevel === 'SELF_ONLY'
+                                        ? 'bg-gray-100 border-gray-200 opacity-60 cursor-not-allowed'
+                                        : settings.brandedContent
+                                            ? 'bg-purple-50 border-purple-300 cursor-pointer'
+                                            : 'bg-gray-50 border-gray-200 hover:border-gray-300 cursor-pointer'}`}
+                                title={settings.privacyLevel === 'SELF_ONLY' ? 'Branded content visibility cannot be set to private' : ''}
+                            >
+                                <input
+                                    type="checkbox"
+                                    checked={settings.brandedContent}
+                                    onChange={(e) => handleChange('brandedContent', e.target.checked)}
+                                    disabled={settings.privacyLevel === 'SELF_ONLY'}
+                                    className="w-4 h-4 text-purple-600 rounded focus:ring-purple-500 mt-0.5 disabled:opacity-50"
+                                />
+                                <div className="flex-1">
+                                    <div className="flex items-center gap-2">
+                                        <Handshake className="w-4 h-4 text-purple-500" />
+                                        <span className="text-sm font-medium text-gray-700">Branded Content</span>
+                                        {settings.privacyLevel === 'SELF_ONLY' && (
+                                            <span className="text-xs text-red-500 ml-auto">(Disabled for private posts)</span>
+                                        )}
+                                    </div>
+                                    <p className="text-xs text-gray-500 mt-1">
+                                        You are promoting another brand or a third party.
+                                    </p>
                                 </div>
-                                <p className="text-xs text-gray-500 mt-1">
-                                    You are promoting another brand or a third party.
-                                </p>
-                            </div>
-                        </label>
+                            </label>
+                            {settings.privacyLevel === 'SELF_ONLY' && (
+                                <div className="mt-2 ml-7 px-3 py-2 bg-amber-50 border border-amber-200 rounded-lg text-sm text-amber-700 flex items-center gap-2">
+                                    <AlertCircle className="w-4 h-4 flex-shrink-0" />
+                                    Branded content visibility cannot be set to private. Change privacy level to enable.
+                                </div>
+                            )}
+                            {settings.brandedContent && settings.privacyLevel !== 'SELF_ONLY' && (
+                                <div className="mt-2 ml-7 px-3 py-2 bg-purple-100 border border-purple-200 rounded-lg text-sm text-purple-800 flex items-center gap-2">
+                                    <Handshake className="w-4 h-4 flex-shrink-0" />
+                                    Your photo/video will be labeled as "Paid partnership"
+                                </div>
+                            )}
+                        </div>
 
-                        {/* Label preview */}
-                        {getLabelText() && (
-                            <div className="bg-amber-50 text-amber-800 text-sm px-3 py-2 rounded-lg flex items-center gap-2">
+                        {/* Combined label preview when both selected */}
+                        {settings.brandOrganic && settings.brandedContent && (
+                            <div className="bg-gradient-to-r from-blue-50 to-purple-50 border border-purple-200 text-purple-800 text-sm px-3 py-2 rounded-lg flex items-center gap-2">
                                 <Info className="w-4 h-4 flex-shrink-0" />
-                                {getLabelText()}
+                                Your photo/video will be labeled as "Paid partnership" (takes priority over Promotional)
                             </div>
                         )}
 
@@ -352,10 +384,18 @@ export default function TikTokSettings({ accountId, settings, onSettingsChange, 
             <div className="bg-gradient-to-r from-gray-50 to-gray-100 rounded-xl p-4 border border-gray-200">
                 <div className="flex items-start gap-3">
                     <CheckCircle2 className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" />
+                    <p className="text-sm text-gray-700">{getConsentText()}</p>
+                </div>
+            </div>
+
+            {/* Processing Time Notification - PROMINENT */}
+            <div className="bg-blue-50 border-l-4 border-blue-500 rounded-r-xl p-4">
+                <div className="flex items-start gap-3">
+                    <Info className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
                     <div>
-                        <p className="text-sm text-gray-700">{getConsentText()}</p>
-                        <p className="text-xs text-gray-500 mt-2">
-                            After publishing, it may take a few minutes for your content to process and appear on your profile.
+                        <p className="text-sm font-medium text-blue-800">Processing Time Notice</p>
+                        <p className="text-sm text-blue-700 mt-1">
+                            After publishing, it may take <strong>a few minutes</strong> for your content to be processed and become visible on your TikTok profile.
                         </p>
                     </div>
                 </div>
