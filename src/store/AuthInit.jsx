@@ -16,8 +16,14 @@ export default function AuthInit() {
 
     useEffect(() => {
         if (!loading && user) {
-            const isPublicPage = pathname === '/' || pathname.startsWith('/auth');
-            if (isPublicPage) {
+            // Pages that should redirect logged-in users to dashboard
+            const isLandingOrAuth = pathname === '/' || pathname.startsWith('/auth');
+            // Legal/info pages should NOT redirect (must be publicly accessible)
+            const isPublicInfoPage = pathname.startsWith('/privacy') ||
+                pathname.startsWith('/terms') ||
+                pathname.startsWith('/about');
+
+            if (isLandingOrAuth && !isPublicInfoPage) {
                 router.replace('/dashboard');
             }
         }
