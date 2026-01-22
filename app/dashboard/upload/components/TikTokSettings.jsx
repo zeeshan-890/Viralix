@@ -67,12 +67,42 @@ export default function TikTokSettings({ accountId, settings, onSettingsChange, 
     const commercialError = settings.commercialDisclosure &&
         !settings.brandOrganic && !settings.brandedContent;
 
-    // Get consent declaration text
-    const getConsentText = () => {
+    // Get consent declaration JSX with clickable links
+    const getConsentDeclaration = () => {
+        const musicLink = (
+            <a
+                href="https://www.tiktok.com/legal/page/global/music-usage-confirmation/en"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-blue-600 hover:text-blue-800 underline font-medium"
+            >
+                Music Usage Confirmation
+            </a>
+        );
+
+        const brandedLink = (
+            <a
+                href="https://www.tiktok.com/legal/page/global/bc-policy/en"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-blue-600 hover:text-blue-800 underline font-medium"
+            >
+                Branded Content Policy
+            </a>
+        );
+
         if (settings.brandedContent) {
-            return "By posting, you agree to TikTok's Branded Content Policy and Music Usage Confirmation.";
+            return (
+                <span>
+                    By posting, you agree to TikTok's {brandedLink} and {musicLink}.
+                </span>
+            );
         }
-        return "By posting, you agree to TikTok's Music Usage Confirmation.";
+        return (
+            <span>
+                By posting, you agree to TikTok's {musicLink}.
+            </span>
+        );
     };
 
     // Get label text for commercial content
@@ -380,11 +410,11 @@ export default function TikTokSettings({ accountId, settings, onSettingsChange, 
                 )}
             </div>
 
-            {/* Consent Declaration */}
+            {/* Consent Declaration - with CLICKABLE links */}
             <div className="bg-gradient-to-r from-gray-50 to-gray-100 rounded-xl p-4 border border-gray-200">
                 <div className="flex items-start gap-3">
                     <CheckCircle2 className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" />
-                    <p className="text-sm text-gray-700">{getConsentText()}</p>
+                    <p className="text-sm text-gray-700">{getConsentDeclaration()}</p>
                 </div>
             </div>
 
