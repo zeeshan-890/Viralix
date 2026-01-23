@@ -32,19 +32,10 @@ api.interceptors.request.use((config) => {
 });
 
 // Response interceptor for auth errors
+// No automatic redirects - let components handle auth state
 api.interceptors.response.use(
     (response) => response,
     (error) => {
-        const status = error?.response?.status;
-        if (status === 401 && typeof window !== 'undefined') {
-            const path = window.location?.pathname || '';
-            const isAuthRoute = path.startsWith('/auth');
-            const isPublicRoot = path === '/' || path === '';
-            // Only redirect to login if not on auth pages or the public landing page
-            if (!isAuthRoute && !isPublicRoot) {
-                window.location.href = '/auth/login';
-            }
-        }
         return Promise.reject(error);
     }
 );
