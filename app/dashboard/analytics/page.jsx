@@ -4,6 +4,12 @@ import { analyticsAPI } from '@/lib/api';
 import AnalyticsCharts from './components/AnalyticsCharts';
 import PlatformMetrics from './components/PlatformMetrics';
 import ContentPerformance from './components/ContentPerformance';
+import BestTimesToPost from './components/BestTimesToPost';
+import SentimentAnalysis from './components/SentimentAnalysis';
+import LinkShortener from './components/LinkShortener';
+import KeywordAlerts from './components/KeywordAlerts';
+import CompetitorAnalysis from './components/CompetitorAnalysis';
+import HashtagResearch from './components/HashtagResearch';
 
 export default function AnalyticsPage() {
     const [loading, setLoading] = useState(true);
@@ -96,7 +102,6 @@ export default function AnalyticsPage() {
                             <span className="text-xl">👁️</span>
                         </div>
                     </div>
-                    {/* Change vs previous period can be added when available */}
                 </div>
 
                 <div className="bg-white rounded-lg border border-gray-200 p-6">
@@ -111,7 +116,6 @@ export default function AnalyticsPage() {
                             <span className="text-xl">❤️</span>
                         </div>
                     </div>
-                    {/* Placeholder for change */}
                 </div>
 
                 <div className="bg-white rounded-lg border border-gray-200 p-6">
@@ -126,7 +130,6 @@ export default function AnalyticsPage() {
                             <span className="text-xl">👍</span>
                         </div>
                     </div>
-                    {/* Placeholder for change */}
                 </div>
 
                 <div className="bg-white rounded-lg border border-gray-200 p-6">
@@ -141,19 +144,36 @@ export default function AnalyticsPage() {
                             <span className="text-xl">👥</span>
                         </div>
                     </div>
-                    {/* Placeholder for change */
-                    }
                 </div>
             </div>
+
+            {/* Best Time to Post (Feature 1) */}
+            <BestTimesToPost />
 
             {/* Charts Section */}
             <AnalyticsCharts analytics={analytics} />
 
+            {/* Comment Sentiment (Feature 2) */}
+            <SentimentAnalysis />
+
+            {/* Social Listening (Feature 5) */}
+            <KeywordAlerts />
+
+            {/* Competitor Analysis (Feature 10) */}
+            <CompetitorAnalysis />
+
+            {/* Hashtag Research Tool */}
+            <HashtagResearch />
+
             {/* Platform Metrics */}
             <PlatformMetrics analytics={analytics} />
+
+            {/* Link Shortener (Feature 4) */}
+            <LinkShortener />
 
             {/* Content Performance */}
             <ContentPerformance />
         </div>
     </div>);
 }
+

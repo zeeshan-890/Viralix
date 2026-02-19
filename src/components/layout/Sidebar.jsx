@@ -13,7 +13,9 @@ import {
     Settings,
     ChevronDown,
     ChevronRight,
-    Layers
+    Layers,
+    MessageSquare,
+    LayoutTemplate
 } from 'lucide-react';
 import { useAuthStore } from '../../store/authStore';
 import Image from 'next/image';
@@ -24,6 +26,8 @@ const navigation = [
     { name: 'Preview', href: '/dashboard/preview', icon: Eye },
     { name: 'Schedule', href: '/dashboard/schedule', icon: Calendar },
     { name: 'Analytics', href: '/dashboard/analytics', icon: BarChart3 },
+    { name: 'Inbox', href: '/dashboard/inbox', icon: MessageSquare },
+    { name: 'Bio Link', href: '/dashboard/bio', icon: LayoutTemplate },
     {
         name: 'Platforms',
         href: '/dashboard/platforms',

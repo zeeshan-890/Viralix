@@ -77,6 +77,7 @@ export const postsAPI = {
     update: (id, data) => api.put(`/posts/${id}`, data),
     remove: (id) => api.delete(`/posts/${id}`),
     publishNow: (id) => api.post(`/posts/${id}/publish`),
+    remix: (id, { tone, platform } = {}) => api.post(`/posts/${id}/remix`, { tone, platform }),
 };
 export const campaignsAPI = {
     getAll: () => api.get('/campaigns'),
@@ -92,12 +93,119 @@ export const analyticsAPI = {
     getContentPerformance: (params) => api.get('/analytics/content-performance', { params }),
     getPerformance: (params) => api.get('/analytics/performance', { params }),
     refresh: () => api.post('/analytics/refresh'),
+    getBestTimes: (params) => api.get('/analytics/best-times', { params }),
 };
 export const aiAPI = {
     caption: ({ topic, tone, platform }) => api.post('/ai/caption', { topic, tone, platform }),
     hashtags: ({ topic, platform, count }) => api.post('/ai/hashtags', { topic, platform, count }),
     rewrite: ({ text, tone, platform }) => api.post('/ai/rewrite', { text, tone, platform }),
 };
+
+// Comment Sentiment API (Feature 2)
+export const commentsAPI = {
+    getSentimentSummary: (params) => api.get('/comments/sentiment-summary', { params }),
+    getRecent: (params) => api.get('/comments/recent', { params }),
+    getUrgent: (params) => api.get('/comments/urgent', { params }),
+};
+
+// Link Shortener API (Feature 4)
+export const linksAPI = {
+    create: (data) => api.post('/links', data),
+    list: (params) => api.get('/links', { params }),
+    getStats: (id) => api.get(`/links/${id}/stats`),
+    remove: (id) => api.delete(`/links/${id}`),
+};
+
+// Keyword Alerts API (Feature 5)
+export const keywordAlertsAPI = {
+    list: () => api.get('/keyword-alerts'),
+    create: (data) => api.post('/keyword-alerts', data),
+    toggle: (id) => api.patch(`/keyword-alerts/${id}/toggle`),
+    remove: (id) => api.delete(`/keyword-alerts/${id}`),
+    getNotifications: () => api.get('/keyword-alerts/notifications'),
+    markAllRead: () => api.patch('/keyword-alerts/notifications/read-all'),
+};
+
+// Team Collaboration API (Feature 6)
+export const teamAPI = {
+    list: () => api.get('/team'),
+    invite: (data) => api.post('/team/invite', data),
+    updateRole: (userId, role) => api.patch(`/team/${userId}/role`, { role }),
+    remove: (userId) => api.delete(`/team/${userId}`),
+    submitPost: (postId, note) => api.post(`/team/posts/${postId}/submit`, { note }),
+    approvePost: (postId, note) => api.post(`/team/posts/${postId}/approve`, { note }),
+    rejectPost: (postId, note) => api.post(`/team/posts/${postId}/reject`, { note }),
+    pendingPosts: () => api.get('/team/posts/pending'),
+};
+
+// Watermark API (Feature 7)
+export const watermarkAPI = {
+    get: () => api.get('/watermark'),
+    upload: (formData) => api.post('/watermark/upload', formData, { headers: { 'Content-Type': 'multipart/form-data' } }),
+    update: (data) => api.patch('/watermark', data),
+    remove: () => api.delete('/watermark'),
+    preview: (imageUrl) => api.get('/watermark/preview', { params: { imageUrl } }),
+};
+
+// Bulk Upload API (Feature 8)
+export const bulkUploadAPI = {
+    preview: (formData) => api.post('/bulk-upload/preview', formData, { headers: { 'Content-Type': 'multipart/form-data' } }),
+    create: (formData) => api.post('/bulk-upload/create', formData, { headers: { 'Content-Type': 'multipart/form-data' } }),
+};
+
+// Unified Inbox API (Feature 9)
+export const inboxAPI = {
+    list: (params) => api.get('/inbox', { params }),
+    stats: () => api.get('/inbox/stats'),
+    messages: (conversationId, params) => api.get(`/inbox/${conversationId}/messages`, { params }),
+    reply: (conversationId, text) => api.post(`/inbox/${conversationId}/reply`, { text }),
+    updateStatus: (conversationId, status) => api.patch(`/inbox/${conversationId}/status`, { status }),
+    updateLabels: (conversationId, labels) => api.patch(`/inbox/${conversationId}/labels`, { labels }),
+    assign: (conversationId, assignedTo) => api.patch(`/inbox/${conversationId}/assign`, { assignedTo }),
+};
+
+// Competitor Analysis API (Feature 10)
+export const competitorAPI = {
+    list: () => api.get('/competitors'),
+    add: (data) => api.post('/competitors', data),
+    remove: (id) => api.delete(`/competitors/${id}`),
+    toggle: (id) => api.patch(`/competitors/${id}/toggle`),
+    snapshot: (id, data) => api.post(`/competitors/${id}/snapshot`, data),
+    history: (id, days) => api.get(`/competitors/${id}/history`, { params: { days } }),
+    compare: () => api.get('/competitors/compare'),
+};
+
+// Hashtag Research API (Feature 9 — Hashtag Tool)
+export const hashtagResearchAPI = {
+    performance: (params) => api.get('/hashtag-research/performance', { params }),
+    suggest: (params) => api.get('/hashtag-research/suggest', { params }),
+    trending: (params) => api.get('/hashtag-research/trending', { params }),
+    listSets: () => api.get('/hashtag-research/sets'),
+    createSet: (data) => api.post('/hashtag-research/sets', data),
+    updateSet: (id, data) => api.patch(`/hashtag-research/sets/${id}`, data),
+    deleteSet: (id) => api.delete(`/hashtag-research/sets/${id}`),
+    copySet: (id) => api.post(`/hashtag-research/sets/${id}/copy`),
+};
+
+// AI Content Calendar (Feature 1)
+export const aiCalendarAPI = {
+    analyze: (data) => api.post('/ai-calendar/analyze', data),
+    generate: (data) => api.post('/ai-calendar/generate', data),
+    confirm: (data) => api.post('/ai-calendar/confirm', data)
+};
+
+// Bio Pages API (Feature 11 — Smart Bio Link)
+export const bioPagesAPI = {
+    list: () => api.get('/bio-pages'),
+    get: (id) => api.get(`/bio-pages/${id}`),
+    create: (data) => api.post('/bio-pages', data),
+    update: (id, data) => api.patch(`/bio-pages/${id}`, data),
+    delete: (id) => api.delete(`/bio-pages/${id}`),
+    // Public
+    getPublic: (slug) => api.get(`/bio-pages/public/${slug}`),
+    trackClick: (id, buttonId) => api.post(`/bio-pages/click/${id}/${buttonId}`)
+};
+
 export const platformsAPI = {
     getConnected: () => api.get('/platforms/connected'),
     connect: (platform, authCode) => api.post('/platforms/connect', { platform, authCode }),
