@@ -20,8 +20,13 @@ const UserSchema = new mongoose.Schema({
     },
     role: {
         type: String,
-        enum: ['user', 'admin'],
+        enum: ['user', 'admin', 'editor', 'viewer'],
         default: 'user'
+    },
+    teamId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
+        default: null  // Points to team owner's user ID
     },
     avatar: {
         type: String,

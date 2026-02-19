@@ -41,4 +41,53 @@ async function rewriteText({ text, tone = 'concise', platform = 'instagram' }) {
     return generateText({ prompt });
 }
 
-module.exports = { suggestCaption, suggestHashtags, rewriteText };
+async function analyzeSentiment(commentText) {
+    const prompt = `You are a sentiment analysis expert for social media.
+Analyze this social media comment and return ONLY valid JSON (no markdown, no code blocks):
+{
+  "label": "positive" or "negative" or "neutral",
+  "confidence": a number between 0.0 and 1.0,
+  "isToxic": true or false (is the comment hateful, abusive, or harmful?),
+  "isUrgent": true or false (does the commenter need immediate attention, e.g. complaint, crisis?)
+}
+
+Comment: "${commentText.replace(/"/g, '\\"')}"`;
+
+    try {
+        const raw = await generateText({ prompt });
+        // Clean potential markdown code block wrapping
+        const cleaned = raw.replace(/```json?\n?/g, '').replace(/```\n?/g, '').trim();
+        return JSON.parse(cleaned);
+    } catch (e) {
+        console.error('[AI] Sentiment parse error:', e.message);
+        return { label: 'neutral', confidence: 0, isToxic: false, isUrgent: false };
+    }
+}
+
+async function remixContent({ content, hashtags = [], tone = 'fresh', platform = 'instagram' }) {
+    const prompt = `You are a top-tier social media strategist.
+Remix this old post for ${platform} in a ${tone} tone.
+Make it feel completely new while keeping the core message.
+Return ONLY valid JSON (no markdown, no code blocks):
+{
+  "caption": "the new remixed caption (2-3 punchy lines)",
+  "hashtags": ["tag1", "tag2", "tag3", "tag4", "tag5"]
+}
+
+ORIGINAL POST:
+${content}
+
+ORIGINAL HASHTAGS: ${hashtags.length > 0 ? hashtags.join(', ') : 'none'}`;
+
+    try {
+        const raw = await generateText({ prompt });
+        const cleaned = raw.replace(/```json?\n?/g, '').replace(/```\n?/g, '').trim();
+        return JSON.parse(cleaned);
+    } catch (e) {
+        console.error('[AI] Remix parse error:', e.message);
+        return { caption: content, hashtags };
+    }
+}
+
+module.exports = { generateText, suggestCaption, suggestHashtags, rewriteText, analyzeSentiment, remixContent };
+

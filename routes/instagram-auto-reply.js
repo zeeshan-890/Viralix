@@ -5,6 +5,10 @@ const AutoReplyRule = require('../models/AutoReplyRule');
 const AccountService = require('../services/account.service');
 const SocialAccount = require('../models/SocialAccount');
 const { decrypt } = require('../utils/encryption');
+const Comment = require('../models/Comment');
+const { analyzeSentiment } = require('../services/ai');
+const { checkKeywordAlerts } = require('./keyword-alerts');
+const { ingestInboundMessage } = require('./inbox');
 
 const router = express.Router();
 const INSTAGRAM_GRAPH_URL = 'https://graph.instagram.com';
@@ -373,6 +377,64 @@ router.post('/webhook', async (req, res) => {
                     }
 
                     if (account) {
+                        // --- Sentiment Analysis Integration ---
+                        try {
+                            const sentiment = await analyzeSentiment(text);
+                            await Comment.findOneAndUpdate(
+                                { commentId: id },
+                                {
+                                    userId: account.userId || account._id,
+                                    platform: 'instagram',
+                                    postId: mediaId,
+                                    commentId: id,
+                                    text: text,
+                                    authorName: from.username || 'Unknown',
+                                    authorId: from.id,
+                                    sentiment,
+                                    processedAt: new Date()
+                                },
+                                { upsert: true, new: true }
+                            );
+                            console.log(`[Sentiment] IG comment ${id}: ${sentiment.label} (${sentiment.confidence})`);
+                        } catch (sentimentErr) {
+                            console.warn('[Sentiment] IG analysis failed:', sentimentErr.message);
+                        }
+                        // --- End Sentiment ---
+
+                        // --- Keyword Alert Check ---
+                        try {
+                            await checkKeywordAlerts({
+                                userId: account.userId || account._id,
+                                commentText: text,
+                                commentId: id,
+                                authorName: from.username || 'Unknown',
+                                platform: 'instagram',
+                                postId: mediaId
+                            });
+                        } catch (kwErr) {
+                            console.warn('[KeywordAlert] IG check failed:', kwErr.message);
+                        }
+                        // --- End Keyword Alert ---
+
+                        // --- Unified Inbox Ingest ---
+                        try {
+                            await ingestInboundMessage({
+                                userId: account.userId || account._id,
+                                platform: 'instagram',
+                                participantId: from.id || from.username || 'unknown',
+                                participantName: from.username || 'Unknown',
+                                type: 'comment',
+                                text,
+                                externalId: id,
+                                postId: mediaId,
+                                postTitle: `IG Post ${mediaId?.substring(0, 8)}`,
+                                sentiment: sentimentResult || null
+                            });
+                        } catch (inboxErr) {
+                            console.warn('[Inbox] IG ingest failed:', inboxErr.message);
+                        }
+                        // --- End Inbox Ingest ---
+
                         await processComment({
                             mediaId: mediaId,
                             commentId: id,

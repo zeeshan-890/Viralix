@@ -72,6 +72,17 @@ const PostSchema = new mongoose.Schema({
         type: Boolean,
         default: true
     },
+    approvalStatus: {
+        type: String,
+        enum: ['none', 'pending', 'approved', 'rejected'],
+        default: 'none'
+    },
+    approvalNote: String,
+    approvedBy: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User'
+    },
+    approvedAt: Date,
     analytics: {
         totalReach: { type: Number, default: 0 },
         totalEngagement: { type: Number, default: 0 },

@@ -279,6 +279,62 @@ router.get('/status/:jobId', auth, async (req, res) => {
     }
 });
 
+// POST /api/posts/:id/remix — AI-powered content remix
+// Creates a new draft post from an existing post with fresh caption & hashtags
+router.post('/:id/remix', auth, async (req, res) => {
+    try {
+        const post = await Post.findById(req.params.id);
+        if (!post) return res.status(404).json({ message: 'Post not found' });
+        if (post.user.toString() !== req.user.id) return res.status(401).json({ message: 'Not authorized' });
+
+        const { tone = 'fresh', platform } = req.body;
+        const validTones = ['fresh', 'emotional', 'professional', 'humorous', 'linkedin-style'];
+        if (!validTones.includes(tone)) {
+            return res.status(400).json({ message: `Invalid tone. Choose from: ${validTones.join(', ')}` });
+        }
+
+        const targetPlatform = platform || post.platforms[0]?.name || 'instagram';
+
+        const { remixContent } = require('../services/ai');
+        const remixed = await remixContent({
+            content: post.content,
+            hashtags: post.hashtags,
+            tone,
+            platform: targetPlatform
+        });
+
+        // Create a new draft post with remixed content
+        const newPost = new Post({
+            user: req.user.id,
+            title: `${post.title} (Remixed)`,
+            content: remixed.caption || post.content,
+            platforms: post.platforms.map(p => ({
+                name: p.name,
+                accountId: p.accountId,
+                status: 'draft'
+            })),
+            media: post.media, // Reuse same media (Cloudinary URLs)
+            hashtags: remixed.hashtags || post.hashtags,
+            mentions: post.mentions,
+            isDraft: true,
+            isScheduled: false,
+            aiGenerated: true
+        });
+
+        const saved = await newPost.save();
+
+        res.json({
+            message: 'Content remixed successfully',
+            originalPostId: post._id,
+            newPost: saved,
+            appliedTone: tone
+        });
+    } catch (e) {
+        console.error('[Remix] Error:', e.message);
+        res.status(500).json({ message: 'Remix failed: ' + e.message });
+    }
+});
+
 module.exports = router;
 // const express = require('express');
 // const { body, validationResult } = require('express-validator');

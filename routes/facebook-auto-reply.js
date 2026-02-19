@@ -3,6 +3,10 @@ const axios = require('axios');
 const auth = require('../middleware/auth');
 const AutoReplyRule = require('../models/AutoReplyRule');
 const User = require('../models/User');
+const Comment = require('../models/Comment');
+const { analyzeSentiment } = require('../services/ai');
+const { checkKeywordAlerts } = require('./keyword-alerts');
+const { ingestInboundMessage } = require('./inbox');
 
 const router = express.Router();
 const FB_GRAPH_URL = 'https://graph.facebook.com/v19.0';
@@ -169,6 +173,74 @@ async function processComment(commentData) {
     console.log('[FB AutoReply] Processing comment:', { pageId, postId, commentId, fromId, message });
 
     try {
+        // --- Sentiment Analysis Integration ---
+        try {
+            const sentiment = await analyzeSentiment(message);
+            // Find the user who owns this page
+            const pageOwner = await User.findOne({ 'settings.facebookPages.id': pageId });
+            if (pageOwner) {
+                await Comment.findOneAndUpdate(
+                    { commentId: commentId },
+                    {
+                        userId: pageOwner._id,
+                        platform: 'facebook',
+                        postId: postId,
+                        commentId: commentId,
+                        text: message,
+                        authorName: 'Facebook User',
+                        authorId: fromId,
+                        sentiment,
+                        processedAt: new Date()
+                    },
+                    { upsert: true, new: true }
+                );
+                console.log(`[Sentiment] FB comment ${commentId}: ${sentiment.label} (${sentiment.confidence})`);
+            }
+        } catch (sentimentErr) {
+            console.warn('[Sentiment] FB analysis failed:', sentimentErr.message);
+        }
+        // --- End Sentiment ---
+
+        // --- Keyword Alert Check ---
+        try {
+            const pageOwnerForKw = await User.findOne({ 'settings.facebookPages.id': pageId });
+            if (pageOwnerForKw) {
+                await checkKeywordAlerts({
+                    userId: pageOwnerForKw._id,
+                    commentText: message,
+                    commentId,
+                    authorName: 'Facebook User',
+                    platform: 'facebook',
+                    postId
+                });
+            }
+        } catch (kwErr) {
+            console.warn('[KeywordAlert] FB check failed:', kwErr.message);
+        }
+        // --- End Keyword Alert ---
+
+        // --- Unified Inbox Ingest ---
+        try {
+            const pageOwnerForInbox = pageOwnerForKw || await User.findOne({ 'settings.facebookPages.id': pageId });
+            if (pageOwnerForInbox) {
+                await ingestInboundMessage({
+                    userId: pageOwnerForInbox._id,
+                    platform: 'facebook',
+                    participantId: senderId || 'unknown',
+                    participantName: 'Facebook User',
+                    type: 'comment',
+                    text: message,
+                    externalId: commentId,
+                    postId,
+                    postTitle: `FB Post ${postId?.substring(0, 8)}`,
+                    sentiment: sentiment || null
+                });
+            }
+        } catch (inboxErr) {
+            console.warn('[Inbox] FB ingest failed:', inboxErr.message);
+        }
+        // --- End Inbox Ingest ---
+
         // Find rule
         const rule = await AutoReplyRule.findOne({
             postId: postId,
