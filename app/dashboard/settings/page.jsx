@@ -1,4 +1,7 @@
 import AccountSettings from './components/AccountSettings';
+import TeamManagement from './components/TeamManagement';
+import WatermarkSettings from './components/WatermarkSettings';
+import BulkUpload from './components/BulkUpload';
 
 export default function SettingsPage() {
     return (
@@ -8,9 +11,13 @@ export default function SettingsPage() {
                 <p className="text-gray-600">Manage your account settings and preferences.</p>
             </div>
 
-            <div>
+            <div className="space-y-8">
                 <AccountSettings />
+                <TeamManagement />
+                <WatermarkSettings />
+                <BulkUpload />
             </div>
         </div>
     );
 }
+
