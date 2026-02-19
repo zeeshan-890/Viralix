@@ -1,9 +1,16 @@
 const express = require('express');
+const mongoose = require('mongoose');
 const auth = require('../middleware/auth');
 const Conversation = require('../models/Conversation');
 const Message = require('../models/Message');
 
 const router = express.Router();
+const toObjectId = (id) => new mongoose.Types.ObjectId(id);
+
+// Escape special regex characters to prevent ReDoS
+function escapeRegex(str) {
+    return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
 
 // GET /api/inbox — list conversations with filters
 router.get('/', auth, async (req, res) => {
@@ -22,9 +29,10 @@ router.get('/', auth, async (req, res) => {
         if (platform) filter.platform = platform;
         if (label) filter.labels = label;
         if (search) {
+            const safe = escapeRegex(search);
             filter.$or = [
-                { participantName: { $regex: search, $options: 'i' } },
-                { 'lastMessage.text': { $regex: search, $options: 'i' } }
+                { participantName: { $regex: safe, $options: 'i' } },
+                { 'lastMessage.text': { $regex: safe, $options: 'i' } }
             ];
         }
 
@@ -39,7 +47,7 @@ router.get('/', auth, async (req, res) => {
         ]);
 
         const unreadTotal = await Conversation.aggregate([
-            { $match: { userId: req.user._id || req.user.id, status: 'open' } },
+            { $match: { userId: toObjectId(req.user.id), status: 'open' } },
             { $group: { _id: null, total: { $sum: '$unreadCount' } } }
         ]);
 
@@ -60,7 +68,7 @@ router.get('/', auth, async (req, res) => {
 router.get('/stats', auth, async (req, res) => {
     try {
         const stats = await Conversation.aggregate([
-            { $match: { userId: req.user._id } },
+            { $match: { userId: toObjectId(req.user.id) } },
             {
                 $group: {
                     _id: '$status',
@@ -71,7 +79,7 @@ router.get('/stats', auth, async (req, res) => {
         ]);
 
         const platforms = await Conversation.aggregate([
-            { $match: { userId: req.user._id, status: 'open' } },
+            { $match: { userId: toObjectId(req.user.id), status: 'open' } },
             {
                 $group: {
                     _id: '$platform',
@@ -252,6 +260,9 @@ async function ingestInboundMessage({
                 postTitle
             });
         }
+
+        // Save conversation first so it has an _id for the message reference
+        await conversation.save();
 
         // Create message
         const message = new Message({

@@ -20,7 +20,7 @@ router.get('/performance', auth, async (req, res) => {
 
         // Build match stage
         const match = {
-            user: req.user._id,
+            user: toObjectId(req.user.id),
             isPublished: true,
             hashtags: { $exists: true, $ne: [] }
         };
@@ -131,15 +131,17 @@ router.get('/suggest', auth, async (req, res) => {
             console.warn('[HashtagResearch] AI suggest fallback:', aiErr.message);
         }
 
+        const escapedTopic = topic.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
         // Also find user's own top-performing hashtags related to the topic
         const relatedFromPosts = await Post.aggregate([
             {
                 $match: {
-                    user: req.user._id,
+                    user: toObjectId(req.user.id),
                     isPublished: true,
                     $or: [
-                        { title: { $regex: topic, $options: 'i' } },
-                        { content: { $regex: topic, $options: 'i' } }
+                        { title: { $regex: escapedTopic, $options: 'i' } },
+                        { content: { $regex: escapedTopic, $options: 'i' } }
                     ],
                     hashtags: { $exists: true, $ne: [] }
                 }
@@ -185,7 +187,7 @@ router.get('/suggest', auth, async (req, res) => {
 // GET /api/hashtag-research/sets — list saved sets
 router.get('/sets', auth, async (req, res) => {
     try {
-        const sets = await HashtagSet.find({ userId: req.user._id || req.user.id })
+        const sets = await HashtagSet.find({ userId: req.user.id })
             .sort({ updatedAt: -1 })
             .lean();
         res.json({ sets });
@@ -295,12 +297,12 @@ router.get('/trending', auth, async (req, res) => {
         // Compare first half vs second half of period
         const [firstHalf, secondHalf] = await Promise.all([
             Post.aggregate([
-                { $match: { user: req.user._id, createdAt: { $gte: since, $lt: midpoint }, hashtags: { $ne: [] } } },
+                { $match: { user: toObjectId(req.user.id), createdAt: { $gte: since, $lt: midpoint }, hashtags: { $ne: [] } } },
                 { $unwind: '$hashtags' },
                 { $group: { _id: { $toLower: '$hashtags' }, count: { $sum: 1 } } }
             ]),
             Post.aggregate([
-                { $match: { user: req.user._id, createdAt: { $gte: midpoint }, hashtags: { $ne: [] } } },
+                { $match: { user: toObjectId(req.user.id), createdAt: { $gte: midpoint }, hashtags: { $ne: [] } } },
                 { $unwind: '$hashtags' },
                 { $group: { _id: { $toLower: '$hashtags' }, count: { $sum: 1 } } }
             ])

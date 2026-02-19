@@ -88,14 +88,14 @@ router.post('/generate', auth, async (req, res) => {
         const { strategy, days = 7, platform = 'instagram', topics } = req.body;
 
         const count = Math.min(days, 30); // Cap at 30 days
-        const topicList = topics && topics.length ? topics.join(', ') : strategy.topics.join(', ');
+        const topicList = topics && topics.length ? topics.join(', ') : (strategy?.topics?.length ? strategy.topics.join(', ') : 'General content');
 
         const prompt = `Generate a ${count}-day social media content calendar for ${platform}.
         
         Strategy:
         - Topics: ${topicList}
-        - Tone: ${strategy.tone}
-        - Format: ${strategy.format}
+        - Tone: ${strategy?.tone || 'Engaging and professional'}
+        - Format: ${strategy?.format || 'Mix of content types'}
         
         Output a JSON array of objects, where each object has:
         - day (number 1-${count})
