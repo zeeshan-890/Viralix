@@ -226,7 +226,7 @@ export default function BioPageBuilder() {
                                 <h3 className="text-sm font-semibold text-blue-900 mb-1">Your Bio Link</h3>
                                 <div className="flex gap-2 items-center">
                                     <code className="text-sm bg-white px-2 py-1 rounded text-blue-600 flex-1">
-                                        {window.location.origin}/b/{page.slug}
+                                        {typeof window !== 'undefined' ? window.location.origin : ''}/b/{page.slug}
                                     </code>
                                     <a href={`/b/${page.slug}`} target="_blank" className="text-xs bg-blue-600 text-white px-3 py-1.5 rounded-lg hover:bg-blue-700">
                                         Visit
