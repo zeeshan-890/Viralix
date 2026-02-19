@@ -165,6 +165,83 @@ app.use('/api/platforms', require('./routes/platforms'));
 app.use('/api/posts', require('./routes/posts'));
 app.use('/api/analytics', require('./routes/analytics'));
 app.use('/api/ai', require('./routes/ai'));
+
+// New Feature Routes
+try {
+    app.use('/api/analytics', require('./routes/best-times'));
+    console.log('📊 Best Time to Post routes mounted');
+} catch (e) {
+    console.warn('Best-times routes not mounted:', e.message);
+}
+try {
+    app.use('/api/comments', require('./routes/comments'));
+    console.log('💬 Comment Sentiment routes mounted');
+} catch (e) {
+    console.warn('Comment routes not mounted:', e.message);
+}
+try {
+    app.use('/api/links', require('./routes/links'));
+    console.log('🔗 Link Shortener routes mounted');
+} catch (e) {
+    console.warn('Link routes not mounted:', e.message);
+}
+try {
+    app.use('/api/keyword-alerts', require('./routes/keyword-alerts'));
+    console.log('🔔 Keyword Alerts routes mounted');
+} catch (e) {
+    console.warn('Keyword alerts routes not mounted:', e.message);
+}
+try {
+    app.use('/api/team', require('./routes/team'));
+    console.log('👥 Team Collaboration routes mounted');
+} catch (e) {
+    console.warn('Team routes not mounted:', e.message);
+}
+try {
+    app.use('/api/watermark', require('./routes/watermark'));
+    console.log('🎨 Watermark routes mounted');
+} catch (e) {
+    console.warn('Watermark routes not mounted:', e.message);
+}
+try {
+    app.use('/api/bulk-upload', require('./routes/bulk-upload'));
+    console.log('📋 Bulk Upload routes mounted');
+} catch (e) {
+    console.warn('Bulk upload routes not mounted:', e.message);
+}
+try {
+    app.use('/api/inbox', require('./routes/inbox'));
+    console.log('📥 Unified Inbox routes mounted');
+} catch (e) {
+    console.warn('Inbox routes not mounted:', e.message);
+}
+try {
+    app.use('/api/competitors', require('./routes/competitors'));
+    console.log('🏆 Competitor Analysis routes mounted');
+} catch (e) {
+    console.warn('Competitor routes not mounted:', e.message);
+}
+try {
+    app.use('/api/hashtag-research', require('./routes/hashtag-research'));
+    console.log('#️⃣  Hashtag Research routes mounted');
+} catch (e) {
+    console.warn('Hashtag research routes not mounted:', e.message);
+}
+
+try {
+    app.use('/api/ai-calendar', require('./routes/ai-calendar'));
+    console.log('📅 AI Calendar routes mounted');
+} catch (e) {
+    console.warn('AI Calendar routes not mounted:', e.message);
+}
+
+try {
+    app.use('/api/bio-pages', require('./routes/bio-pages'));
+    console.log('🔗 Bio Pages routes mounted');
+} catch (e) {
+    console.warn('Bio pages routes not mounted:', e.message);
+}
+
 try {
     app.use('/api/platform-sync', require('./routes/platform-sync'));
     console.log('🔄 Platform sync routes mounted');
@@ -203,6 +280,36 @@ app.get('/api/cors/debug', (req, res) => {
     });
 });
 
+// Public short link redirect handler (Feature 4: Link Shortener)
+const ShortLink = require('./models/ShortLink');
+app.get('/l/:slug', async (req, res) => {
+    try {
+        const link = await ShortLink.findOneAndUpdate(
+            { slug: req.params.slug, isActive: true },
+            {
+                $inc: { clicks: 1 },
+                $push: {
+                    clickLog: {
+                        $each: [{
+                            timestamp: new Date(),
+                            referrer: req.get('referrer') || null,
+                            userAgent: req.get('user-agent') || null,
+                            ip: req.ip
+                        }],
+                        $slice: -1000 // Keep last 1000 clicks to avoid unbounded growth
+                    }
+                }
+            },
+            { new: true }
+        );
+        if (!link) return res.status(404).json({ message: 'Link not found or inactive' });
+        return res.redirect(301, link.originalUrl);
+    } catch (error) {
+        console.error('[ShortLink] Redirect error:', error.message);
+        return res.status(500).json({ message: 'Server error' });
+    }
+});
+
 // 404 handler
 app.use('*', (req, res) => {
     res.status(404).json({
@@ -224,8 +331,45 @@ app.use((err, req, res, next) => {
 const connectDB = require('./config/database');
 connectDB();
 
-// Start server
-app.listen(PORT, () => {
+// Start server with optional Socket.io
+const http = require('http');
+const server = http.createServer(app);
+
+try {
+    const { Server } = require('socket.io');
+    const io = new Server(server, {
+        cors: {
+            origin: process.env.CLIENT_URL || 'http://localhost:3000',
+            methods: ['GET', 'POST'],
+            credentials: true
+        },
+        transports: ['websocket', 'polling']
+    });
+
+    io.on('connection', (socket) => {
+        console.log(`[Socket.io] Client connected: ${socket.id}`);
+
+        // Authenticate and join user room
+        socket.on('join', (userId) => {
+            if (userId) {
+                socket.join(`user:${userId}`);
+                console.log(`[Socket.io] ${socket.id} joined room user:${userId}`);
+            }
+        });
+
+        socket.on('disconnect', () => {
+            console.log(`[Socket.io] Client disconnected: ${socket.id}`);
+        });
+    });
+
+    // Store io on app for routes/inbox.js to use
+    app.set('io', io);
+    console.log('🔌 Socket.io initialized for real-time inbox');
+} catch (e) {
+    console.warn('Socket.io not available (install with: npm i socket.io):', e.message);
+}
+
+server.listen(PORT, () => {
     console.log(`🚀 AutoReach AI Backend running on port ${PORT}`);
     console.log(`📊 Environment: ${process.env.NODE_ENV || 'development'}`);
     console.log(`🌐 Client URL: ${process.env.CLIENT_URL || 'http://localhost:3000'}`);
