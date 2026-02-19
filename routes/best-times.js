@@ -1,8 +1,10 @@
 const express = require('express');
+const mongoose = require('mongoose');
 const Post = require('../models/Post');
 const auth = require('../middleware/auth');
 
 const router = express.Router();
+const toObjectId = (id) => new mongoose.Types.ObjectId(id);
 
 // GET /api/analytics/best-times — Smart "Best Time to Post" analysis
 // Aggregates published posts by hour and day of week, calculates average engagement
@@ -13,7 +15,7 @@ router.get('/best-times', auth, async (req, res) => {
 
         // Build match filter
         const matchFilter = {
-            user: req.user._id || req.user.id,
+            user: toObjectId(req.user._id || req.user.id),
             'platforms.status': 'published',
             createdAt: { $gte: lookbackDate }
         };

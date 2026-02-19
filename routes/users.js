@@ -59,11 +59,18 @@ router.put('/settings', auth, async (req, res) => {
     try {
         const { settings } = req.body;
 
+        // Use dot-notation so we merge into existing settings instead of overwriting
+        // (protects watermark, timezone, and other nested settings from being clobbered)
+        const update = {};
+        for (const [key, value] of Object.entries(settings || {})) {
+            update[`settings.${key}`] = value;
+        }
+
         const user = await User.findByIdAndUpdate(
             req.user.id,
-            { $set: { settings } },
+            { $set: update },
             { new: true }
-        ).select('-password');
+        ).select('-password -socialAccounts.accessToken -socialAccounts.refreshToken');
 
         res.json(user);
     } catch (error) {
@@ -112,7 +119,17 @@ router.post('/social-accounts', [
 
         await user.save();
 
-        res.json({ message: 'Social account added successfully', socialAccounts: user.socialAccounts });
+        res.json({
+            message: 'Social account added successfully',
+            socialAccounts: user.socialAccounts.map(a => ({
+                _id: a._id,
+                platform: a.platform,
+                accountId: a.accountId,
+                accountName: a.accountName,
+                tokenExpires: a.tokenExpires,
+                connected: a.connected
+            }))
+        });
     } catch (error) {
         console.error(error.message);
         res.status(500).send('Server error');
@@ -144,7 +161,7 @@ router.delete('/social-accounts/:accountId', auth, async (req, res) => {
 // @access  Private
 router.get('/social-accounts', auth, async (req, res) => {
     try {
-        const user = await User.findById(req.user.id).select('socialAccounts');
+        const user = await User.findById(req.user.id).select('socialAccounts.platform socialAccounts.accountId socialAccounts.accountName socialAccounts.tokenExpires socialAccounts.connected socialAccounts._id');
         res.json(user.socialAccounts);
     } catch (error) {
         console.error(error.message);
@@ -157,6 +174,12 @@ router.get('/social-accounts', auth, async (req, res) => {
 // @access  Private
 router.put('/subscription', auth, async (req, res) => {
     try {
+        // Only admins can change subscription plans
+        const currentUser = await User.findById(req.user.id).select('role');
+        if (!currentUser || currentUser.role !== 'admin') {
+            return res.status(403).json({ message: 'Only admins can update subscriptions' });
+        }
+
         const { plan, status, endDate } = req.body;
 
         const updateFields = {};
@@ -205,20 +228,45 @@ router.delete('/account', auth, async (req, res) => {
         const PlatformContent = require('../models/PlatformContent');
         const AutoReplyRule = require('../models/AutoReplyRule');
         const PublishJob = require('../models/PublishJob');
+        const KeywordAlert = require('../models/KeywordAlert');
+        const HashtagSet = require('../models/HashtagSet');
+        const Conversation = require('../models/Conversation');
+        const Message = require('../models/Message');
+        const Competitor = require('../models/Competitor');
+        const Comment = require('../models/Comment');
+        const BioPage = require('../models/BioPage');
+        const ShortLink = require('../models/ShortLink');
 
         console.log(`[Account Deletion] Starting deletion for user: ${userId}`);
 
+        // First, find all conversations to delete their messages
+        const conversations = await Conversation.find({ userId }).select('_id');
+        const conversationIds = conversations.map(c => c._id);
+
         // Delete all related data in parallel
+        // Note: Post uses 'user' field; all other models use 'userId'
         const deletionResults = await Promise.allSettled([
             SocialAccount.deleteMany({ userId }),
-            Post.deleteMany({ userId }),
+            Post.deleteMany({ user: userId }),
             PlatformContent.deleteMany({ userId }),
             AutoReplyRule.deleteMany({ userId }),
-            PublishJob.deleteMany({ userId })
+            PublishJob.deleteMany({ userId }),
+            KeywordAlert.deleteMany({ userId }),
+            HashtagSet.deleteMany({ userId }),
+            Message.deleteMany({ conversationId: { $in: conversationIds } }),
+            Conversation.deleteMany({ userId }),
+            Competitor.deleteMany({ userId }),
+            Comment.deleteMany({ userId }),
+            BioPage.deleteMany({ userId }),
+            ShortLink.deleteMany({ userId })
         ]);
 
         // Log deletion results
-        const collections = ['SocialAccount', 'Post', 'PlatformContent', 'AutoReplyRule', 'PublishJob'];
+        const collections = [
+            'SocialAccount', 'Post', 'PlatformContent', 'AutoReplyRule', 'PublishJob',
+            'KeywordAlert', 'HashtagSet', 'Message', 'Conversation',
+            'Competitor', 'Comment', 'BioPage', 'ShortLink'
+        ];
         deletionResults.forEach((result, index) => {
             if (result.status === 'fulfilled') {
                 console.log(`[Account Deletion] Deleted ${result.value.deletedCount} ${collections[index]} records`);

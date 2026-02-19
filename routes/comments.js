@@ -1,8 +1,10 @@
 const express = require('express');
+const mongoose = require('mongoose');
 const auth = require('../middleware/auth');
 const Comment = require('../models/Comment');
 
 const router = express.Router();
+const toObjectId = (id) => new mongoose.Types.ObjectId(id);
 
 // GET /api/comments/sentiment-summary — Aggregate sentiment breakdown
 router.get('/sentiment-summary', auth, async (req, res) => {
@@ -11,7 +13,7 @@ router.get('/sentiment-summary', auth, async (req, res) => {
         const lookbackDate = new Date(Date.now() - parseInt(days) * 24 * 60 * 60 * 1000);
 
         const matchFilter = {
-            userId: req.user._id || req.user.id,
+            userId: toObjectId(req.user.id),
             createdAt: { $gte: lookbackDate }
         };
         if (platform) matchFilter.platform = platform;
@@ -45,9 +47,11 @@ router.get('/sentiment-summary', auth, async (req, res) => {
             summary[`${r._id}Percent`] = total > 0 ? Math.round((r.count / total) * 100) : 0;
         });
 
-        // Count toxic and urgent
-        const toxicCount = await Comment.countDocuments({ ...matchFilter, 'sentiment.isToxic': true });
-        const urgentCount = await Comment.countDocuments({ ...matchFilter, 'sentiment.isUrgent': true });
+        // For countDocuments, use string ID (Mongoose auto-casts)
+        const countFilter = { userId: req.user.id, createdAt: { $gte: lookbackDate } };
+        if (platform) countFilter.platform = platform;
+        const toxicCount = await Comment.countDocuments({ ...countFilter, 'sentiment.isToxic': true });
+        const urgentCount = await Comment.countDocuments({ ...countFilter, 'sentiment.isUrgent': true });
 
         summary.toxic = toxicCount;
         summary.urgent = urgentCount;
@@ -68,7 +72,7 @@ router.get('/recent', auth, async (req, res) => {
         const skip = (page - 1) * limit;
         const { platform, sentiment } = req.query;
 
-        const filter = { userId: req.user._id || req.user.id };
+        const filter = { userId: req.user.id };
         if (platform) filter.platform = platform;
         if (sentiment) filter['sentiment.label'] = sentiment;
 
@@ -99,7 +103,7 @@ router.get('/urgent', auth, async (req, res) => {
         const skip = (page - 1) * limit;
 
         const filter = {
-            userId: req.user._id || req.user.id,
+            userId: req.user.id,
             $or: [
                 { 'sentiment.isToxic': true },
                 { 'sentiment.isUrgent': true }

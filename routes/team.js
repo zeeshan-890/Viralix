@@ -43,8 +43,9 @@ router.get('/', auth, async (req, res) => {
 // POST /api/team/invite — invite user to team by email
 router.post('/invite', auth, async (req, res) => {
     try {
-        // Only owners/admins can invite
-        if (req.user.role !== 'admin' && req.user.role !== 'user') {
+        // Only the team owner can invite
+        const teamId = req.user.teamId || req.user.id;
+        if (teamId.toString() !== req.user.id.toString()) {
             return res.status(403).json({ message: 'Only team owners can invite members' });
         }
 
@@ -68,7 +69,6 @@ router.post('/invite', auth, async (req, res) => {
         }
 
         // Set teamId to the inviter (team owner)
-        const teamId = req.user.teamId || req.user.id;
         invitee.teamId = teamId;
         invitee.role = role;
         await invitee.save();
