@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 import { Plus, ChevronLeft, ChevronRight, Sparkles } from 'lucide-react';
-import { scheduleAPI, platformsAPI } from '@/lib/api';
+import { postsAPI, platformsAPI } from '@/lib/api';
 import NewPostModal from './components/NewPostModal';
 import PostCard from './components/PostCard';
 import CalendarAutofillWizard from './components/CalendarAutofillWizard';
@@ -58,7 +58,7 @@ export default function SchedulePage() {
             start.setDate(start.getDate() - 7);
             end.setDate(end.getDate() + 7);
 
-            const res = await scheduleAPI.getPosts(start.toISOString(), end.toISOString());
+            const res = await postsAPI.list({ startDate: start.toISOString(), endDate: end.toISOString() });
 
             // Group by date
             const grouped = {};
@@ -105,7 +105,7 @@ export default function SchedulePage() {
         });
 
         try {
-            await scheduleAPI.updatePost(postId, { scheduledDate: newDate });
+            await postsAPI.update(postId, { scheduledDate: newDate });
         } catch (error) {
             console.error('Failed to update post date:', error);
             loadPosts(); // Revert on error
