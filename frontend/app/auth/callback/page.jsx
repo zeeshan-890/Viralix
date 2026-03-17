@@ -24,7 +24,7 @@ function AuthCallbackContent() {
             localStorage.setItem('auth_token', token);
 
             // Fetch user data
-            fetch(`${process.env.NEXT_PUBLIC_API_URL || 'https://viralix-b3ff86cb412f.herokuapp.com/api'}/auth/me`, {
+            fetch(`${process.env.NEXT_PUBLIC_API_URL || 'https://api.viralix.dev/api'}/auth/me`, {
                 headers: {
                     'Authorization': `Bearer ${token}`
                 }
