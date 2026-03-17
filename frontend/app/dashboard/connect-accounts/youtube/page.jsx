@@ -127,7 +127,7 @@ export default function YouTubeManagePage() {
                                             </div>
                                         </div>
                                         <button
-                                            onClick={() => handleDisconnect(account.platformAccountId)}
+                                            onClick={() => handleDisconnect(account.platformAccountId || account._id)}
                                             className="px-4 py-2 text-sm font-medium text-red-600 border-2 border-red-600 rounded-lg hover:bg-red-50 transition-colors"
                                         >
                                             Disconnect
