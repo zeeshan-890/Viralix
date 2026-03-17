@@ -1,7 +1,7 @@
 'use client';
 import { notFound } from 'next/navigation';
 import { useState, useEffect } from 'react';
-import { bioPagesAPI } from '@/src/lib/api';
+import { bioPagesAPI } from '@/lib/api';
 
 export default function PublicBioPage({ params }) {
     const { slug } = params;
