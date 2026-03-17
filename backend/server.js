@@ -41,17 +41,20 @@ app.use('/api/auth', authLimiter);
 // backend domain (e.g., *.herokuapp.com), we must allow credentials and echo
 // the exact Origin. SameSite=None cookies are required for cross-site.
 // ---------------------------------------------------------------------------
-const CLIENT_URL = 'https://client-autoreach-ai-gs1k.vercel.app' || 'https://client-autoreach-ai-gs1k.vercel.app';
-let ALLOWED = (process.env.CORS_ALLOWED_ORIGINS || CLIENT_URL)
-    .split(',')
-    .map(o => o.trim())
-    .filter(Boolean)
-    .map(o => o.replace(/\/$/, ''));
+const CLIENT_URL = process.env.CLIENT_URL || 'https://www.viralix.dev';
+let ALLOWED = [
+    'https://viralix.dev',
+    'https://www.viralix.dev',
+    'https://client-autoreach-ai-gs1k.vercel.app',
+    CLIENT_URL
+].filter(Boolean).map(o => o.replace(/\/$/, ''));
 
-// Add production domains
-['https://viralix.dev', 'https://www.viralix.dev'].forEach(prod => {
-    if (!ALLOWED.includes(prod)) ALLOWED.push(prod);
-});
+if (process.env.CORS_ALLOWED_ORIGINS) {
+    process.env.CORS_ALLOWED_ORIGINS.split(',').forEach(o => {
+        const cleaned = o.trim().replace(/\/$/, '');
+        if (cleaned && !ALLOWED.includes(cleaned)) ALLOWED.push(cleaned);
+    });
+}
 
 // In production, optionally also allow local development origins for testing
 if (process.env.ALLOW_LOCAL_DEV !== '0') {
@@ -80,17 +83,17 @@ app.use(cors({
     },
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'x-auth-token']
+    allowedHeaders: ['Content-Type', 'Authorization', 'x-auth-token', 'Accept', 'Origin']
 }));
 
 // Manual OPTIONS fallback (some hosts need explicit 204)
 app.options('*', (req, res) => {
     const origin = req.headers.origin && req.headers.origin.replace(/\/$/, '');
-    if (origin && ALLOWED.includes(origin)) {
+    if (origin && (ALLOWED.includes(origin) || origin.match(/^https:\/\/client-autoreach-ai.*\.vercel\.app$/))) {
         res.header('Access-Control-Allow-Origin', origin);
         res.header('Access-Control-Allow-Credentials', 'true');
         res.header('Access-Control-Allow-Methods', 'GET,POST,PUT,PATCH,DELETE,OPTIONS');
-        res.header('Access-Control-Allow-Headers', 'Content-Type,Authorization,x-auth-token');
+        res.header('Access-Control-Allow-Headers', 'Content-Type,Authorization,x-auth-token,Accept,Origin');
     }
     return res.sendStatus(204);
 });
