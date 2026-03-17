@@ -179,9 +179,9 @@ export default function TikTokManagePage() {
                             <div className="space-y-2">
                                 {status.accounts.map(account => (
                                     <button
-                                        key={account.accountId}
+                                        key={account.platformAccountId}
                                         onClick={() => setSelectedAccount(account)}
-                                        className={`w-full text-left p-3 rounded-lg border-2 transition-all ${selectedAccount?.accountId === account.accountId
+                                        className={`w-full text-left p-3 rounded-lg border-2 transition-all ${selectedAccount?.platformAccountId === account.platformAccountId
                                             ? 'border-black bg-gray-50'
                                             : 'border-gray-200 hover:border-gray-300'
                                             }`}
@@ -257,7 +257,7 @@ export default function TikTokManagePage() {
                                         </div>
                                         <div className="flex gap-2">
                                             <button
-                                                onClick={() => handleRefreshToken(selectedAccount.accountId)}
+                                                onClick={() => handleRefreshToken(selectedAccount.platformAccountId)}
                                                 disabled={refreshing}
                                                 className="px-3 py-2 text-sm font-medium text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors flex items-center gap-2"
                                             >
@@ -265,7 +265,7 @@ export default function TikTokManagePage() {
                                                 Refresh
                                             </button>
                                             <button
-                                                onClick={() => handleDisconnect(selectedAccount.accountId)}
+                                                onClick={() => handleDisconnect(selectedAccount.platformAccountId)}
                                                 className="px-3 py-2 text-sm font-medium text-red-600 border border-red-200 rounded-lg hover:bg-red-50 transition-colors flex items-center gap-2"
                                             >
                                                 <Trash2 className="w-4 h-4" />

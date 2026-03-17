@@ -251,14 +251,14 @@ export default function ConnectAccountsPage() {
                         {ttAccounts.length > 0 && (
                             <div className="mt-6 pt-6 border-t border-gray-200 space-y-3">
                                 {ttAccounts.map(acc => (
-                                    <div key={acc.accountId} className="flex items-center justify-between p-3 border rounded-lg">
+                                    <div key={acc.platformAccountId} className="flex items-center justify-between p-3 border rounded-lg">
                                         <div className="flex items-center gap-3">
                                             <div className="w-10 h-10 rounded-full  flex items-center justify-center text-white">
                                                 <Image src="/tiktok.png" alt="TT" width={20} height={20} className="w-5 h-5 object-contain" />
                                             </div>
                                             <div className="font-medium">{acc.accountName}</div>
                                         </div>
-                                        <button onClick={() => handleDisconnect('tiktok', acc.accountId)} className="text-xs text-red-600 hover:text-red-800">Disconnect</button>
+                                        <button onClick={() => handleDisconnect('tiktok', acc.platformAccountId)} className="text-xs text-red-600 hover:text-red-800">Disconnect</button>
                                     </div>
                                 ))}
                             </div>
@@ -290,14 +290,14 @@ export default function ConnectAccountsPage() {
                         {ytAccounts.length > 0 && (
                             <div className="mt-6 pt-6 border-t border-gray-200 space-y-3">
                                 {ytAccounts.map(acc => (
-                                    <div key={acc.accountId} className="flex items-center justify-between p-3 border rounded-lg">
+                                    <div key={acc.platformAccountId} className="flex items-center justify-between p-3 border rounded-lg">
                                         <div className="flex items-center gap-3">
                                             <div className="w-10 h-10 rounded-full  flex items-center justify-center text-white">
                                                 <Image src="/youtube.png" alt="YT" width={20} height={20} className="w-5 h-5 object-contain" />
                                             </div>
                                             <div className="font-medium">{acc.accountName}</div>
                                         </div>
-                                        <button onClick={() => handleDisconnect('youtube', acc.accountId)} className="text-xs text-red-600 hover:text-red-800">Disconnect</button>
+                                        <button onClick={() => handleDisconnect('youtube', acc.platformAccountId)} className="text-xs text-red-600 hover:text-red-800">Disconnect</button>
                                     </div>
                                 ))}
                             </div>
