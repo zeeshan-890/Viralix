@@ -1,65 +1,129 @@
 'use client';
-import { useState, useRef, useMemo, useEffect } from 'react';
+import { useState, useRef, useEffect, useMemo } from 'react';
 import Image from 'next/image';
-import { X, Upload, Trash2, Video, Eye, EyeOff, MessageSquare, Users, Share2, Calendar, Clock, CheckCircle2 } from 'lucide-react';
+import { X, Video, AlertCircle, Info, Tag, Building2, Handshake, CheckCircle2, Copy, Scissors, MessageSquare, Loader2, ArrowLeft, Eye, EyeOff, Users, Upload } from 'lucide-react';
 import { tiktokAPI, uploadAPI, postsAPI } from '@/lib/api';
-import TikTokSettings, { useTikTokSettingsValidation } from '../../../upload/components/TikTokSettings';
 import { toast } from 'react-hot-toast';
 
-// TikTok icon component
-const TikTokIcon = () => (
-    <svg className="w-6 h-6" viewBox="0 0 24 24" fill="currentColor">
-        <path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64 2.93 2.93 0 0 1 .88.13V9.4a6.84 6.84 0 0 0-1-.05A6.33 6.33 0 0 0 5 20.1a6.34 6.34 0 0 0 10.86-4.43v-7a8.16 8.16 0 0 0 4.77 1.52v-3.4a4.85 4.85 0 0 1-1-.1z" />
-    </svg>
-);
-
 export default function CreateTikTokPost({ isOpen, onClose, accounts = [], onSuccess }) {
-    const [step, setStep] = useState(1); // 1: Content, 2: Settings, 3: Schedule
+    // ---------------------------------------------------------
+    // State
+    // ---------------------------------------------------------
     const [loading, setLoading] = useState(false);
     const [uploading, setUploading] = useState(false);
     const [uploadProgress, setUploadProgress] = useState(0);
     const [error, setError] = useState('');
 
-    // Account Selection
-    const [selectedAccountId, setSelectedAccountId] = useState(accounts?.[0]?.platformAccountId || '');
-
-    // Auto-select first account when loaded
-    useEffect(() => {
-        if (!selectedAccountId && accounts?.length > 0) {
-            setSelectedAccountId(accounts[0].platformAccountId);
-        }
-    }, [accounts, selectedAccountId]);
-
-    // Video state
-    const [videoFile, setVideoFile] = useState(null);
+    // Video 
     const [videoPreview, setVideoPreview] = useState('');
-    const [videoUrl, setVideoUrl] = useState(''); // Cloudinary URL after upload
-    const [videoMeta, setVideoMeta] = useState({ filename: '', size: 0, mimetype: '' });
+    const [videoUrl, setVideoUrl] = useState(''); // Cloudinary URL
+    const [videoMeta, setVideoMeta] = useState({ filename: '', size: 0, mimetype: '', duration: 0, resolution: '1080P' });
+    const fileInputRef = useRef(null);
 
-    // Content state
+    // Account & Creator Info
+    const [selectedAccountId, setSelectedAccountId] = useState('');
+    const [creatorInfo, setCreatorInfo] = useState(null);
+    const [loadingCreator, setLoadingCreator] = useState(false);
+
+    // Form settings
     const [caption, setCaption] = useState('');
-
-    // Shared TikTok Settings State
-    const [tiktokSettings, setTiktokSettings] = useState({
+    const [settings, setSettings] = useState({
         privacyLevel: '',
         allowComment: false,
         allowDuet: false,
         allowStitch: false,
         commercialDisclosure: false,
         brandOrganic: false,
-        brandedContent: false,
-        creatorInfo: null
+        brandedContent: false
     });
 
-    // Schedule State
-    const [scheduleType, setScheduleType] = useState('now'); // now | later
-    const [date, setDate] = useState('');
-    const [time, setTime] = useState('');
+    // ---------------------------------------------------------
+    // Effects
+    // ---------------------------------------------------------
 
-    const fileInputRef = useRef(null);
+    // 1. Auto-select first account on load
+    useEffect(() => {
+        if (!selectedAccountId && accounts?.length > 0) {
+            setSelectedAccountId(accounts[0].platformAccountId);
+        }
+    }, [accounts, selectedAccountId]);
 
-    // Validation hook
-    const tiktokValidation = useTikTokSettingsValidation(tiktokSettings);
+    // 2. Fetch Creator Info when account changes
+    useEffect(() => {
+        if (!selectedAccountId) {
+            setCreatorInfo(null);
+            return;
+        }
+
+        const fetchCreatorInfo = async () => {
+            setLoadingCreator(true);
+            setError('');
+            try {
+                const response = await tiktokAPI.creatorInfo(selectedAccountId);
+                const info = response.data;
+                setCreatorInfo(info);
+                
+                // Reset form settings that depend on creator info
+                setSettings(prev => ({
+                    ...prev,
+                    privacyLevel: '', // Must have no default
+                    allowComment: false, // Must be manual turn on
+                    allowDuet: false, // Must be manual turn on
+                    allowStitch: false // Must be manual turn on
+                }));
+            } catch (err) {
+                console.error('Failed to fetch creator info:', err);
+                setError(err.response?.data?.message || 'Failed to load TikTok account info. Please check if your account token is valid.');
+            } finally {
+                setLoadingCreator(false);
+            }
+        };
+
+        fetchCreatorInfo();
+    }, [selectedAccountId]);
+
+    // ---------------------------------------------------------
+    // Handlers
+    // ---------------------------------------------------------
+
+    const resetForm = () => {
+        setVideoPreview('');
+        setVideoUrl('');
+        setVideoMeta({ filename: '', size: 0, mimetype: '', duration: 0, resolution: '1080P' });
+        setCaption('');
+        setSettings({
+            privacyLevel: '',
+            allowComment: false,
+            allowDuet: false,
+            allowStitch: false,
+            commercialDisclosure: false,
+            brandOrganic: false,
+            brandedContent: false
+        });
+        setError('');
+        if (fileInputRef.current) fileInputRef.current.value = '';
+    };
+
+    const handleClose = () => {
+        resetForm();
+        onClose();
+    };
+
+    const handleBack = () => {
+        // Clear video to go back to initial upload state
+        setVideoPreview('');
+        setVideoUrl('');
+        setVideoMeta({ filename: '', size: 0, mimetype: '', duration: 0, resolution: '1080P' });
+    };
+
+    const formatBytes = (bytes) => {
+        if (!bytes) return '0 Bytes';
+        const k = 1024;
+        const dm = 2;
+        const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
+    };
 
     const handleFileChange = async (e) => {
         const file = e.target.files?.[0];
@@ -70,10 +134,29 @@ export default function CreateTikTokPost({ isOpen, onClose, accounts = [], onSuc
             return;
         }
 
+        // Get video duration via object URL
+        const videoElement = document.createElement('video');
+        videoElement.preload = 'metadata';
+        videoElement.onloadedmetadata = () => {
+            window.URL.revokeObjectURL(videoElement.src);
+            const durationSecs = videoElement.duration;
+            
+            // Validate limits based on creator info
+            if (creatorInfo?.maxVideoPostDurationSec && durationSecs > creatorInfo.maxVideoPostDurationSec) {
+                setError(`Video duration exceeds the maximum allowed ${creatorInfo.maxVideoPostDurationSec} seconds.`);
+                setVideoPreview('');
+                return;
+            }
+            
+            setVideoMeta(prev => ({ ...prev, duration: durationSecs }));
+        };
+        videoElement.src = URL.createObjectURL(file);
+
+        // Set preview
         const reader = new FileReader();
         reader.onload = (ev) => setVideoPreview(ev.target.result);
         reader.readAsDataURL(file);
-        setVideoFile(file);
+        
         setError('');
 
         // Upload to Cloudinary immediately
@@ -87,51 +170,78 @@ export default function CreateTikTokPost({ isOpen, onClose, accounts = [], onSuc
             if (!uploadedFile?.url) throw new Error('Failed to upload video');
 
             setVideoUrl(uploadedFile.url);
-            setVideoMeta({
-                filename: uploadedFile.filename,
+            setVideoMeta(prev => ({
+                ...prev,
+                filename: file.name,
                 size: uploadedFile.size,
-                mimetype: uploadedFile.mimetype
-            });
+                mimetype: uploadedFile.mimetype,
+            }));
         } catch (err) {
             console.error('Upload error:', err);
             setError('Failed to upload video: ' + (err.message || 'Unknown error'));
-            setVideoFile(null);
             setVideoPreview('');
         } finally {
             setUploading(false);
         }
     };
 
-    const computeScheduledIso = () => {
-        if (scheduleType !== 'later') return null;
-        try {
-            return new Date(`${date}T${time}:00`).toISOString();
-        } catch {
-            return null;
+    const handleSettingChange = (field, value) => {
+        const newSettings = { ...settings, [field]: value };
+
+        // Compliance Logic
+
+        // If branded content is enabled and privacy is SELF_ONLY, auto-switch to PUBLIC (or clear it)
+        if (field === 'brandedContent' && value && settings.privacyLevel === 'SELF_ONLY') {
+            newSettings.privacyLevel = 'PUBLIC_TO_EVERYONE';
         }
+
+        // If switching to private and branded content is enabled, disable it
+        if (field === 'privacyLevel' && value === 'SELF_ONLY' && settings.brandedContent) {
+            newSettings.brandedContent = false;
+        }
+
+        setSettings(newSettings);
+    };
+
+    const getValidationErrors = () => {
+        const errors = [];
+        
+        if (!creatorInfo?.canPost) {
+            errors.push('You have reached your daily posting limit.');
+        }
+
+        if (!videoUrl) {
+            errors.push('Please wait for the video to finish uploading.');
+        }
+
+        if (!settings.privacyLevel) {
+            errors.push('Please select who can view this video.');
+        }
+
+        if (settings.commercialDisclosure && !settings.brandOrganic && !settings.brandedContent) {
+            errors.push('You must select at least one commercial option ("Your brand" or "Branded content").');
+        }
+        
+        if (settings.brandedContent && settings.privacyLevel === 'SELF_ONLY') {
+            errors.push('Branded content cannot be set to private.');
+        }
+
+        return errors;
     };
 
     const handlePublish = async () => {
-        if (!selectedAccountId) return setError('Please select an account');
-        if (!videoUrl) return setError('Please upload a video first');
-
-        // Final Validation check
-        if (!tiktokValidation.isValid) {
-            setStep(2); // Go back to settings if invalid
-            return setError('Please correct TikTok settings before publishing');
-        }
-
-        if (scheduleType === 'later' && (!date || !time)) {
-            return setError('Please select date and time for scheduling');
+        if (!selectedAccountId) return setError('Please select an account.');
+        
+        const errors = getValidationErrors();
+        if (errors.length > 0) {
+            setError(errors.join(' '));
+            return;
         }
 
         setLoading(true);
         setError('');
 
         try {
-            const isScheduled = scheduleType === 'later';
-            const scheduledDate = computeScheduledIso();
-
             // 1. Create Post Record via Unified postsAPI
             const postPayload = {
                 title: caption ? (caption.length > 50 ? caption.substring(0, 50) + '...' : caption) : 'TikTok Video',
@@ -144,15 +254,14 @@ export default function CreateTikTokPost({ isOpen, onClose, accounts = [], onSuc
                     size: videoMeta.size,
                     mimetype: videoMeta.mimetype
                 }],
-                isScheduled,
-                scheduledDate: isScheduled ? scheduledDate : undefined,
+                isScheduled: false,
                 tiktokSettings: {
-                    privacyLevel: tiktokSettings.privacyLevel,
-                    disableComment: !tiktokSettings.allowComment,
-                    disableDuet: !tiktokSettings.allowDuet,
-                    disableStitch: !tiktokSettings.allowStitch,
-                    brandOrganic: tiktokSettings.brandOrganic,
-                    brandedContent: tiktokSettings.brandedContent
+                    privacyLevel: settings.privacyLevel,
+                    disableComment: !settings.allowComment,
+                    disableDuet: !settings.allowDuet,
+                    disableStitch: !settings.allowStitch,
+                    brandOrganic: settings.commercialDisclosure ? settings.brandOrganic : false,
+                    brandedContent: settings.commercialDisclosure ? settings.brandedContent : false
                 }
             };
 
@@ -161,19 +270,13 @@ export default function CreateTikTokPost({ isOpen, onClose, accounts = [], onSuc
 
             if (!postId) throw new Error('Failed to create post record');
 
-            // 2. If 'Publish Now', trigger publication immediately
-            if (!isScheduled) {
-                await postsAPI.publishNow(postId);
-                toast.success("Published! Note: It may take a few minutes for content to appear on TikTok.", {
-                    duration: 5000,
-                    icon: '🚀'
-                });
-            } else {
-                toast.success("Post scheduled successfully!", {
-                    duration: 4000,
-                    icon: '📅'
-                });
-            }
+            // 2. Publish Now
+            await postsAPI.publishNow(postId);
+            
+            toast.success(
+                "Published securely to TikTok! Note: It may take a few minutes for content to process and appear on your profile.", 
+                { duration: 6000, icon: '🚀' }
+            );
 
             onSuccess?.();
             handleClose();
@@ -185,315 +288,432 @@ export default function CreateTikTokPost({ isOpen, onClose, accounts = [], onSuc
         }
     };
 
-    const resetForm = () => {
-        setStep(1);
-        setVideoFile(null);
-        setVideoPreview('');
-        setVideoUrl('');
-        setVideoMeta({ filename: '', size: 0, mimetype: '' });
-        setCaption('');
-        setTiktokSettings({
-            privacyLevel: '',
-            allowComment: false,
-            allowDuet: false,
-            allowStitch: false,
-            commercialDisclosure: false,
-            brandOrganic: false,
-            brandedContent: false,
-            creatorInfo: null
-        });
-        setScheduleType('now');
-        setDate('');
-        setTime('');
-        setError('');
-    };
-
-    const handleClose = () => {
-        resetForm();
-        onClose();
-    };
+    // ---------------------------------------------------------
+    // Renders
+    // ---------------------------------------------------------
 
     if (!isOpen) return null;
 
-    return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col">
-                {/* Header */}
-                <div className="flex items-center justify-between p-5 border-b border-gray-200">
-                    <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-gradient-to-br from-pink-500 via-red-500 to-yellow-500 rounded-xl flex items-center justify-center text-white">
-                            <TikTokIcon />
-                        </div>
-                        <div>
-                            <h2 className="text-xl font-bold" style={{ color: '#354F52' }}>Create TikTok Post</h2>
-                            <p className="text-sm text-gray-500">
-                                {step === 1 && 'Step 1: Upload Content'}
-                                {step === 2 && 'Step 2: TikTok Settings'}
-                                {step === 3 && 'Step 3: Review & Schedule'}
-                            </p>
-                        </div>
-                    </div>
-                    <button onClick={handleClose} className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
+    // View: Initial Upload State
+    if (!videoPreview) {
+        return (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+                <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col relative">
+                    <button onClick={handleClose} className="absolute top-4 right-4 p-2 bg-gray-100 hover:bg-gray-200 rounded-full transition-colors z-10">
                         <X className="w-5 h-5 text-gray-500" />
                     </button>
-                </div>
-
-                {/* Progress Bar */}
-                <div className="flex items-center h-1 bg-gray-100">
-                    <div
-                        className="h-full bg-gradient-to-r from-pink-500 to-red-500 transition-all duration-300"
-                        style={{ width: `${(step / 3) * 100}%` }}
-                    />
-                </div>
-
-                {/* Content */}
-                <div className="flex-1 overflow-y-auto p-5">
-                    {error && (
-                        <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-600 text-sm">
-                            {error}
+                    
+                    <div className="p-10 flex flex-col items-center justify-center min-h-[500px]">
+                        <div className="w-20 h-20 mb-6 bg-gradient-to-br from-[#00f2fe] to-[#4facfe] rounded-3xl flex items-center justify-center shadow-lg transform rotate-[-5deg]">
+                            <svg className="w-10 h-10 text-white" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64 2.93 2.93 0 0 1 .88.13V9.4a6.84 6.84 0 0 0-1-.05A6.33 6.33 0 0 0 5 20.1a6.34 6.34 0 0 0 10.86-4.43v-7a8.16 8.16 0 0 0 4.77 1.52v-3.4a4.85 4.85 0 0 1-1-.1z" />
+                            </svg>
                         </div>
-                    )}
+                        <h2 className="text-3xl font-bold text-gray-900 mb-2">Upload to TikTok</h2>
+                        <p className="text-gray-500 mb-8 text-center max-w-md">
+                            Post videos directly to your TikTok profile. Choose MP4 or WebM (Max 10 minutes).
+                        </p>
+                        
+                        {error && (
+                            <div className="mb-6 px-6 py-3 bg-red-50 border border-red-200 text-red-700 rounded-xl w-full max-w-lg text-center font-medium">
+                                {error}
+                            </div>
+                        )}
+                        
+                        <button
+                            onClick={() => fileInputRef.current?.click()}
+                            className="bg-[#FE2C55] hover:bg-[#E3264C] text-white px-8 py-4 rounded-xl text-lg font-bold shadow-lg shadow-pink-500/30 transition-all hover:scale-105"
+                        >
+                            Select video to upload
+                        </button>
 
-                    {/* Step 1: Upload Content */}
-                    {step === 1 && (
-                        <div className="space-y-6">
-                            {/* Account Selector */}
-                            {accounts.length > 1 && (
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">Select Account</label>
-                                    <select
-                                        value={selectedAccountId}
-                                        onChange={(e) => setSelectedAccountId(e.target.value)}
-                                        className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent outline-none"
-                                    >
-                                        {accounts.map(a => (
-                                            <option key={a.platformAccountId} value={a.platformAccountId}>{a.accountName || a.platformAccountId}</option>
-                                        ))}
-                                    </select>
+                        <input ref={fileInputRef} type="file" accept="video/mp4,video/webm" onChange={handleFileChange} className="hidden" />
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
+    // Determine layout columns
+    const showThirdColumn = settings.commercialDisclosure;
+    const modalMaxWidth = showThirdColumn ? 'max-w-6xl' : 'max-w-4xl';
+
+    // Privacy logic
+    const privacyLabels = {
+        'PUBLIC_TO_EVERYONE': 'Public',
+        'MUTUAL_FOLLOW_FRIENDS': 'Friends',
+        'FOLLOWER_OF_CREATOR': 'Followers',
+        'SELF_ONLY': 'Only Me (Private)'
+    };
+    
+    const getPrivacyIcon = (level) => {
+        if (level === 'PUBLIC_TO_EVERYONE') return <Eye className="w-4 h-4" />;
+        if (level === 'SELF_ONLY') return <EyeOff className="w-4 h-4" />;
+        return <Users className="w-4 h-4" />;
+    };
+
+    const selectedAccountObj = accounts.find(a => a.platformAccountId === selectedAccountId);
+    
+    const formatDuration = (seconds) => {
+        if (!seconds) return '00:00';
+        const m = Math.floor(seconds / 60);
+        const s = Math.floor(seconds % 60);
+        return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+    };
+
+    // Consent Link generators
+    const getConsentNotice = () => {
+        const musicLink = <a href="https://www.tiktok.com/legal/page/global/music-usage-confirmation/en" target="_blank" rel="noopener noreferrer" className="text-[#00f2fe] hover:underline font-medium">Music Usage Confirmation</a>;
+        const bcLink = <a href="https://www.tiktok.com/legal/page/global/bc-policy/en" target="_blank" rel="noopener noreferrer" className="text-[#00f2fe] hover:underline font-medium">Branded Content Policy</a>;
+        
+        if (settings.brandedContent) {
+             return <span>By posting, you agree to our {bcLink} and {musicLink}.</span>;
+        }
+        return <span>By posting, you agree to our {musicLink}.</span>;
+    };
+
+    // View: Split Layout
+    return (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 md:p-8">
+            <div className={`bg-white rounded-2xl shadow-2xl w-full ${modalMaxWidth} h-[calc(100vh-4rem)] flex flex-col relative transition-all duration-300 overflow-hidden`}>
+                
+                {/* Global Error Banner */}
+                {error && (
+                    <div className="absolute top-0 left-0 right-0 z-50 bg-red-500 text-white p-3 text-center text-sm font-medium flex items-center justify-center gap-2">
+                        <AlertCircle className="w-4 h-4" />
+                        {error}
+                        <button onClick={() => setError('')} className="absolute right-3 p-1 hover:bg-red-600 rounded">
+                            <X className="w-4 h-4" />
+                        </button>
+                    </div>
+                )}
+
+                <div className="flex flex-1 overflow-hidden h-full">
+                    {/* LEFT PANE: VIDEO PREVIEW (approx 40%) */}
+                    <div className="w-[40%] bg-black flex flex-col relative">
+                        {uploading ? (
+                            <div className="flex-1 flex flex-col items-center justify-center text-white p-8 text-center space-y-4">
+                                <Loader2 className="w-12 h-12 text-[#FE2C55] animate-spin" />
+                                <h3 className="text-xl font-bold">Uploading to cloud...</h3>
+                                <div className="w-full max-w-xs bg-gray-800 rounded-full h-2.5">
+                                    <div className="bg-[#FE2C55] h-2.5 rounded-full transition-all duration-300" style={{width: `${uploadProgress}%`}}></div>
                                 </div>
-                            )}
-
-                            {/* Video Upload */}
-                            {videoPreview ? (
-                                <div className="relative aspect-[9/16] max-h-[400px] mx-auto rounded-xl overflow-hidden bg-black shadow-lg">
-                                    <video src={videoPreview} controls className="w-full h-full object-contain" />
-                                    {uploading && (
-                                        <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
-                                            <div className="text-center text-white">
-                                                <div className="w-16 h-16 border-4 border-white/30 border-t-white rounded-full animate-spin mx-auto mb-2" />
-                                                <p className="font-medium">Uploading... {uploadProgress}%</p>
-                                            </div>
-                                        </div>
-                                    )}
-                                    {!uploading && (
-                                        <button
-                                            onClick={() => { setVideoFile(null); setVideoPreview(''); setVideoUrl(''); }}
-                                            className="absolute top-3 right-3 p-2 bg-black/50 text-white rounded-full hover:bg-red-500/80 transition-colors backdrop-blur-sm"
-                                        >
-                                            <Trash2 className="w-4 h-4" />
-                                        </button>
-                                    )}
-                                </div>
-                            ) : (
-                                <button
-                                    onClick={() => fileInputRef.current?.click()}
-                                    className="w-full aspect-[9/16] max-h-[400px] border-2 border-dashed border-gray-300 rounded-xl flex flex-col items-center justify-center gap-4 hover:border-pink-400 hover:bg-pink-50/50 transition-all cursor-pointer text-gray-500 bg-gray-50"
-                                >
-                                    <div className="w-16 h-16 bg-white rounded-full shadow-sm flex items-center justify-center">
-                                        <div className="w-12 h-12 bg-gradient-to-br from-pink-100 to-red-100 rounded-full flex items-center justify-center">
-                                            <Video className="w-6 h-6 text-pink-500" />
-                                        </div>
-                                    </div>
-                                    <div className="text-center px-4">
-                                        <p className="font-medium text-gray-700">Click to Upload Video</p>
-                                        <p className="text-sm text-gray-400 mt-1">MP4 or WebM (Max 10 min)</p>
-                                    </div>
-                                </button>
-                            )}
-                            <input
-                                ref={fileInputRef}
-                                type="file"
-                                accept="video/*"
-                                onChange={handleFileChange}
-                                className="hidden"
-                            />
-
-                            {/* Caption */}
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">Caption</label>
-                                <textarea
-                                    value={caption}
-                                    onChange={(e) => setCaption(e.target.value)}
-                                    placeholder="Write a caption... #fyp #viral"
-                                    rows={4}
-                                    maxLength={2200}
-                                    className="w-full p-4 border border-gray-200 rounded-xl focus:ring-2 focus:ring-pink-400 focus:border-transparent outline-none resize-none"
+                                <p className="text-sm text-gray-400">{uploadProgress}% complete</p>
+                            </div>
+                        ) : (
+                            <div className="flex-1 relative overflow-hidden flex items-center justify-center p-4">
+                                <video 
+                                    src={videoPreview} 
+                                    controls 
+                                    autoPlay
+                                    muted
+                                    className="max-w-full max-h-full rounded-lg object-contain" 
                                 />
-                                <div className="flex justify-between items-center mt-1">
-                                    <p className="text-xs text-gray-400">Add relevant hashtags for better reach</p>
-                                    <p className="text-xs text-gray-400">{caption.length}/2200</p>
-                                </div>
+                            </div>
+                        )}
+                        
+                        {/* Video Meta Bar */}
+                        <div className="h-16 bg-gray-900 border-t border-gray-800 px-6 flex items-center justify-between text-xs text-gray-400">
+                            <div className="flex flex-col">
+                                <span className="font-medium text-gray-300">Filename</span>
+                                <span className="truncate max-w-[120px]" title={videoMeta.filename}>{videoMeta.filename || 'Original.mp4'}</span>
+                            </div>
+                            <div className="flex flex-col">
+                                <span className="font-medium text-gray-300">Duration</span>
+                                <span>{formatDuration(videoMeta.duration)}</span>
+                            </div>
+                            <div className="flex flex-col">
+                                <span className="font-medium text-gray-300">Format</span>
+                                <span>{(videoMeta.mimetype || 'video/mp4').split('/')[1]?.toUpperCase()}</span>
+                            </div>
+                            <div className="flex flex-col">
+                                <span className="font-medium text-gray-300">Size</span>
+                                <span>{formatBytes(videoMeta.size)}</span>
                             </div>
                         </div>
-                    )}
+                    </div>
 
-                    {/* Step 2: Settings */}
-                    {step === 2 && (
-                        <div className="space-y-6">
-                            <TikTokSettings
-                                accountId={selectedAccountId}
-                                settings={tiktokSettings}
-                                onSettingsChange={setTiktokSettings}
-                                isPhotoPost={false}
-                            />
+                    {/* MIDDLE PANE: SETTINGS (approx 60% or 30% if third pane open) */}
+                    <div className={`flex flex-col border-r border-gray-200 overflow-y-auto ${showThirdColumn ? 'w-[30%]' : 'w-[60%]'}`}>
+                        <div className="p-6">
+                            <div className="flex items-center gap-3 mb-8">
+                                <button onClick={handleBack} className="p-2 -ml-2 hover:bg-gray-100 rounded-full text-gray-500">
+                                    <ArrowLeft className="w-5 h-5" />
+                                </button>
+                                <h2 className="text-2xl font-bold text-gray-900">Upload to TikTok</h2>
+                                {!showThirdColumn && (
+                                    <button onClick={handleClose} className="ml-auto p-2 hover:bg-gray-100 rounded-full text-gray-500">
+                                        <X className="w-5 h-5" />
+                                    </button>
+                                )}
+                            </div>
 
-                            {/* Validation Errors */}
-                            {tiktokValidation.errors.length > 0 && (
-                                <div className="bg-red-50 border-l-4 border-red-500 text-red-700 px-4 py-3 rounded-lg">
-                                    <p className="font-medium text-sm mb-1">Please fix the following issues:</p>
-                                    <ul className="list-disc list-inside text-xs">
-                                        {tiktokValidation.errors.map((err, idx) => (
-                                            <li key={idx}>{err}</li>
-                                        ))}
-                                    </ul>
-                                </div>
-                            )}
-                        </div>
-                    )}
-
-                    {/* Step 3: Review & Schedule */}
-                    {step === 3 && (
-                        <div className="space-y-6">
-                            <h3 className="text-lg font-semibold" style={{ color: '#354F52' }}>Final Review</h3>
-
-                            <div className="flex gap-4 p-4 bg-gray-50 rounded-xl border border-gray-100">
-                                {/* Thumbnail */}
-                                <div className="w-24 h-32 bg-black rounded-lg overflow-hidden flex-shrink-0">
-                                    {videoPreview && (
-                                        <video src={videoPreview} className="w-full h-full object-cover" />
-                                    )}
-                                </div>
-                                <div className="flex-1 min-w-0 py-1">
-                                    <p className="font-medium text-gray-900 line-clamp-2 mb-2">{caption || '(No Caption)'}</p>
-                                    <div className="space-y-1">
-                                        <div className="flex items-center gap-2 text-xs text-gray-500">
-                                            {tiktokSettings.privacyLevel === 'PUBLIC_TO_EVERYONE' ? <Eye className="w-3 h-3" /> :
-                                                tiktokSettings.privacyLevel === 'SELF_ONLY' ? <EyeOff className="w-3 h-3" /> : <Users className="w-3 h-3" />}
-                                            <span>
-                                                {tiktokSettings.privacyLevel === 'PUBLIC_TO_EVERYONE' ? 'Public' :
-                                                    tiktokSettings.privacyLevel === 'SELF_ONLY' ? 'Private' : 'Friends/Followers'}
-                                            </span>
-                                        </div>
-                                        {tiktokSettings.commercialDisclosure && (
-                                            <div className="flex items-center gap-2 text-xs text-orange-600">
-                                                <CheckCircle2 className="w-3 h-3" />
-                                                <span>Commercial Content</span>
-                                            </div>
-                                        )}
+                            {/* Account Selector */}
+                            <div className="mb-6 relative">
+                                {loadingCreator ? (
+                                    <div className="w-full p-4 border border-gray-200 rounded-xl bg-gray-50 flex items-center gap-3">
+                                        <Loader2 className="w-5 h-5 animate-spin text-gray-400" />
+                                        <span className="text-gray-500 font-medium">Loading creator info...</span>
                                     </div>
-                                </div>
-                            </div>
-
-                            {/* Scheduling Options */}
-                            <div className="bg-white rounded-xl border-2 border-gray-100 p-1">
-                                <div className="grid grid-cols-2 gap-1 p-1">
-                                    <button
-                                        onClick={() => setScheduleType('now')}
-                                        className={`flex items-center justify-center gap-2 py-3 rounded-lg text-sm font-medium transition-all ${scheduleType === 'now'
-                                            ? 'bg-pink-50 text-pink-600 shadow-sm'
-                                            : 'text-gray-500 hover:bg-gray-50'
-                                            }`}
-                                    >
-                                        <Upload className="w-4 h-4" />
-                                        Publish Now
-                                    </button>
-                                    <button
-                                        onClick={() => setScheduleType('later')}
-                                        className={`flex items-center justify-center gap-2 py-3 rounded-lg text-sm font-medium transition-all ${scheduleType === 'later'
-                                            ? 'bg-pink-50 text-pink-600 shadow-sm'
-                                            : 'text-gray-500 hover:bg-gray-50'
-                                            }`}
-                                    >
-                                        <Calendar className="w-4 h-4" />
-                                        Schedule
-                                    </button>
-                                </div>
-
-                                {scheduleType === 'later' && (
-                                    <div className="p-4 border-t border-gray-100 animate-in slide-in-from-top-2 fade-in duration-200">
-                                        <div className="grid grid-cols-2 gap-4">
-                                            <div className="space-y-2">
-                                                <label className="text-xs font-medium text-gray-500">Date</label>
-                                                <div className="relative">
-                                                    <input
-                                                        type="date"
-                                                        value={date}
-                                                        min={new Date().toISOString().split('T')[0]}
-                                                        onChange={(e) => setDate(e.target.value)}
-                                                        className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-pink-500 outline-none"
-                                                    />
-                                                    <Calendar className="w-4 h-4 text-gray-400 absolute left-3 top-2.5" />
-                                                </div>
-                                            </div>
-                                            <div className="space-y-2">
-                                                <label className="text-xs font-medium text-gray-500">Time</label>
-                                                <div className="relative">
-                                                    <input
-                                                        type="time"
-                                                        value={time}
-                                                        onChange={(e) => setTime(e.target.value)}
-                                                        className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-pink-500 outline-none"
-                                                    />
-                                                    <Clock className="w-4 h-4 text-gray-400 absolute left-3 top-2.5" />
-                                                </div>
-                                            </div>
+                                ) : (
+                                    <>
+                                        <select
+                                            value={selectedAccountId}
+                                            onChange={(e) => setSelectedAccountId(e.target.value)}
+                                            className="w-full p-4 pl-14 pr-10 border border-gray-200 rounded-xl appearance-none bg-gray-50 hover:bg-gray-100 transition-colors font-medium text-gray-900 outline-none focus:ring-2 focus:ring-[#FE2C55]/20 focus:border-[#FE2C55]"
+                                        >
+                                            {accounts.map(a => (
+                                                <option key={a.platformAccountId} value={a.platformAccountId}>
+                                                    {a.accountName || a.platformAccountId}
+                                                </option>
+                                            ))}
+                                        </select>
+                                        <div className="absolute left-4 top-1/2 -translate-y-1/2 rounded-full overflow-hidden w-6 h-6 border border-gray-200">
+                                            {creatorInfo?.avatarUrl ? (
+                                                <img src={creatorInfo.avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
+                                            ) : (
+                                                <div className="w-full h-full bg-black flex items-center justify-center"><CheckCircle2 className="w-3 h-3 text-white" /></div>
+                                            )}
                                         </div>
+                                        <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none">
+                                            <svg className="w-5 h-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                            </svg>
+                                        </div>
+                                    </>
+                                )}
+                                
+                                {!creatorInfo?.canPost && creatorInfo && (
+                                    <div className="mt-2 text-red-600 text-sm flex items-center gap-1 font-medium bg-red-50 p-2 rounded-lg">
+                                        <AlertCircle className="w-4 h-4 flex-shrink-0" />
+                                        You cannot make more posts right now based on TikTok limits.
                                     </div>
                                 )}
                             </div>
+
+                            {/* Caption */}
+                            <div className="mb-8">
+                                <label className="block text-sm font-bold text-gray-900 mb-2">Caption</label>
+                                <div className="relative border border-gray-200 rounded-xl overflow-hidden focus-within:ring-2 focus-within:ring-[#FE2C55]/20 focus-within:border-[#FE2C55] bg-gray-50">
+                                    <textarea
+                                        value={caption}
+                                        onChange={(e) => setCaption(e.target.value)}
+                                        placeholder="Add a title that describes your video"
+                                        rows={4}
+                                        maxLength={2200}
+                                        className="w-full p-4 bg-transparent outline-none resize-none"
+                                    />
+                                    <div className="absolute bottom-2 right-4 text-xs font-medium text-gray-400">
+                                        {caption.length}/2200
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Privacy */}
+                            <div className="mb-8">
+                                <label className="block text-sm font-bold text-gray-900 mb-2">Who can view this video</label>
+                                <div className="relative">
+                                    <select
+                                        value={settings.privacyLevel}
+                                        onChange={(e) => handleSettingChange('privacyLevel', e.target.value)}
+                                        className="w-full p-4 pl-10 pr-10 border border-gray-200 rounded-xl appearance-none bg-gray-50 hover:bg-gray-100 transition-colors font-medium text-gray-900 outline-none focus:ring-2 focus:ring-[#FE2C55]/20 focus:border-[#FE2C55]"
+                                    >
+                                        <option value="" disabled>Select visibility...</option>
+                                        {(creatorInfo?.privacyLevelOptions || ['PUBLIC_TO_EVERYONE', 'MUTUAL_FOLLOW_FRIENDS', 'SELF_ONLY']).map(level => {
+                                            const isDisabled = level === 'SELF_ONLY' && settings.brandedContent;
+                                            return (
+                                                <option key={level} value={level} disabled={isDisabled}>
+                                                    {privacyLabels[level] || level} {isDisabled ? '(Disabled for branded)' : ''}
+                                                </option>
+                                            );
+                                        })}
+                                    </select>
+                                    <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500">
+                                        {getPrivacyIcon(settings.privacyLevel || 'PUBLIC_TO_EVERYONE')}
+                                    </div>
+                                    <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none">
+                                        <svg className="w-5 h-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                        </svg>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Interactions */}
+                            <div className="mb-8">
+                                <label className="block text-sm font-bold text-gray-900 mb-4">Allow users to</label>
+                                <div className="flex flex-wrap gap-6">
+                                    <label className={`flex items-center gap-2 cursor-pointer group ${creatorInfo?.commentDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}>
+                                        <div className={`w-5 h-5 rounded flex items-center justify-center transition-colors border ${settings.allowComment ? 'bg-[#00f2fe] border-[#00f2fe]' : 'border-gray-300 group-hover:border-[#00f2fe]'}`}>
+                                            {settings.allowComment && <CheckCircle2 className="w-4 h-4 text-white" />}
+                                        </div>
+                                        <input
+                                            type="checkbox"
+                                            checked={settings.allowComment}
+                                            onChange={(e) => !creatorInfo?.commentDisabled && handleSettingChange('allowComment', e.target.checked)}
+                                            className="hidden"
+                                            disabled={creatorInfo?.commentDisabled}
+                                        />
+                                        <span className="font-medium text-gray-800">Comment</span>
+                                    </label>
+
+                                    <label className={`flex items-center gap-2 cursor-pointer group ${creatorInfo?.duetDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}>
+                                        <div className={`w-5 h-5 rounded flex items-center justify-center transition-colors border ${settings.allowDuet ? 'bg-[#00f2fe] border-[#00f2fe]' : 'border-gray-300 group-hover:border-[#00f2fe]'}`}>
+                                            {settings.allowDuet && <CheckCircle2 className="w-4 h-4 text-white" />}
+                                        </div>
+                                        <input
+                                            type="checkbox"
+                                            checked={settings.allowDuet}
+                                            onChange={(e) => !creatorInfo?.duetDisabled && handleSettingChange('allowDuet', e.target.checked)}
+                                            className="hidden"
+                                            disabled={creatorInfo?.duetDisabled}
+                                        />
+                                        <span className="font-medium text-gray-800">Duet</span>
+                                    </label>
+
+                                    <label className={`flex items-center gap-2 cursor-pointer group ${creatorInfo?.stitchDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}>
+                                        <div className={`w-5 h-5 rounded flex items-center justify-center transition-colors border ${settings.allowStitch ? 'bg-[#00f2fe] border-[#00f2fe]' : 'border-gray-300 group-hover:border-[#00f2fe]'}`}>
+                                            {settings.allowStitch && <CheckCircle2 className="w-4 h-4 text-white" />}
+                                        </div>
+                                        <input
+                                            type="checkbox"
+                                            checked={settings.allowStitch}
+                                            onChange={(e) => !creatorInfo?.stitchDisabled && handleSettingChange('allowStitch', e.target.checked)}
+                                            className="hidden"
+                                            disabled={creatorInfo?.stitchDisabled}
+                                        />
+                                        <span className="font-medium text-gray-800">Stitch</span>
+                                    </label>
+                                </div>
+                            </div>
+
+                            {/* Disclose Setup Toggle */}
+                            <div className="mb-8">
+                                <div className="flex items-center justify-between mb-2">
+                                    <label className="text-sm font-bold text-gray-900">Disclose video content</label>
+                                    <button 
+                                        role="switch" 
+                                        aria-checked={settings.commercialDisclosure}
+                                        onClick={() => handleSettingChange('commercialDisclosure', !settings.commercialDisclosure)}
+                                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${settings.commercialDisclosure ? 'bg-[#00f2fe]' : 'bg-gray-200'}`}
+                                    >
+                                        <span className={`inline-block h-5 w-5 transform rounded-full bg-white transition-transform ${settings.commercialDisclosure ? 'translate-x-6' : 'translate-x-1'}`} />
+                                    </button>
+                                </div>
+                                <p className="text-sm text-gray-500">
+                                    Turn on to disclose that this video promotes goods or services in exchange for something of value.
+                                </p>
+                            </div>
+
+                            {/* If No Third pane, show Submit here */}
+                            {!showThirdColumn && (
+                                <div className="mt-8">
+                                    <button
+                                        onClick={handlePublish}
+                                        disabled={loading || uploading || !creatorInfo?.canPost}
+                                        className="w-full py-4 bg-[#00f2fe] hover:bg-[#00d0de] text-white rounded-xl font-bold shadow-lg shadow-cyan-500/20 transition-all disabled:opacity-50 flex justify-center"
+                                    >
+                                        {loading ? <Loader2 className="w-6 h-6 animate-spin" /> : 'Upload'}
+                                    </button>
+                                </div>
+                            )}
+
+                        </div>
+                    </div>
+
+                    {/* RIGHT PANE: BRANDED CONTENT DISCLOSURE (approx 30%) */}
+                    {showThirdColumn && (
+                        <div className="w-[30%] bg-gray-50 p-6 flex flex-col relative animate-in slide-in-from-right-8 duration-300">
+                            <button onClick={handleClose} className="absolute top-6 right-6 p-2 hover:bg-gray-200 rounded-full text-gray-500">
+                                <X className="w-5 h-5" />
+                            </button>
+                            
+                            <h3 className="text-lg font-bold text-gray-900 mb-6 mt-1">Disclose video content</h3>
+
+                            {/* Label Info card */}
+                            <div className="bg-[#eef2ff] border border-blue-100 rounded-xl p-4 flex items-start gap-3 mb-6">
+                                <Info className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
+                                <div className="text-sm text-blue-900 leading-snug">
+                                    Your video will be labeled <span className="font-semibold">"{settings.brandOrganic && settings.brandedContent ? 'Paid partnership' : settings.brandedContent ? 'Paid partnership' : settings.brandOrganic ? 'Promotional content' : 'Promotional content'}"</span>. 
+                                    This cannot be changed once your video is posted.
+                                </div>
+                            </div>
+
+                            <p className="text-sm text-gray-500 mb-8">
+                                Turn on to disclose that this video promotes goods or services in exchange for something of value. Your video could promote yourself, a third party, or both.
+                            </p>
+
+                            {/* Warning if nothing checked */}
+                            {!settings.brandOrganic && !settings.brandedContent && (
+                                <div className="mb-4 text-xs font-semibold text-[#FE2C55] bg-red-50 p-2 rounded-lg border border-red-100">
+                                    You need to indicate if your content promotes yourself, a third party, or both.
+                                </div>
+                            )}
+
+                            {/* Checkboxes */}
+                            <div className="space-y-6 flex-1">
+                                {/* Your Brand */}
+                                <label className="flex items-start gap-4 cursor-pointer group">
+                                    <div className="flex-1">
+                                        <div className="font-bold text-gray-900 mb-1">Your brand</div>
+                                        <div className="text-sm text-gray-500">
+                                            You are promoting yourself or your own business. This video will be classified as Brand Organic.
+                                        </div>
+                                    </div>
+                                    <div className={`mt-1 w-5 h-5 rounded flex items-center justify-center transition-colors border ${settings.brandOrganic ? 'bg-[#00f2fe] border-[#00f2fe]' : 'border-gray-300 group-hover:border-[#00f2fe]'}`}>
+                                        {settings.brandOrganic && <CheckCircle2 className="w-4 h-4 text-white" />}
+                                    </div>
+                                    <input
+                                        type="checkbox"
+                                        checked={settings.brandOrganic}
+                                        onChange={(e) => handleSettingChange('brandOrganic', e.target.checked)}
+                                        className="hidden"
+                                    />
+                                </label>
+
+                                {/* Branded Content */}
+                                <label 
+                                    className={`flex items-start gap-4 cursor-pointer group ${settings.privacyLevel === 'SELF_ONLY' ? 'opacity-50' : ''}`}
+                                    title={settings.privacyLevel === 'SELF_ONLY' ? 'Branded content visibility cannot be set to private.' : ''}
+                                >
+                                    <div className="flex-1">
+                                        <div className="font-bold text-gray-900 mb-1">Branded content</div>
+                                        <div className="text-sm text-gray-500">
+                                            You are promoting another brand or a third party. This video will be classified as Branded Content.
+                                        </div>
+                                        {settings.privacyLevel === 'SELF_ONLY' && (
+                                            <div className="text-xs font-medium text-[#FE2C55] mt-1">visibility cannot be private</div>
+                                        )}
+                                    </div>
+                                    <div className={`mt-1 w-5 h-5 rounded flex items-center justify-center transition-colors border ${settings.brandedContent ? 'bg-[#00f2fe] border-[#00f2fe]' : 'border-gray-300 group-hover:border-[#00f2fe]'}`}>
+                                        {settings.brandedContent && <CheckCircle2 className="w-4 h-4 text-white" />}
+                                    </div>
+                                    <input
+                                        type="checkbox"
+                                        checked={settings.brandedContent}
+                                        disabled={settings.privacyLevel === 'SELF_ONLY'}
+                                        onChange={(e) => handleSettingChange('brandedContent', e.target.checked)}
+                                        className="hidden"
+                                    />
+                                </label>
+                            </div>
+
+                            {/* Consent footer & Upload */}
+                            <div className="mt-8 border-t border-gray-200 pt-6">
+                                <div className="text-xs text-gray-500 mb-6 text-center">
+                                    {getConsentNotice()}
+                                </div>
+                                <button
+                                    onClick={handlePublish}
+                                    disabled={loading || uploading || !creatorInfo?.canPost || (!settings.brandOrganic && !settings.brandedContent)}
+                                    className="w-full py-4 bg-[#00f2fe] hover:bg-[#00d0de] text-white rounded-xl font-bold shadow-lg shadow-cyan-500/20 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex justify-center"
+                                >
+                                    {loading ? <Loader2 className="w-6 h-6 animate-spin" /> : 'Upload'}
+                                </button>
+                            </div>
                         </div>
                     )}
-                </div>
-
-                {/* Footer */}
-                <div className="flex items-center justify-between p-5 border-t border-gray-200 bg-gray-50">
-                    <button
-                        onClick={() => step > 1 ? setStep(step - 1) : handleClose()}
-                        className="px-5 py-2.5 text-gray-600 hover:bg-gray-200 rounded-xl transition-colors font-medium text-sm"
-                    >
-                        {step === 1 ? 'Cancel' : 'Back'}
-                    </button>
-
-                    {step < 3 ? (
-                        <button
-                            onClick={() => setStep(step + 1)}
-                            disabled={
-                                (step === 1 && (!videoUrl || uploading)) ||
-                                (step === 2 && !tiktokValidation.isValid)
-                            }
-                            className="px-6 py-2.5 bg-gradient-to-r from-pink-500 to-red-500 text-white rounded-xl font-medium hover:from-pink-600 hover:to-red-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-md hover:shadow-lg"
-                        >
-                            Next Step
-                        </button>
-                    ) : (
-                        <button
-                            onClick={handlePublish}
-                            disabled={loading || (scheduleType === 'later' && (!date || !time))}
-                            className="px-8 py-2.5 bg-gradient-to-r from-pink-500 to-red-500 text-white rounded-xl font-medium hover:from-pink-600 hover:to-red-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-md hover:shadow-lg flex items-center gap-2"
-                        >
-                            {loading ? (
-                                <>
-                                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                                    {scheduleType === 'now' ? 'Publishing...' : 'Scheduling...'}
-                                </>
-                            ) : (
-                                <>
-                                    {scheduleType === 'now' ? <Upload className="w-4 h-4" /> : <Calendar className="w-4 h-4" />}
-                                    {scheduleType === 'now' ? 'Publish Now' : 'Schedule Post'}
-                                </>
-                            )}
-                        </button>
-                    )}
+                    
                 </div>
             </div>
         </div>
