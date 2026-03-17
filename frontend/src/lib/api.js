@@ -1,18 +1,16 @@
 import axios from 'axios';
-// let API_BASE_URL = 'https://viralix-b3ff86cb412f.herokuapp.com/api';
-let API_BASE_URL = 'https://viralix-b3ff86cb412f.herokuapp.com/api';
+let API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://api.viralix.dev/api';
 
-// Derive backend URL from current host in browser if not set, falling back to localhost
-if (!API_BASE_URL && typeof window !== 'undefined') {
+// Fallback to relative path if not configured and running in browser
+if (!process.env.NEXT_PUBLIC_API_URL && typeof window !== 'undefined') {
     try {
         const { protocol, hostname } = window.location;
-        API_BASE_URL = `${protocol}//${hostname}/api`;
+        if (hostname === 'localhost' || hostname === '127.0.0.1') {
+             API_BASE_URL = `${protocol}//${hostname}:5000/api`;
+        }
     } catch {
         // ignore
     }
-}
-if (!API_BASE_URL) {
-    API_BASE_URL = 'https://viralix-b3ff86cb412f.herokuapp.com/api';
 }
 
 // Token (localStorage) auth mode
