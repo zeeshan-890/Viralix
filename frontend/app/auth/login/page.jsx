@@ -79,7 +79,7 @@ export default function LoginPage() {
                         </div>
 
                         <a
-                            href={`${process.env.NEXT_PUBLIC_API_URL || 'https://viralix-b3ff86cb412f.herokuapp.com/api'}/auth/google`}
+                            href={`${process.env.NEXT_PUBLIC_API_URL || 'https://api.viralix.dev/api'}/auth/google`}
                             className="w-full flex items-center justify-center gap-3 px-4 py-3 border-2 border-gray-200 rounded-xl hover:bg-gray-50 hover:border-gray-300 transition-all font-semibold text-gray-700"
                         >
                             <svg className="w-5 h-5" viewBox="0 0 24 24">
@@ -104,7 +104,7 @@ export default function LoginPage() {
                         </a>
 
                         <a
-                            href={`${process.env.NEXT_PUBLIC_API_URL || 'https://viralix-b3ff86cb412f.herokuapp.com/api'}/auth/facebook`}
+                            href={`${process.env.NEXT_PUBLIC_API_URL || 'https://api.viralix.dev/api'}/auth/facebook`}
                             className="w-full flex items-center justify-center gap-3 px-4 py-3 border-2 border-gray-200 rounded-xl hover:bg-blue-50 hover:border-blue-300 transition-all font-semibold text-gray-700"
                         >
                             <svg className="w-5 h-5" viewBox="0 0 24 24" fill="#1877F2">

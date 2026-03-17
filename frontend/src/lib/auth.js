@@ -25,7 +25,7 @@ export const isAuthenticated = () => {
 export const logout = async () => {
     // Hit server to clear cookie; ignore errors
     try {
-        await fetch((process.env.NEXT_PUBLIC_API_URL || 'https://viralix-b3ff86cb412f.herokuapp.com/api') + '/auth/logout', {
+        await fetch((process.env.NEXT_PUBLIC_API_URL || 'https://api.viralix.dev/api') + '/auth/logout', {
             method: 'POST',
             credentials: 'include',
         });
