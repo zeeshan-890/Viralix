@@ -1,0 +1,19 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "tsc-emit-js",
+			"type": "shell",
+			"command": "npx",
+			"args": [
+				"tsc",
+				"-p",
+				"tsconfig.json"
+			],
+			"problemMatcher": [
+				"$tsc"
+			],
+			"group": "build"
+		}
+	]
+}
