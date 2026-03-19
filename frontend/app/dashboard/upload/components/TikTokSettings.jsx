@@ -66,6 +66,7 @@ export default function TikTokSettings({ accountId, settings, onSettingsChange, 
     // Check if publish should be disabled due to commercial content
     const commercialError = settings.commercialDisclosure &&
         !settings.brandOrganic && !settings.brandedContent;
+    const isPrivate = settings.privacyLevel === 'SELF_ONLY';
 
     // Get consent declaration JSX with clickable links
     const getConsentDeclaration = () => {
@@ -410,6 +411,45 @@ export default function TikTokSettings({ accountId, settings, onSettingsChange, 
                 )}
             </div>
 
+            {/* Privacy Management Behavior (Guideline 3b) */}
+            <div className="bg-amber-50 border-l-4 border-amber-500 rounded-r-xl p-4">
+                <div className="flex items-start gap-3">
+                    <Info className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
+                    <div>
+                        <p className="text-sm font-medium text-amber-900">Privacy Management (Guideline 3b)</p>
+                        {!settings.privacyLevel && (
+                            <p className="text-sm text-amber-800 mt-1">
+                                Select a privacy level to preview how TikTok will apply interaction and disclosure checkboxes.
+                            </p>
+                        )}
+                        {settings.privacyLevel && (
+                            <div className="text-sm text-amber-800 mt-1 space-y-1">
+                                <p>
+                                    Current privacy: <strong>{privacyLabels[settings.privacyLevel] || settings.privacyLevel}</strong>
+                                </p>
+                                {isPrivate ? (
+                                    <>
+                                        <p>When set to private, TikTok keeps the post visible only to you.</p>
+                                        <p>
+                                            The <strong>Branded Content</strong> checkbox is disabled for private posts, and any selected branded-content state is cleared automatically.
+                                        </p>
+                                        {settings.commercialDisclosure && settings.brandOrganic && (
+                                            <p>
+                                                With <strong>Your Brand</strong> selected, the post is still private and receives a promotional content label.
+                                            </p>
+                                        )}
+                                    </>
+                                ) : (
+                                    <p>
+                                        For non-private posts, interaction checkboxes and both commercial disclosure checkboxes are available based on your selections.
+                                    </p>
+                                )}
+                            </div>
+                        )}
+                    </div>
+                </div>
+            </div>
+
             {/* Consent Declaration - with CLICKABLE links */}
             <div className="bg-gradient-to-r from-gray-50 to-gray-100 rounded-xl p-4 border border-gray-200">
                 <div className="flex items-start gap-3">
@@ -425,7 +465,7 @@ export default function TikTokSettings({ accountId, settings, onSettingsChange, 
                     <div>
                         <p className="text-sm font-medium text-blue-800">Processing Time Notice</p>
                         <p className="text-sm text-blue-700 mt-1">
-                            After publishing, it may take <strong>a few minutes</strong> for your content to be processed and become visible on your TikTok profile.
+                            After you finish publishing, it may take <strong>a few minutes</strong> for your content to be processed and become visible on your TikTok profile.
                         </p>
                     </div>
                 </div>
