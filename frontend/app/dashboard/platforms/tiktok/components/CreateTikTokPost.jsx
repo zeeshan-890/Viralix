@@ -274,7 +274,7 @@ export default function CreateTikTokPost({ isOpen, onClose, accounts = [], onSuc
             await postsAPI.publishNow(postId);
             
             toast.success(
-                "Published securely to TikTok! Note: It may take a few minutes for content to process and appear on your profile.", 
+                "Published to TikTok successfully. After you finish publishing, it may take a few minutes for your content to process and become visible on your profile.", 
                 { duration: 6000, icon: '🚀' }
             );
 
@@ -367,9 +367,9 @@ export default function CreateTikTokPost({ isOpen, onClose, accounts = [], onSuc
         const bcLink = <a href="https://www.tiktok.com/legal/page/global/bc-policy/en" target="_blank" rel="noopener noreferrer" className="text-[#00f2fe] hover:underline font-medium">Branded Content Policy</a>;
         
         if (settings.brandedContent) {
-             return <span>By posting, you agree to our {bcLink} and {musicLink}.</span>;
+             return <span>By posting, you agree to TikTok's {bcLink} and {musicLink}.</span>;
         }
-        return <span>By posting, you agree to our {musicLink}.</span>;
+        return <span>By posting, you agree to TikTok's {musicLink}.</span>;
     };
 
     // View: Split Layout
@@ -539,6 +539,31 @@ export default function CreateTikTokPost({ isOpen, onClose, accounts = [], onSuc
                                 </div>
                             </div>
 
+                            {/* Privacy Management Behavior (Guideline 3b) */}
+                            <div className="mb-8 bg-amber-50 border border-amber-200 rounded-xl p-4">
+                                <div className="flex items-start gap-2">
+                                    <Info className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" />
+                                    <div className="text-sm text-amber-900">
+                                        <p className="font-bold">Privacy Management (Guideline 3b)</p>
+                                        {!settings.privacyLevel && (
+                                            <p className="mt-1 text-amber-800">Select a privacy level to preview how checkbox selections behave.</p>
+                                        )}
+                                        {settings.privacyLevel === 'SELF_ONLY' && (
+                                            <div className="mt-1 text-amber-800 space-y-1">
+                                                <p>This post is private and only visible to you on TikTok.</p>
+                                                <p>The Branded content checkbox is disabled for private posts.</p>
+                                                {settings.commercialDisclosure && settings.brandOrganic && (
+                                                    <p>With Your brand selected, the post stays private and is labeled as promotional content.</p>
+                                                )}
+                                            </div>
+                                        )}
+                                        {settings.privacyLevel && settings.privacyLevel !== 'SELF_ONLY' && (
+                                            <p className="mt-1 text-amber-800">For non-private visibility, interaction checkboxes and commercial disclosure checkboxes remain available based on your selections.</p>
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+
                             {/* Interactions */}
                             <div className="mb-8">
                                 <label className="block text-sm font-bold text-gray-900 mb-4">Allow users to</label>
@@ -608,6 +633,10 @@ export default function CreateTikTokPost({ isOpen, onClose, accounts = [], onSuc
                             {/* If No Third pane, show Submit here */}
                             {!showThirdColumn && (
                                 <div className="mt-8">
+                                    <div className="mb-4 bg-blue-50 border border-blue-200 text-blue-800 text-sm px-4 py-3 rounded-xl flex items-start gap-2">
+                                        <Info className="w-4 h-4 flex-shrink-0 mt-0.5" />
+                                        <span>After you finish publishing, TikTok may take a few minutes to process your content before it appears on your profile.</span>
+                                    </div>
                                     <button
                                         onClick={handlePublish}
                                         disabled={loading || uploading || !creatorInfo?.canPost}
@@ -702,6 +731,10 @@ export default function CreateTikTokPost({ isOpen, onClose, accounts = [], onSuc
                             <div className="mt-8 border-t border-gray-200 pt-6">
                                 <div className="text-xs text-gray-500 mb-6 text-center">
                                     {getConsentNotice()}
+                                </div>
+                                <div className="mb-4 bg-blue-50 border border-blue-200 text-blue-800 text-sm px-4 py-3 rounded-xl flex items-start gap-2">
+                                    <Info className="w-4 h-4 flex-shrink-0 mt-0.5" />
+                                    <span>After you finish publishing, TikTok may take a few minutes to process your content before it appears on your profile.</span>
                                 </div>
                                 <button
                                     onClick={handlePublish}

@@ -219,7 +219,7 @@ export default function UploadPage() {
             if (!postId) throw new Error('Post creation failed');
             // Publish immediately
             await postsAPI.publishNow(postId);
-            toast.success("After publishing, it may take a few minutes for content to appear on your profile", {
+            toast.success("Published successfully. After you finish publishing, it may take a few minutes for your content to process and become visible on your profile", {
                 duration: 5000,
                 icon: '🚀'
             });
