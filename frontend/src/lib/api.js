@@ -1,4 +1,7 @@
 import axios from 'axios';
+import { setupMockAdapter, isMockMode } from './mock';
+import { normalizePost, normalizePosts } from './posts';
+
 let API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://api.viralix.dev/api';
 
 // Fallback to relative path if not configured and running in browser
@@ -39,6 +42,15 @@ api.interceptors.response.use(
 );
 
 export default api;
+
+/** Build absolute API URL for OAuth redirects (avoids double /api) */
+export function getApiUrl(path = '') {
+    const base = API_BASE_URL.replace(/\/$/, '');
+    if (!path) return base;
+    return `${base}${path.startsWith('/') ? path : `/${path}`}`;
+}
+
+export { API_BASE_URL };
 // API helper functions
 export const authAPI = {
     login: async (email, password) => {
@@ -66,12 +78,28 @@ export const authAPI = {
 };
 // Posts (scheduling) API
 export const postsAPI = {
-    getAllPosts: (params) => api.get('/posts', { params }),  // Alias for compatibility
-    list: (params) => api.get('/posts', { params }),
-    getPost: (id) => api.get(`/posts/${id}`),  // Alias for compatibility  
-    get: (id) => api.get(`/posts/${id}`),
+    getAllPosts: async (params) => {
+        const res = await api.get('/posts', { params });
+        if (res.data?.posts) res.data.posts = normalizePosts(res.data.posts);
+        return res;
+    },
+    list: async (params) => {
+        const res = await api.get('/posts', { params });
+        if (res.data?.posts) res.data.posts = normalizePosts(res.data.posts);
+        return res;
+    },
+    getPost: async (id) => {
+        const res = await api.get(`/posts/${id}`);
+        if (res.data) res.data = normalizePost(res.data);
+        return res;
+    },
+    get: async (id) => {
+        const res = await api.get(`/posts/${id}`);
+        if (res.data) res.data = normalizePost(res.data);
+        return res;
+    },
     create: (data) => api.post('/posts', data),
-    updatePost: (id, data) => api.put(`/posts/${id}`, data),  // Alias for compatibility
+    updatePost: (id, data) => api.put(`/posts/${id}`, data),
     update: (id, data) => api.put(`/posts/${id}`, data),
     remove: (id) => api.delete(`/posts/${id}`),
     publishNow: (id) => api.post(`/posts/${id}/publish`),
@@ -160,6 +188,18 @@ export const inboxAPI = {
     updateStatus: (conversationId, status) => api.patch(`/inbox/${conversationId}/status`, { status }),
     updateLabels: (conversationId, labels) => api.patch(`/inbox/${conversationId}/labels`, { labels }),
     assign: (conversationId, assignedTo) => api.patch(`/inbox/${conversationId}/assign`, { assignedTo }),
+    aiSuggest: (conversationId, data) => api.post(`/inbox/${conversationId}/ai-suggest`, data),
+};
+
+// Unified Auto-Reply + AI Reply API
+export const autoReplyAPI = {
+    getSettings: () => api.get('/inbox/auto-reply/settings'),
+    updateSettings: (data) => api.patch('/inbox/auto-reply/settings', data),
+    getRules: () => api.get('/inbox/auto-reply/rules'),
+    createRule: (data) => api.post('/inbox/auto-reply/rules', data),
+    updateRule: (id, data) => api.put(`/inbox/auto-reply/rules/${id}`, data),
+    deleteRule: (id) => api.delete(`/inbox/auto-reply/rules/${id}`),
+    toggleRule: (id) => api.patch(`/inbox/auto-reply/rules/${id}/toggle`),
 };
 
 // Competitor Analysis API (Feature 10)
@@ -261,6 +301,14 @@ export const instagramAPI = {
     deleteAutoReplyRule: (ruleId) => api.delete(`/instagram-auto-reply/rules/${ruleId}`),
     toggleAutoReplyRule: (ruleId) => api.patch(`/instagram-auto-reply/rules/${ruleId}/toggle`),
 };
+
+// Instagram OAuth (direct connect flow)
+export const instagramOAuthAPI = {
+    status: () => api.get('/instagram-oauth/status'),
+    connect: () => api.get('/instagram-oauth/connect'),
+    disconnect: (accountId) => api.delete(`/instagram-oauth/disconnect/${accountId}`),
+};
+
 export const uploadAPI = {
     // Get user's uploaded media
     getMedia: (params = {}) => {
@@ -374,3 +422,8 @@ export const platformSyncAPI = {
     // Get synced content for platform
     getContent: (platform, params = {}) => api.get(`/platform-sync/content/${platform}`, { params }),
 };
+
+// Mock data mode — intercepts all requests with dummy data (default ON)
+setupMockAdapter(api);
+
+export { isMockMode };

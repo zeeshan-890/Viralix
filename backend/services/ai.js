@@ -89,5 +89,91 @@ ORIGINAL HASHTAGS: ${hashtags.length > 0 ? hashtags.join(', ') : 'none'}`;
     }
 }
 
-module.exports = { generateText, suggestCaption, suggestHashtags, rewriteText, analyzeSentiment, remixContent };
+function fallbackInboxSuggestions({ participantName, lastMessage, tone, signOff }) {
+    const name = (participantName || 'there').split(' ')[0];
+    const topic = lastMessage || 'your message';
+    const templates = {
+        friendly: [
+            `Hey ${name}! Thanks for reaching out 😊 ${topic.includes('?') ? 'Great question — ' : ''}I'd love to help you get started.`,
+            `Hi ${name}! So glad you wrote in. Let me know what you need and I'll point you in the right direction!`,
+        ],
+        professional: [
+            `Hello ${name}, thank you for your message. Regarding "${topic.slice(0, 60)}${topic.length > 60 ? '…' : ''}" — we'd be happy to assist.`,
+            `Hi ${name}, we appreciate you contacting us. A team member will follow up shortly with more details.`,
+        ],
+        concise: [
+            `Hi ${name}! Happy to help. What can I assist you with today?`,
+            `Thanks ${name}! Let me know which platform you're looking to connect first.`,
+        ],
+        empathetic: [
+            `Hi ${name}, I'm sorry you're running into this. Let's get it sorted — can you share a few more details?`,
+            `${name}, I understand the frustration. We're here to help and will make this right.`,
+        ],
+    };
+    const list = templates[tone] || templates.friendly;
+    return list.map((text, i) => ({
+        id: `sug-${i}`,
+        text: signOff ? `${text}\n\n${signOff}` : text,
+        tone,
+        confidence: 0.88 - i * 0.04,
+    }));
+}
+
+async function suggestInboxReply({
+    participantName,
+    lastMessage,
+    tone = 'friendly',
+    includeContext = true,
+    signOff = ''
+}) {
+    const name = (participantName || 'there').split(' ')[0];
+    const topic = lastMessage || 'your message';
+
+    try {
+        const contextLine = includeContext
+            ? `Their last message: "${topic.replace(/"/g, '\\"')}"`
+            : 'Generate general helpful replies.';
+        const prompt = `You are a social media customer support agent.
+Generate exactly 2 short reply suggestions in a ${tone} tone for an inbox conversation.
+Participant first name: ${name}
+${contextLine}
+Rules:
+- Keep each reply under 3 sentences
+- Be helpful and human
+- No hashtags
+Return ONLY valid JSON array: [{"text":"..."},{"text":"..."}]`;
+
+        const raw = await generateText({ prompt });
+        const cleaned = raw.replace(/```json?\n?/g, '').replace(/```\n?/g, '').trim();
+        let parsed = JSON.parse(cleaned);
+        if (!Array.isArray(parsed)) parsed = parsed.suggestions || [];
+
+        const suggestions = parsed
+            .filter((s) => s?.text)
+            .slice(0, 2)
+            .map((s, i) => ({
+                id: `sug-${i}`,
+                text: signOff ? `${s.text.trim()}\n\n${signOff}` : s.text.trim(),
+                tone,
+                confidence: 0.9 - i * 0.05,
+            }));
+
+        if (suggestions.length > 0) return suggestions;
+    } catch (e) {
+        console.warn('[AI] Inbox suggest fallback:', e.message);
+    }
+
+    return fallbackInboxSuggestions({ participantName, lastMessage, tone, signOff });
+}
+
+module.exports = {
+    generateText,
+    suggestCaption,
+    suggestHashtags,
+    rewriteText,
+    analyzeSentiment,
+    remixContent,
+    suggestInboxReply,
+    fallbackInboxSuggestions,
+};
 

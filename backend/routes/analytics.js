@@ -27,6 +27,7 @@ router.get('/overview', auth, async (req, res) => {
         const publishedPosts = posts.filter(p => p.isPublished).length;
         const scheduledPosts = posts.filter(p => p.isScheduled).length;
         const draftPosts = posts.filter(p => p.isDraft).length;
+        const failedPosts = posts.filter(p => (p.platforms || []).some(pl => pl.status === 'failed')).length;
 
         // Aggregate engagement metrics from platforms
         let totalLikes = 0;
@@ -142,7 +143,7 @@ router.get('/overview', auth, async (req, res) => {
                 publishedPosts,
                 scheduledPosts,
                 draftPosts,
-                totalViews,
+                failedPosts,
                 totalLikes,
                 totalComments,
                 totalShares,

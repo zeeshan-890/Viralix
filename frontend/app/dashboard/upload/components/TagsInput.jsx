@@ -1,89 +1,80 @@
 'use client';
-import { useState } from 'react';
 
-export default function TagsInput({ tags = [], onChange }) {
-    const [inputValue, setInputValue] = useState('');
+import { cn } from '@/lib/utils';
 
-    const addTag = (tag) => {
-        const trimmedTag = tag.trim();
-        if (trimmedTag && !tags.includes(trimmedTag)) {
-            const newTags = [...tags, trimmedTag];
-            onChange?.(newTags);
-            setInputValue('');
-        }
-    };
+const SUGGESTED = ['viral', 'trending', 'education', 'lifestyle', 'technology', 'marketing', 'tutorial', 'review'];
 
-    const removeTag = (tagToRemove) => {
-        const newTags = tags.filter(tag => tag !== tagToRemove);
-        onChange?.(newTags);
-    };
+export default function TagsInput({ tags = [], onChange, embedded = false }) {
+    const labelClass = 'mb-1.5 block text-xs font-medium text-[#52796F]';
+    const inputClass =
+        'w-full rounded-lg border border-[#C8D4CE] bg-[#FAFCFB] px-3 py-2 text-sm text-[#354F52] focus:border-[#84A98C] focus:outline-none focus:ring-2 focus:ring-[#84A98C]/25';
 
-    const handleKeyDown = (e) => {
-        if (e.key === 'Enter' || e.key === ',') {
-            e.preventDefault();
-            addTag(inputValue);
-        } else if (e.key === 'Backspace' && !inputValue && tags.length > 0) {
-            removeTag(tags[tags.length - 1]);
-        }
-    };
-
-    const suggestedTags = [
-        'viral', 'trending', 'education', 'entertainment', 'lifestyle',
-        'technology', 'business', 'motivation', 'tutorial', 'review'
-    ];
-
-    return (
-        <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-                Tags
-            </label>
-
-            {/* Tags Display */}
-            <div className="flex flex-wrap gap-2 mb-3">
-                {tags.map((tag, index) => (
+    const body = (
+        <>
+            <div className="mb-2 flex min-h-[36px] flex-wrap gap-1.5 rounded-lg border border-[#C8D4CE] bg-[#FAFCFB] p-2">
+                {tags.map((tag) => (
                     <span
-                        key={index}
-                        className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-blue-100 text-blue-800"
+                        key={tag}
+                        className="inline-flex items-center rounded-full bg-[#84A98C]/15 px-2 py-0.5 text-xs text-[#354F52]"
                     >
                         #{tag}
                         <button
-                            onClick={() => removeTag(tag)}
-                            className="ml-2 text-blue-600 hover:text-blue-800"
+                            type="button"
+                            onClick={() => onChange?.(tags.filter((t) => t !== tag))}
+                            className="ml-1 text-[#52796F] hover:text-[#354F52]"
                         >
                             ×
                         </button>
                     </span>
                 ))}
+                <input
+                    type="text"
+                    placeholder={tags.length === 0 ? 'Type a tag and press Enter…' : ''}
+                    className="min-w-[100px] flex-1 bg-transparent text-sm outline-none placeholder:text-[#94A3B8]"
+                    onKeyDown={(e) => {
+                        if (e.key === 'Enter' || e.key === ',') {
+                            e.preventDefault();
+                            const val = e.currentTarget.value.trim().replace(/^#/, '');
+                            if (val && !tags.includes(val)) {
+                                onChange?.([...tags, val]);
+                                e.currentTarget.value = '';
+                            }
+                        } else if (e.key === 'Backspace' && !e.currentTarget.value && tags.length) {
+                            onChange?.(tags.slice(0, -1));
+                        }
+                    }}
+                />
             </div>
-
-            {/* Input */}
-            <input
-                type="text"
-                value={inputValue}
-                onChange={(e) => setInputValue(e.target.value)}
-                onKeyDown={handleKeyDown}
-                placeholder="Type tags and press Enter..."
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            />
-
-            {/* Suggested Tags */}
-            <div className="mt-3">
-                <p className="text-xs text-gray-600 mb-2">Suggested tags:</p>
-                <div className="flex flex-wrap gap-2">
-                    {suggestedTags
-                        .filter(tag => !tags.includes(tag))
-                        .slice(0, 5)
-                        .map((tag) => (
-                            <button
-                                key={tag}
-                                onClick={() => addTag(tag)}
-                                className="px-2 py-1 text-xs bg-gray-100 text-gray-700 rounded hover:bg-gray-200 transition-colors"
-                            >
-                                #{tag}
-                            </button>
-                        ))}
-                </div>
+            <div className="flex flex-wrap gap-1.5">
+                {SUGGESTED.filter((t) => !tags.includes(t))
+                    .slice(0, 6)
+                    .map((tag) => (
+                        <button
+                            key={tag}
+                            type="button"
+                            onClick={() => onChange?.([...tags, tag])}
+                            className="rounded-full bg-[#F4F8F6] px-2 py-0.5 text-[0.6875rem] text-[#52796F] hover:bg-[#E8EDEA]"
+                        >
+                            #{tag}
+                        </button>
+                    ))}
             </div>
+        </>
+    );
+
+    if (embedded) {
+        return (
+            <div>
+                <label className={labelClass}>Hashtags</label>
+                {body}
+            </div>
+        );
+    }
+
+    return (
+        <div>
+            <label className={labelClass}>Tags</label>
+            {body}
         </div>
     );
 }

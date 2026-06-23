@@ -4,6 +4,26 @@ import { tiktokAPI } from '@/lib/api';
 import { AlertCircle, CheckCircle2, User, Shield, MessageSquare, Copy, Scissors, Info, Tag, Building2, Handshake } from 'lucide-react';
 import Image from 'next/image';
 
+const PRIVACY_LABELS = {
+    PUBLIC_TO_EVERYONE: 'Public',
+    MUTUAL_FOLLOW_FRIENDS: 'Friends',
+    FOLLOWER_OF_CREATOR: 'Followers',
+    SELF_ONLY: 'Only Me (Private)',
+};
+
+/** API may return string[] or { value, label }[] */
+function normalizePrivacyOptions(options) {
+    if (!options?.length) return [];
+    return options.map((item, idx) => {
+        if (typeof item === 'string') {
+            return { value: item, label: PRIVACY_LABELS[item] || item };
+        }
+        const value = item.value ?? item.id ?? `option-${idx}`;
+        const label = item.label ?? PRIVACY_LABELS[value] ?? value;
+        return { value, label };
+    });
+}
+
 /**
  * TikTokSettings Component
  * Implements all TikTok Content Sharing Guidelines UX requirements
@@ -121,12 +141,8 @@ export default function TikTokSettings({ accountId, settings, onSettingsChange, 
     };
 
     // Privacy level display names
-    const privacyLabels = {
-        'PUBLIC_TO_EVERYONE': 'Public',
-        'MUTUAL_FOLLOW_FRIENDS': 'Friends',
-        'FOLLOWER_OF_CREATOR': 'Followers',
-        'SELF_ONLY': 'Only Me (Private)'
-    };
+    const privacyLabels = PRIVACY_LABELS;
+    const privacyOptions = normalizePrivacyOptions(creatorInfo?.privacyLevelOptions);
 
     if (loading) {
         return (
@@ -202,14 +218,14 @@ export default function TikTokSettings({ accountId, settings, onSettingsChange, 
                     className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-pink-300 focus:border-pink-400 transition-all"
                 >
                     <option value="">Select privacy level...</option>
-                    {(creatorInfo.privacyLevelOptions || []).map(level => (
+                    {privacyOptions.map(({ value, label }) => (
                         <option
-                            key={level}
-                            value={level}
-                            disabled={level === 'SELF_ONLY' && settings.brandedContent}
+                            key={value}
+                            value={value}
+                            disabled={value === 'SELF_ONLY' && settings.brandedContent}
                         >
-                            {privacyLabels[level] || level}
-                            {level === 'SELF_ONLY' && settings.brandedContent ? ' (disabled for branded content)' : ''}
+                            {label}
+                            {value === 'SELF_ONLY' && settings.brandedContent ? ' (disabled for branded content)' : ''}
                         </option>
                     ))}
                 </select>

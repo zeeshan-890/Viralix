@@ -3,7 +3,7 @@ import { useAccounts } from '@/hooks/useAccounts';
 
 import Image from 'next/image';
 
-export default function PlatformSelector({ value = [], onChange }) {
+export default function PlatformSelector({ value = [], onChange, embedded = false }) {
     const { accounts, isLoading } = useAccounts();
 
     const targets = accounts.map(acc => ({
@@ -46,29 +46,42 @@ export default function PlatformSelector({ value = [], onChange }) {
         onChange(next);
     };
 
+    const body = isLoading ? (
+        <div className="text-sm text-[#52796F]">Loading connected accounts…</div>
+    ) : targets.length === 0 ? (
+        <div className="text-sm text-[#52796F]">No connected social accounts found.</div>
+    ) : (
+        <div className="grid grid-cols-1 gap-1.5">
+            {targets.map((t) => {
+                const selected = value.some((p) => p.name === t.name && p.accountId === t.accountId);
+                return (
+                    <button
+                        key={t.key}
+                        type="button"
+                        onClick={() => toggle(t)}
+                        className={`flex items-center justify-between rounded-lg border px-3 py-2.5 text-left transition-colors ${
+                            selected
+                                ? 'border-[#84A98C] bg-[#84A98C]/10 text-[#354F52]'
+                                : 'border-[#D5DFD9] bg-white hover:border-[#84A98C]/50 hover:bg-[#FAFCFB]'
+                        }`}
+                    >
+                        <div className="flex items-center gap-2">
+                            <span>{t.icon}</span>
+                            <span className="text-sm font-medium">{t.label}</span>
+                        </div>
+                        {selected && <span className="text-[0.625rem] font-semibold uppercase text-[#52796F]">On</span>}
+                    </button>
+                );
+            })}
+        </div>
+    );
+
+    if (embedded) return body;
+
     return (
-        <div className="bg-white rounded-lg border border-gray-200 p-6">
-            <h3 className="text-lg font-semibold mb-4">Platforms</h3>
-            {isLoading ? (
-                <div className="text-sm text-gray-500">Loading connected accounts…</div>
-            ) : targets.length === 0 ? (
-                <div className="text-sm text-gray-500">No connected social accounts found.</div>
-            ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                    {targets.map(t => {
-                        const selected = value.some(p => p.name === t.name && p.accountId === t.accountId);
-                        return (
-                            <button key={t.key} onClick={() => toggle(t)} className={`flex items-center justify-between p-3 rounded-lg border transition-colors ${selected ? 'border-blue-500 bg-blue-50 text-blue-700' : 'border-gray-300 hover:bg-gray-50'}`}>
-                                <div className="flex items-center space-x-2">
-                                    <span>{t.icon}</span>
-                                    <span className="text-sm font-medium">{t.label}</span>
-                                </div>
-                                {selected && <span className="text-xs">Selected</span>}
-                            </button>
-                        );
-                    })}
-                </div>
-            )}
+        <div className="rounded-lg border border-gray-200 bg-white p-6">
+            <h3 className="mb-4 text-lg font-semibold">Platforms</h3>
+            {body}
         </div>
     );
 }

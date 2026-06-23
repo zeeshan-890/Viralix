@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import Image from 'next/image';
 
-export default function PlatformTabs({ post }) {
+export default function PlatformTabs({ post, embedded = false }) {
     const [activeTab, setActiveTab] = useState('facebook');
 
     const PlatformIcon = ({ src, alt }) => (
@@ -357,48 +357,51 @@ export default function PlatformTabs({ post }) {
 
     if (!post) {
         return (
-            <div className="bg-white rounded-lg border border-gray-200 p-6">
-                <h3 className="text-lg font-semibold mb-4">Platform Preview</h3>
-                <div className="text-center py-8 text-gray-500">
-                    <div className="text-4xl mb-4">📝</div>
-                    <p>No post data available</p>
-                </div>
+            <div className={embedded ? 'p-6 text-center' : 'rounded-lg border border-gray-200 bg-white p-6'}>
+                {!embedded && <h3 className="mb-4 text-lg font-semibold">Platform Preview</h3>}
+                <p className="text-sm text-gray-500">No post data available</p>
             </div>
         );
     }
 
-    return (
-        <div className="bg-white rounded-lg border border-gray-200 p-6">
-            <h3 className="text-lg font-semibold mb-4">Platform Preview</h3>
-
-            {/* Platform Tabs */}
-            <div className="flex space-x-1 mb-6 bg-gray-100 rounded-lg p-1 overflow-x-auto">
+    const content = (
+        <>
+            <div className="mb-4 flex gap-1 overflow-x-auto rounded-lg border border-[#D5DFD9] bg-[#EEF3F0] p-1">
                 {displayPlatforms.map((platform) => (
                     <button
                         key={platform.id}
+                        type="button"
                         onClick={() => setActiveTab(platform.id)}
-                        className={`flex items-center justify-center space-x-2 py-2 px-4 rounded-md transition-colors whitespace-nowrap ${currentTab === platform.id
-                            ? 'bg-white shadow-sm text-gray-900'
-                            : 'text-gray-600 hover:text-gray-900'
-                            }`}
+                        className={`flex shrink-0 items-center gap-2 whitespace-nowrap rounded-md px-3 py-2 text-xs font-medium transition-colors ${
+                            currentTab === platform.id
+                                ? 'bg-white text-[#354F52] shadow-sm'
+                                : 'text-[#52796F] hover:text-[#354F52]'
+                        }`}
                     >
                         <span>{platform.icon}</span>
-                        <span className="font-medium">{platform.name}</span>
+                        {platform.name}
                     </button>
                 ))}
             </div>
 
-            {/* Available Platforms Notice */}
             {availablePlatforms.length > 0 && availablePlatforms.length < platforms.length && (
-                <div className="mb-4 text-sm text-gray-600 bg-blue-50 p-3 rounded-lg">
-                    This post is configured for: {availablePlatforms.map(p => p.name).join(', ')}
+                <div className="mb-4 rounded-lg border border-[#C8D4CE] bg-[#FAFCFB] px-3 py-2 text-xs text-[#52796F]">
+                    Configured for: {availablePlatforms.map((p) => p.name).join(', ')}
                 </div>
             )}
 
-            {/* Preview Content */}
-            <div className="min-h-[400px] flex items-center justify-center">
-                {renderPreview()}
-            </div>
+            <div className="flex min-h-[360px] items-start justify-center py-2">{renderPreview()}</div>
+        </>
+    );
+
+    if (embedded) {
+        return <div className="px-4 pb-5 pt-3 sm:px-5">{content}</div>;
+    }
+
+    return (
+        <div className="rounded-lg border border-gray-200 bg-white p-6">
+            <h3 className="mb-4 text-lg font-semibold">Platform Preview</h3>
+            {content}
         </div>
     );
 }

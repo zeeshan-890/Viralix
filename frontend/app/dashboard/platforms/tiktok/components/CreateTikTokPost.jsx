@@ -519,11 +519,13 @@ export default function CreateTikTokPost({ isOpen, onClose, accounts = [], onSuc
                                         className="w-full p-4 pl-10 pr-10 border border-gray-200 rounded-xl appearance-none bg-gray-50 hover:bg-gray-100 transition-colors font-medium text-gray-900 outline-none focus:ring-2 focus:ring-[#FE2C55]/20 focus:border-[#FE2C55]"
                                     >
                                         <option value="" disabled>Select visibility...</option>
-                                        {(creatorInfo?.privacyLevelOptions || ['PUBLIC_TO_EVERYONE', 'MUTUAL_FOLLOW_FRIENDS', 'SELF_ONLY']).map(level => {
-                                            const isDisabled = level === 'SELF_ONLY' && settings.brandedContent;
+                                        {(creatorInfo?.privacyLevelOptions || ['PUBLIC_TO_EVERYONE', 'MUTUAL_FOLLOW_FRIENDS', 'SELF_ONLY']).map((level, idx) => {
+                                            const value = typeof level === 'string' ? level : (level.value ?? `option-${idx}`);
+                                            const label = typeof level === 'string' ? (privacyLabels[value] || value) : (level.label ?? privacyLabels[value] ?? value);
+                                            const isDisabled = value === 'SELF_ONLY' && settings.brandedContent;
                                             return (
-                                                <option key={level} value={level} disabled={isDisabled}>
-                                                    {privacyLabels[level] || level} {isDisabled ? '(Disabled for branded)' : ''}
+                                                <option key={value} value={value} disabled={isDisabled}>
+                                                    {label} {isDisabled ? '(Disabled for branded)' : ''}
                                                 </option>
                                             );
                                         })}

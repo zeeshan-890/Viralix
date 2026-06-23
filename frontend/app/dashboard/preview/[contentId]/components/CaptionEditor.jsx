@@ -1,8 +1,9 @@
 'use client';
 import { useState, useEffect } from 'react';
+import { Sparkles } from 'lucide-react';
 import { aiAPI } from '@/lib/api';
 
-export default function CaptionEditor({ content = '', onChange, topic = '', onHashtags }) {
+export default function CaptionEditor({ content = '', onChange, topic = '', onHashtags, embedded = false, compact = false }) {
     const [caption, setCaption] = useState(content);
     const [platform, setPlatform] = useState('facebook');
     const [aiLoading, setAiLoading] = useState(false);
@@ -179,70 +180,35 @@ export default function CaptionEditor({ content = '', onChange, topic = '', onHa
         }
     };
 
-    return (
-        <div className="bg-white rounded-lg border border-gray-200 p-6">
-            <h3 className="text-lg font-semibold mb-4">Caption Editor</h3>
+    const fieldClass =
+        'w-full rounded-lg border border-[#C8D4CE] bg-[#FAFCFB] px-3 py-2 text-sm text-[#354F52] focus:border-[#84A98C] focus:outline-none focus:ring-2 focus:ring-[#84A98C]/25';
+    const labelClass = 'mb-1.5 block text-xs font-medium text-[#52796F]';
 
-            {/* Platform Selector */}
-            <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Optimize for Platform
-                </label>
-                <select
-                    value={platform}
-                    onChange={(e) => setPlatform(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                >
-                    <option value="facebook">Facebook</option>
-                    <option value="instagram">Instagram</option>
-                    <option value="twitter">Twitter</option>
-                    <option value="linkedin">LinkedIn</option>
-                    <option value="tiktok">TikTok</option>
-                    <option value="youtube">YouTube</option>
-                </select>
-            </div>
-
-            {/* Caption Textarea */}
-            <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Caption
-                </label>
-                <textarea
-                    value={caption}
-                    onChange={(e) => handleCaptionChange(e.target.value)}
-                    rows={6}
-                    placeholder="Write your caption here..."
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
-                />
-                <div className="flex justify-between items-center mt-2">
-                    <span className={`text-sm ${remainingChars < 0 ? 'text-red-600' : remainingChars < 50 ? 'text-yellow-600' : 'text-gray-600'}`}>
-                        {remainingChars} characters remaining
-                    </span>
-                    <button onClick={runAiOptimize} disabled={aiLoading} className="text-sm text-blue-600 hover:text-blue-800 disabled:opacity-60">
-                        {aiLoading ? 'Optimizing…' : '✨ AI Optimize'}
-                    </button>
-                </div>
-            </div>
-
-            {/* AI Caption Suggestions */}
-            <div className="mb-4">
-                <div className="flex items-center justify-between mb-2">
-                    <label className="text-sm font-medium text-gray-700">
-                        AI Suggestions
-                    </label>
-                    <button onClick={generateSuggestions} disabled={suggesting} className="text-xs text-blue-600 hover:text-blue-800 disabled:opacity-60">
-                        {suggesting ? 'Generating…' : '✨ Generate Suggestions'}
+    const aiTools = (
+        <>
+            <div className="mb-3">
+                <div className="mb-2 flex items-center justify-between">
+                    <label className={labelClass}>AI suggestions</label>
+                    <button
+                        type="button"
+                        onClick={generateSuggestions}
+                        disabled={suggesting}
+                        className="inline-flex items-center gap-1 text-xs font-medium text-[#52796F] hover:text-[#354F52] disabled:opacity-60"
+                    >
+                        <Sparkles className="h-3 w-3" aria-hidden />
+                        {suggesting ? 'Generating…' : 'Generate'}
                     </button>
                 </div>
                 {suggestions.length === 0 && !suggesting && (
-                    <div className="text-xs text-gray-500">No suggestions yet. Click Generate to get ideas.</div>
+                    <div className="text-xs text-[#94A3B8]">Generate caption ideas with AI.</div>
                 )}
-                <div className="space-y-2 max-h-40 overflow-y-auto break-words whitespace-pre-wrap">
+                <div className="max-h-28 space-y-1.5 overflow-y-auto break-words whitespace-pre-wrap">
                     {suggestions.map((s, i) => (
                         <button
                             key={i}
+                            type="button"
                             onClick={() => applySuggestion(s)}
-                            className="w-full text-left p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors text-sm break-words"
+                            className="w-full rounded-lg bg-[#F4F8F6] p-2.5 text-left text-xs text-[#354F52] transition-colors hover:bg-[#E8EDEA]"
                         >
                             {s}
                         </button>
@@ -250,19 +216,25 @@ export default function CaptionEditor({ content = '', onChange, topic = '', onHa
                 </div>
             </div>
 
-            {/* AI Hashtag Suggestions (click to append to caption end) */}
             {aiTagSuggestions.length > 0 && (
-                <div className="mb-4">
-                    <div className="flex items-center justify-between mb-2">
-                        <label className="text-sm font-medium text-gray-700">AI Hashtag Suggestions</label>
-                        <button onClick={() => setAiTagSuggestions([])} className="text-xs text-gray-500 hover:text-gray-700">Clear</button>
+                <div className="mb-3">
+                    <div className="mb-2 flex items-center justify-between">
+                        <label className={labelClass}>AI hashtag picks</label>
+                        <button
+                            type="button"
+                            onClick={() => setAiTagSuggestions([])}
+                            className="text-xs text-[#94A3B8] hover:text-[#52796F]"
+                        >
+                            Clear
+                        </button>
                     </div>
-                    <div className="flex flex-wrap gap-2">
+                    <div className="flex flex-wrap gap-1.5">
                         {aiTagSuggestions.map((t, idx) => (
                             <button
                                 key={idx}
+                                type="button"
                                 onClick={() => addTag(t)}
-                                className="px-2 py-1 rounded-full text-xs bg-gray-100 hover:bg-gray-200 text-gray-800"
+                                className="rounded-full bg-[#EEF3F0] px-2 py-0.5 text-xs text-[#354F52] hover:bg-[#D5DFD9]"
                                 title={`Add #${t}`}
                             >
                                 #{t}
@@ -272,21 +244,108 @@ export default function CaptionEditor({ content = '', onChange, topic = '', onHa
                 </div>
             )}
 
-            {/* Hashtags (merged into caption; appended at end) */}
-            <div className="mb-4">
-                <div className="flex items-center justify-between mb-2">
-                    <label className="text-sm font-medium text-gray-700">
-                        Hashtags ({tags.length}/30)
-                    </label>
-                    <button onClick={generateAiHashtags} disabled={aiTagsLoading} className="text-xs text-blue-600 hover:text-blue-800 disabled:opacity-60">
-                        {aiTagsLoading ? 'Generating…' : '✨ Generate with AI'}
+            <div className="flex flex-wrap gap-1.5">
+                {quickActions.map((action, index) => (
+                    <button
+                        key={index}
+                        type="button"
+                        onClick={action.action}
+                        className="rounded-full bg-[#F4F8F6] px-2.5 py-1 text-xs text-[#52796F] transition-colors hover:bg-[#E8EDEA]"
+                    >
+                        {action.label}
+                    </button>
+                ))}
+            </div>
+        </>
+    );
+
+    const body = (
+        <>
+            {!compact && (
+                <div className="mb-4">
+                    <label className={labelClass}>Optimize for platform</label>
+                    <select value={platform} onChange={(e) => setPlatform(e.target.value)} className={fieldClass}>
+                        <option value="facebook">Facebook</option>
+                        <option value="instagram">Instagram</option>
+                        <option value="twitter">Twitter</option>
+                        <option value="linkedin">LinkedIn</option>
+                        <option value="tiktok">TikTok</option>
+                        <option value="youtube">YouTube</option>
+                    </select>
+                </div>
+            )}
+
+            <div className={compact ? 'mb-3' : 'mb-4'}>
+                {!compact && <label className={labelClass}>Caption</label>}
+                <textarea
+                    value={caption}
+                    onChange={(e) => handleCaptionChange(e.target.value)}
+                    rows={compact ? 6 : 6}
+                    placeholder="Write your caption…"
+                    className={`${fieldClass} resize-none`}
+                />
+                <div className="mt-2 flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-2">
+                        {compact && (
+                            <select
+                                value={platform}
+                                onChange={(e) => setPlatform(e.target.value)}
+                                className="rounded-md border border-[#D5DFD9] bg-white px-2 py-1 text-[0.6875rem] text-[#52796F] focus:border-[#84A98C] focus:outline-none"
+                                aria-label="Optimize for platform"
+                            >
+                                <option value="facebook">Facebook</option>
+                                <option value="instagram">Instagram</option>
+                                <option value="twitter">Twitter</option>
+                                <option value="linkedin">LinkedIn</option>
+                                <option value="tiktok">TikTok</option>
+                                <option value="youtube">YouTube</option>
+                            </select>
+                        )}
+                        <span
+                            className={`text-xs tabular-nums ${remainingChars < 0 ? 'text-red-600' : remainingChars < 50 ? 'text-amber-600' : 'text-[#52796F]'}`}
+                        >
+                            {remainingChars} left
+                        </span>
+                    </div>
+                    <button
+                        type="button"
+                        onClick={runAiOptimize}
+                        disabled={aiLoading}
+                        className="inline-flex items-center gap-1 text-xs font-medium text-[#52796F] hover:text-[#354F52] disabled:opacity-60"
+                    >
+                        <Sparkles className="h-3 w-3" aria-hidden />
+                        {aiLoading ? 'Optimizing…' : 'Optimize'}
                     </button>
                 </div>
-                <div className="flex flex-wrap gap-2 mb-3 min-h-[40px] p-2 border border-gray-300 rounded-lg">
+            </div>
+
+            <div className={compact ? 'mb-3' : 'mb-4'}>
+                <div className="mb-2 flex items-center justify-between">
+                    <label className={labelClass}>Hashtags ({tags.length}/30)</label>
+                    <button
+                        type="button"
+                        onClick={generateAiHashtags}
+                        disabled={aiTagsLoading}
+                        className="inline-flex items-center gap-1 text-xs font-medium text-[#52796F] hover:text-[#354F52] disabled:opacity-60"
+                    >
+                        <Sparkles className="h-3 w-3" aria-hidden />
+                        {aiTagsLoading ? 'Generating…' : 'AI tags'}
+                    </button>
+                </div>
+                <div className="flex min-h-[36px] flex-wrap gap-1.5 rounded-lg border border-[#C8D4CE] bg-[#FAFCFB] p-2">
                     {tags.map((t, idx) => (
-                        <span key={idx} className="inline-flex items-center px-2 py-1 rounded-full text-sm bg-blue-100 text-blue-800">
+                        <span
+                            key={idx}
+                            className="inline-flex items-center rounded-full bg-[#84A98C]/15 px-2 py-0.5 text-xs text-[#354F52]"
+                        >
                             #{t}
-                            <button onClick={() => removeTag(t)} className="ml-1 text-blue-600 hover:text-blue-800">×</button>
+                            <button
+                                type="button"
+                                onClick={() => removeTag(t)}
+                                className="ml-1 text-[#52796F] hover:text-[#354F52]"
+                            >
+                                ×
+                            </button>
                         </span>
                     ))}
                     <input
@@ -294,25 +353,35 @@ export default function CaptionEditor({ content = '', onChange, topic = '', onHa
                         value={tagInput}
                         onChange={(e) => setTagInput(e.target.value)}
                         onKeyDown={handleTagKeyDown}
-                        placeholder={tags.length === 0 ? 'Type hashtags...' : ''}
-                        className="flex-1 min-w-[120px] outline-none"
+                        placeholder={tags.length === 0 ? 'Add hashtags…' : ''}
+                        className="min-w-[80px] flex-1 bg-transparent text-sm outline-none placeholder:text-[#94A3B8]"
                     />
                 </div>
-                <p className="text-xs text-gray-500">Hashtags are appended to the end of the caption automatically.</p>
             </div>
 
-            {/* Quick Actions */}
-            <div className="flex flex-wrap gap-2">
-                {quickActions.map((action, index) => (
-                    <button
-                        key={index}
-                        onClick={action.action}
-                        className="px-3 py-1 text-xs bg-blue-100 text-blue-800 rounded-full hover:bg-blue-200 transition-colors"
-                    >
-                        {action.label}
-                    </button>
-                ))}
-            </div>
+            {compact ? (
+                <details className="group rounded-lg border border-[#E8EDEA] bg-[#FAFCFB]">
+                    <summary className="flex cursor-pointer list-none items-center justify-between px-3 py-2.5 text-xs font-medium text-[#52796F] marker:content-none [&::-webkit-details-marker]:hidden">
+                        <span className="inline-flex items-center gap-1.5">
+                            <Sparkles className="h-3.5 w-3.5 text-[#84A98C]" aria-hidden />
+                            AI writing tools
+                        </span>
+                        <span className="text-[#94A3B8] transition-transform group-open:rotate-180">▾</span>
+                    </summary>
+                    <div className="border-t border-[#E8EDEA] px-3 py-3">{aiTools}</div>
+                </details>
+            ) : (
+                aiTools
+            )}
+        </>
+    );
+
+    if (embedded) return body;
+
+    return (
+        <div className="rounded-lg border border-gray-200 bg-white p-6">
+            <h3 className="mb-4 text-lg font-semibold">Caption Editor</h3>
+            {body}
         </div>
     );
 }

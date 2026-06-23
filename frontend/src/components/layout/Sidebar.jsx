@@ -1,164 +1,141 @@
 'use client';
+
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useState } from 'react';
 import { cn } from '../../lib/utils';
-import {
-    LayoutDashboard,
-    Upload,
-    Eye,
-    Calendar,
-    BarChart3,
-    Link2,
-    Settings,
-    ChevronDown,
-    ChevronRight,
-    Layers,
-    MessageSquare,
-    LayoutTemplate
-} from 'lucide-react';
+import { NAV_SECTIONS, isNavItemActive } from '../../config/navigation';
 import { useAuthStore } from '../../store/authStore';
 import Image from 'next/image';
 
-const navigation = [
-    { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
-    { name: 'Upload', href: '/dashboard/upload', icon: Upload },
-    { name: 'Preview', href: '/dashboard/preview', icon: Eye },
-    { name: 'Schedule', href: '/dashboard/schedule', icon: Calendar },
-    { name: 'Analytics', href: '/dashboard/analytics', icon: BarChart3 },
-    { name: 'Inbox', href: '/dashboard/inbox', icon: MessageSquare },
-    { name: 'Bio Link', href: '/dashboard/bio', icon: LayoutTemplate },
-    {
-        name: 'Platforms',
-        href: '/dashboard/platforms',
-        icon: Layers,
-        subItems: [
-            { name: 'All Platforms', href: '/dashboard/platforms' },
-            { name: 'Instagram', href: '/dashboard/platforms/instagram' },
-            { name: 'TikTok', href: '/dashboard/platforms/tiktok' },
-            { name: 'YouTube', href: '/dashboard/platforms/youtube' },
-            { name: 'Facebook', href: '/dashboard/platforms/facebook' },
-        ]
-    },
-    { name: 'Connect Accounts', href: '/dashboard/connect-accounts', icon: Link2 },
-    { name: 'Settings', href: '/dashboard/settings', icon: Settings },
-];
-
-export default function Sidebar({ open = false, onClose = () => { } }) {
+export default function Sidebar({ open = false, onClose = () => {} }) {
     const pathname = usePathname();
     const user = useAuthStore((state) => state.user);
-    const [expandedItems, setExpandedItems] = useState([]);
-    const toggleExpanded = (itemName) => {
-        setExpandedItems(prev => prev.includes(itemName)
-            ? prev.filter(name => name !== itemName)
-            : [...prev, itemName]);
+    const [expandedSections, setExpandedSections] = useState(() => NAV_SECTIONS.map((s) => s.id));
+
+    const toggleSection = (id) => {
+        setExpandedSections((prev) =>
+            prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
+        );
     };
 
     return (
         <>
-            {/* Overlay for mobile */}
             <div
-                className={`fixed inset-0 bg-black/40 z-40 transition-opacity md:hidden ${open ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}
+                className={cn(
+                    'fixed inset-0 z-40 bg-black/40 transition-opacity md:hidden',
+                    open ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
+                )}
                 onClick={onClose}
+                aria-hidden="true"
             />
-            {/* Sidebar panel */}
-            <div className={`fixed md:fixed top-0 left-0 h-full md:h-screen w-72 md:w-64 z-50 transform transition-transform md:transition-none flex flex-col ${open ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}`}
-                style={{ background: 'linear-gradient(to bottom, #2F3E46, #354F52)' }}>
-                {/* Logo */}
-                <div className="p-6 border-b" style={{ borderColor: 'rgba(255, 255, 255, 0.1)' }}>
-                    <div className="flex items-center gap-3">
-                        <img src="/logo.png" className='w-10 h-10 rounded-full' alt="Viralix Logo" />
-                        <h1 className="text-xl font-bold text-white">Viralix</h1>
+
+            <aside
+                className={cn(
+                    'fixed top-0 left-0 z-50 flex h-full w-[15.5rem] flex-col border-r transition-transform md:translate-x-0',
+                    open ? 'translate-x-0' : '-translate-x-full'
+                )}
+                style={{
+                    background: 'linear-gradient(180deg, #2F3E46 0%, #354F52 100%)',
+                    borderColor: 'rgba(255,255,255,0.08)',
+                }}
+            >
+                {/* Brand */}
+                <div
+                    className="flex h-14 shrink-0 items-center gap-2.5 border-b px-4"
+                    style={{ borderColor: 'rgba(255,255,255,0.1)' }}
+                >
+                    <img src="/logo.png" className="h-8 w-8 rounded-full" alt="Viralix" />
+                    <div className="min-w-0">
+                        <p className="truncate text-sm font-semibold text-white">Viralix</p>
+                        <p className="truncate text-[11px] text-white/50">Social workspace</p>
                     </div>
                 </div>
 
-                {/* Navigation */}
-                <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
-                    {navigation.map((item) => {
-                        const Icon = item.icon;
-                        const isActive = pathname === item.href || pathname.startsWith(item.href + '/');
-                        const isExpanded = expandedItems.includes(item.name);
+                {/* Section navigation */}
+                <nav className="sidebar-scroll flex-1 overflow-y-auto px-2 py-3">
+                    {NAV_SECTIONS.map((section) => {
+                        const isExpanded = expandedSections.includes(section.id);
+                        const sectionActive = section.items.some((item) =>
+                            isNavItemActive(pathname, item)
+                        );
 
                         return (
-                            <div key={item.name}>
-                                {item.subItems ? (
-                                    <div>
-                                        <button
-                                            onClick={() => toggleExpanded(item.name)}
-                                            className={cn(
-                                                'w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm font-medium transition-all',
-                                                isActive
-                                                    ? 'text-white'
-                                                    : 'text-gray-300 hover:text-white hover:bg-white/10'
-                                            )}
-                                            style={isActive ? { backgroundColor: '#84A98C' } : {}}
-                                        >
-                                            <div className="flex items-center gap-3">
-                                                <Icon className="w-5 h-5" />
-                                                {item.name}
-                                            </div>
-                                            {isExpanded ? (
-                                                <ChevronDown className="w-4 h-4" />
-                                            ) : (
-                                                <ChevronRight className="w-4 h-4" />
-                                            )}
-                                        </button>
-                                        {isExpanded && (
-                                            <div className="ml-6 mt-1 space-y-1">
-                                                {item.subItems.map((subItem) => (
+                            <div key={section.id} className="mb-1">
+                                <button
+                                    type="button"
+                                    onClick={() => toggleSection(section.id)}
+                                    className={cn(
+                                        'flex w-full items-center justify-between rounded-md px-2 py-1.5 text-left transition-colors',
+                                        sectionActive ? 'text-white/90' : 'text-white/45 hover:text-white/70'
+                                    )}
+                                >
+                                    <span className="text-[11px] font-semibold uppercase tracking-[0.14em]">
+                                        {section.label}
+                                    </span>
+                                    <span className="text-[11px] text-white/40">{isExpanded ? '−' : '+'}</span>
+                                </button>
+
+                                {isExpanded && (
+                                    <ul className="mt-0.5 space-y-0.5 pb-2">
+                                        {section.items.map((item) => {
+                                            const Icon = item.icon;
+                                            const active = isNavItemActive(pathname, item);
+                                            return (
+                                                <li key={item.href}>
                                                     <Link
-                                                        key={subItem.name}
-                                                        href={subItem.href}
+                                                        href={item.href}
+                                                        onClick={onClose}
                                                         className={cn(
-                                                            'flex items-center px-3 py-2 rounded-lg text-sm transition-all',
-                                                            pathname === subItem.href
-                                                                ? 'text-white bg-white/20'
-                                                                : 'text-gray-400 hover:text-white hover:bg-white/10'
+                                                            'flex items-center gap-2.5 rounded-md px-2.5 py-2 text-xs font-medium transition-all',
+                                                            active
+                                                                ? 'text-white shadow-sm'
+                                                                : 'text-white/65 hover:bg-white/8 hover:text-white'
                                                         )}
+                                                        style={active ? { backgroundColor: '#84A98C' } : undefined}
                                                     >
-                                                        {subItem.name}
+                                                        {Icon && <Icon className="h-3.5 w-3.5 shrink-0 opacity-90" />}
+                                                        <span className="truncate">{item.name}</span>
                                                     </Link>
-                                                ))}
-                                            </div>
-                                        )}
-                                    </div>
-                                ) : (
-                                    <Link
-                                        href={item.href}
-                                        className={cn(
-                                            'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all',
-                                            isActive
-                                                ? 'text-white'
-                                                : 'text-gray-300 hover:text-white hover:bg-white/10'
-                                        )}
-                                        style={isActive ? { backgroundColor: '#84A98C' } : {}}
-                                    >
-                                        <Icon className="w-5 h-5" />
-                                        {item.name}
-                                    </Link>
+                                                </li>
+                                            );
+                                        })}
+                                    </ul>
                                 )}
                             </div>
                         );
                     })}
                 </nav>
 
-                {/* User Profile */}
-                <div className="p-4 border-t" style={{ borderColor: 'rgba(255, 255, 255, 0.1)' }}>
-                    <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full overflow-hidden flex items-center justify-center text-white font-semibold flex-shrink-0" style={{ backgroundColor: '#84A98C' }}>
+                {/* User */}
+                <div
+                    className="shrink-0 border-t p-3"
+                    style={{ borderColor: 'rgba(255,255,255,0.1)' }}
+                >
+                    <div className="flex items-center gap-2.5 rounded-lg bg-white/5 px-2 py-2">
+                        <div
+                            className="flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-full text-xs font-semibold text-white"
+                            style={{ backgroundColor: '#84A98C' }}
+                        >
                             {user?.profilePicture ? (
-                                <Image src={user.profilePicture} alt={user.name || 'User'} width={40} height={40} className="w-full h-full object-cover" />
+                                <Image
+                                    src={user.profilePicture}
+                                    alt={user.name || 'User'}
+                                    width={32}
+                                    height={32}
+                                    className="h-full w-full object-cover"
+                                />
                             ) : (
                                 <span>{user?.name?.charAt(0).toUpperCase() || 'U'}</span>
                             )}
                         </div>
-                        <div className="overflow-hidden">
-                            <p className="text-sm font-medium text-white truncate">{user?.name || 'User'}</p>
-                            <p className="text-xs text-gray-400 truncate">{user?.email || 'Free Plan'}</p>
+                        <div className="min-w-0 flex-1">
+                            <p className="truncate text-xs font-medium text-white">{user?.name || 'User'}</p>
+                            <p className="truncate text-[11px] text-white/45">{user?.email || 'demo@viralix.dev'}</p>
                         </div>
                     </div>
                 </div>
-            </div>
+            </aside>
         </>
     );
 }
