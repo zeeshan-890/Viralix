@@ -213,6 +213,12 @@ try {
     console.warn('Bulk upload routes not mounted:', e.message);
 }
 try {
+    app.use('/api/inbox/auto-reply', require('./routes/inbox-auto-reply'));
+    console.log('🤖 Inbox auto-reply routes mounted');
+} catch (e) {
+    console.warn('Inbox auto-reply routes not mounted:', e.message);
+}
+try {
     app.use('/api/inbox', require('./routes/inbox'));
     console.log('📥 Unified Inbox routes mounted');
 } catch (e) {

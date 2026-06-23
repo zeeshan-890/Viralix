@@ -1,7 +1,6 @@
 import { create } from 'zustand';
 import { authAPI } from '../lib/api';
-import { getStoredToken, getStoredUser, setStoredUser, removeStoredUser } from '../lib/auth';
-import { log } from 'console';
+import { getStoredUser, setStoredUser, removeStoredUser } from '../lib/auth';
 
 // Shape
 // state: { user: object|null, loading: boolean }

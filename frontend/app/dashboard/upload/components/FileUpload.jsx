@@ -1,330 +1,267 @@
 'use client';
+
 import { useState, useCallback, useRef } from 'react';
+import { Upload, Image as ImageIcon, Film, X, Loader2, CheckCircle2 } from 'lucide-react';
+import { cn } from '@/lib/utils';
+import { isMockMode } from '@/lib/mock';
 import { uploadAPI } from '@/lib/api';
 
-export default function FileUpload({ onUploadComplete, onDeleteUploaded }) {
+function formatFileSize(bytes) {
+    if (bytes === 0) return '0 B';
+    const k = 1024;
+    const sizes = ['B', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return `${parseFloat((bytes / k ** i).toFixed(1))} ${sizes[i]}`;
+}
+
+/** Demo upload — local preview only, no cloud storage */
+async function simulateDemoUpload(file, onProgress) {
+    const steps = [15, 40, 65, 85, 100];
+    for (const pct of steps) {
+        await new Promise((r) => setTimeout(r, 120));
+        onProgress(pct);
+    }
+    const isVideo = file.type.startsWith('video/');
+    return {
+        type: isVideo ? 'video' : 'image',
+        url: URL.createObjectURL(file),
+        filename: file.name,
+        size: file.size,
+        mimetype: file.type,
+        publicId: `demo-local/${Date.now()}-${file.name}`,
+        width: isVideo ? 1080 : 1200,
+        height: isVideo ? 1920 : 800,
+        duration: isVideo ? 32 : null,
+        isLocal: true,
+    };
+}
+
+async function uploadFileToServer(file, onProgress) {
+    const res = await uploadAPI.uploadFile(file, onProgress);
+    const uploaded = res.data?.files?.[0];
+    if (!uploaded?.url) throw new Error('Upload failed');
+    const isVideo = uploaded.type === 'video' || uploaded.mimetype?.startsWith('video/');
+    return {
+        type: isVideo ? 'video' : 'image',
+        url: uploaded.url,
+        filename: uploaded.filename || file.name,
+        size: uploaded.size ?? file.size,
+        mimetype: uploaded.mimetype || file.type,
+        publicId: uploaded.publicId,
+        width: uploaded.width,
+        height: uploaded.height,
+        duration: uploaded.duration,
+    };
+}
+
+export default function FileUpload({ onUploadComplete, onDeleteUploaded, embedded = false, multi = false }) {
     const [dragActive, setDragActive] = useState(false);
-    const [files, setFiles] = useState([]);
     const [uploading, setUploading] = useState(false);
-    const [uploadProgress, setUploadProgress] = useState({});
-    const [uploadResults, setUploadResults] = useState([]);
+    const [progress, setProgress] = useState(0);
     const [error, setError] = useState('');
+    const [queue, setQueue] = useState([]);
     const fileInputRef = useRef(null);
+    const demoMode = isMockMode();
+
+    const processFiles = useCallback(
+        async (fileList) => {
+            const list = Array.from(fileList);
+            if (!list.length) return;
+
+            const batch = multi ? list : [list[0]];
+            setUploading(true);
+            setError('');
+            setProgress(0);
+
+            try {
+                const results = [];
+                for (let i = 0; i < batch.length; i++) {
+                    const file = batch[i];
+                    const onFileProgress = (pct) => {
+                        setProgress(Math.round(((i + pct / 100) / batch.length) * 100));
+                    };
+                    const uploaded = demoMode
+                        ? await simulateDemoUpload(file, onFileProgress)
+                        : await uploadFileToServer(file, onFileProgress);
+                    results.push(uploaded);
+                }
+                setQueue((prev) => (multi ? [...prev, ...results] : results));
+                onUploadComplete?.(results);
+            } catch {
+                setError('Upload simulation failed. Please try again.');
+            } finally {
+                setUploading(false);
+                setProgress(0);
+                if (fileInputRef.current) fileInputRef.current.value = '';
+            }
+        },
+        [multi, onUploadComplete, demoMode]
+    );
 
     const handleDrag = useCallback((e) => {
         e.preventDefault();
         e.stopPropagation();
-        if (e.type === "dragenter" || e.type === "dragover") {
-            setDragActive(true);
-        } else if (e.type === "dragleave") {
+        if (e.type === 'dragenter' || e.type === 'dragover') setDragActive(true);
+        else if (e.type === 'dragleave') setDragActive(false);
+    }, []);
+
+    const handleDrop = useCallback(
+        (e) => {
+            e.preventDefault();
+            e.stopPropagation();
             setDragActive(false);
-        }
-    }, []);
+            if (e.dataTransfer.files?.length) processFiles(e.dataTransfer.files);
+        },
+        [processFiles]
+    );
 
-    const handleDrop = useCallback((e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        setDragActive(false);
-        if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-            const list = Array.from(e.dataTransfer.files);
-            const first = list[0];
-            if (list.length > 1) {
-                setError('Only one file allowed. Uploading the first file.');
-            } else {
-                setError('');
-            }
-            // Replace existing file with the first one
-            setFiles([first]);
-            setUploadProgress({});
-            setUploadResults([]);
-            uploadNewFiles([first], 0);
-        }
-    }, []);
+    const handleFileSelect = useCallback(
+        (e) => {
+            if (e.target.files?.length) processFiles(e.target.files);
+        },
+        [processFiles]
+    );
 
-    const handleFileSelect = useCallback((e) => {
-        if (e.target.files && e.target.files[0]) {
-            const list = Array.from(e.target.files);
-            const first = list[0];
-            if (list.length > 1) {
-                setError('Only one file allowed. Uploading the first file.');
-            } else {
-                setError('');
-            }
-            // Replace existing file with the first one
-            setFiles([first]);
-            setUploadProgress({});
-            setUploadResults([]);
-            uploadNewFiles([first], 0);
-            // Reset input so selecting the same file again triggers onChange
-            try { e.target.value = ''; } catch { }
-        }
-    }, []);
-
-    const removeFile = async (index) => {
-        const file = files[index];
-        const result = uploadResults.find(r => r.file === file && r.success && r.data?.publicId);
-        if (result?.data?.publicId) {
-            try {
-                await uploadAPI.deleteFile(result.data.publicId);
-                if (onDeleteUploaded) onDeleteUploaded(result.data.publicId);
-            } catch (err) {
-                setError(err?.response?.data?.message || 'Failed to delete file from cloud');
-                return;
-            }
-        }
-        setFiles(prev => prev.filter((_, i) => i !== index));
-        setUploadProgress(prev => {
-            const newProgress = { ...prev };
-            delete newProgress[index];
-            return newProgress;
-        });
-        setUploadResults(prev => prev.filter(r => r.file !== file));
-        // Also reset the hidden input to allow re-selecting the same file
-        if (fileInputRef.current) {
-            try { fileInputRef.current.value = ''; } catch { }
-        }
+    const removeQueued = (publicId) => {
+        setQueue((prev) => prev.filter((f) => f.publicId !== publicId));
+        onDeleteUploaded?.(publicId);
     };
 
-    const uploadNewFiles = async (newFiles, startIndex = 0) => {
-        if (!newFiles || newFiles.length === 0) return;
-        setUploading(true);
-        setError('');
-
-        try {
-            const results = [];
-            for (let i = 0; i < newFiles.length; i++) {
-                const file = newFiles[i];
-                const idx = startIndex + i;
-                try {
-                    const response = await uploadAPI.uploadFile(file, (progress) => {
-                        setUploadProgress(prev => ({
-                            ...prev,
-                            [idx]: progress
-                        }));
-                    });
-
-                    // /upload/media returns { files: [...] }
-                    const uploaded = Array.isArray(response?.data?.files) ? response.data.files[0] : response.data;
-                    const resultEntry = {
-                        file,
-                        success: true,
-                        data: uploaded
-                    };
-                    results.push(resultEntry);
-                    setUploadResults(prev => [...prev, resultEntry]);
-                } catch (err) {
-                    const resultEntry = {
-                        file,
-                        success: false,
-                        error: err.response?.data?.message || 'Upload failed'
-                    };
-                    results.push(resultEntry);
-                    setUploadResults(prev => [...prev, resultEntry]);
-                }
-            }
-
-            // Notify parent only with successful uploads from this batch
-            if (onUploadComplete) {
-                const successfulUploads = results
-                    .filter(r => r.success && r.data)
-                    .map(r => ({
-                        type: r.data.type,
-                        url: r.data.url,
-                        filename: r.data.filename,
-                        size: r.data.size,
-                        mimetype: r.data.mimetype,
-                        publicId: r.data.publicId,
-                        width: r.data.width,
-                        height: r.data.height,
-                        duration: r.data.duration || null,
-                    }));
-                if (successfulUploads.length > 0) onUploadComplete(successfulUploads);
-            }
-        } catch (err) {
-            setError('Failed to upload files');
-            console.error(err);
-        } finally {
-            setUploading(false);
-        }
-    };
-
-    const clearAll = () => {
-        setFiles([]);
-        setUploadProgress({});
-        setUploadResults([]);
-        setError('');
-        if (fileInputRef.current) {
-            try { fileInputRef.current.value = ''; } catch { }
-        }
-    };
-
-    const formatFileSize = (bytes) => {
-        if (bytes === 0) return '0 Bytes';
-        const k = 1024;
-        const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-        const i = Math.floor(Math.log(bytes) / Math.log(k));
-        return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
-    };
-
-    const getOverallProgress = () => {
-        const progressValues = Object.values(uploadProgress);
-        if (progressValues.length === 0) return 0;
-        return Math.round(progressValues.reduce((sum, p) => sum + p, 0) / progressValues.length);
-    };
-
-    return (
-        <div className="bg-white rounded-lg border border-gray-200 p-6">
-            <h3 className="text-lg font-semibold mb-4">Upload Files</h3>
-
-            {error && (
-                <div className="mb-4 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
-                    {error}
-                </div>
+    const dropzone = (
+        <div
+            className={cn(
+                'relative rounded-xl border-2 border-dashed transition-all',
+                dragActive
+                    ? 'border-[#84A98C] bg-[#84A98C]/10'
+                    : 'border-[#C8D4CE] bg-[#FAFCFB] hover:border-[#84A98C]/60 hover:bg-white',
+                embedded ? 'p-8' : 'p-10'
             )}
+            onDragEnter={handleDrag}
+            onDragLeave={handleDrag}
+            onDragOver={handleDrag}
+            onDrop={handleDrop}
+        >
+            <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*,video/*"
+                multiple={multi}
+                onChange={handleFileSelect}
+                className="absolute inset-0 cursor-pointer opacity-0"
+                disabled={uploading}
+                aria-label="Upload media file"
+            />
 
-            {/* Drop Zone */}
-            <div
-                className={`relative border-2 border-dashed rounded-lg p-8 text-center transition-colors ${dragActive
-                    ? 'border-blue-400 bg-blue-50'
-                    : 'border-gray-300 hover:border-gray-400'
-                    }`}
-                onDragEnter={handleDrag}
-                onDragLeave={handleDrag}
-                onDragOver={handleDrag}
-                onDrop={handleDrop}
-            >
-                <input
-                    ref={fileInputRef}
-                    type="file"
-                    accept="image/*,video/*"
-                    onChange={handleFileSelect}
-                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                    disabled={uploading}
-                />
-
-                <div className="space-y-4">
-                    <div className="text-4xl">
-                        {uploading ? '⏳' : '📁'}
-                    </div>
-                    <div>
-                        <p className="text-lg font-medium text-gray-900">
-                            {uploading ? 'Uploading files...' : 'Drop files here or click to browse'}
-                        </p>
-                        <p className="text-sm text-gray-600">
-                            Support for videos and images up to 100MB
-                        </p>
-                    </div>
-                    {!uploading && (
-                        <button
-                            type="button"
-                            className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-lg shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
-                        >
-                            Choose Files
-                        </button>
+            <div className="pointer-events-none flex flex-col items-center text-center">
+                <div
+                    className={cn(
+                        'mb-3 flex h-14 w-14 items-center justify-center rounded-2xl',
+                        uploading ? 'bg-[#84A98C]/20' : 'bg-[#354F52]/8'
+                    )}
+                >
+                    {uploading ? (
+                        <Loader2 className="h-7 w-7 animate-spin text-[#52796F]" />
+                    ) : (
+                        <Upload className="h-7 w-7 text-[#52796F]" />
                     )}
                 </div>
+                <p className="text-sm font-semibold text-[#354F52]">
+                    {uploading ? 'Processing file…' : 'Drop media here or click to browse'}
+                </p>
+                <p className="mt-1 text-xs text-[#52796F]">Images & videos · demo mode (local preview only)</p>
+                {!uploading && (
+                    <div className="mt-4 flex flex-wrap justify-center gap-2">
+                        <span className="inline-flex items-center gap-1 rounded-full bg-white px-2.5 py-1 text-[0.625rem] text-[#52796F] ring-1 ring-[#D5DFD9]">
+                            <ImageIcon className="h-3 w-3" /> JPG, PNG, WebP
+                        </span>
+                        <span className="inline-flex items-center gap-1 rounded-full bg-white px-2.5 py-1 text-[0.625rem] text-[#52796F] ring-1 ring-[#D5DFD9]">
+                            <Film className="h-3 w-3" /> MP4, MOV
+                        </span>
+                    </div>
+                )}
             </div>
 
-            {/* File List */}
-            {files.length > 0 && (
-                <div className="mt-6 space-y-3">
-                    <div className="flex items-center justify-between">
-                        <h4 className="font-medium text-gray-900">Files ({files.length})</h4>
-                        <div className="flex space-x-2">
-                            {!uploading && (
-                                <button
-                                    onClick={clearAll}
-                                    className="px-4 py-2 text-gray-600 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
-                                >
-                                    Clear All
-                                </button>
-                            )}
-                        </div>
+            {uploading && (
+                <div className="mt-5">
+                    <div className="mb-1 flex justify-between text-xs text-[#52796F]">
+                        <span>Uploading</span>
+                        <span className="tabular-nums">{progress}%</span>
                     </div>
-
-                    <div className="space-y-2">
-                        {files.map((file, index) => {
-                            const progress = uploadProgress[index] || 0;
-                            const result = uploadResults.find(r => r.file === file);
-
-                            return (
-                                <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                                    <div className="flex items-center space-x-3">
-                                        <div className="w-10 h-10 bg-gray-200 rounded-lg flex items-center justify-center">
-                                            {file.type.startsWith('video/') ? '🎥' : '🖼️'}
-                                        </div>
-                                        <div className="flex-1">
-                                            <div className="flex items-center space-x-2">
-                                                <p className="text-sm font-medium text-gray-900">{file.name}</p>
-                                                {result && (
-                                                    <span className={`text-xs px-2 py-1 rounded-full ${result.success
-                                                        ? 'bg-green-100 text-green-800'
-                                                        : 'bg-red-100 text-red-800'
-                                                        }`}>
-                                                        {result.success ? '✓ Uploaded' : '✗ Failed'}
-                                                    </span>
-                                                )}
-                                            </div>
-                                            <p className="text-xs text-gray-600">{formatFileSize(file.size)}</p>
-
-                                            {uploading && uploadProgress[index] !== undefined && (
-                                                <div className="mt-1">
-                                                    <div className="w-full bg-gray-200 rounded-full h-1">
-                                                        <div
-                                                            className="bg-blue-600 h-1 rounded-full transition-all"
-                                                            style={{ width: `${progress}%` }}
-                                                        />
-                                                    </div>
-                                                    <span className="text-xs text-gray-500">{progress}%</span>
-                                                </div>
-                                            )}
-
-                                            {result && !result.success && (
-                                                <p className="text-xs text-red-600 mt-1">{result.error}</p>
-                                            )}
-                                        </div>
-                                    </div>
-
-                                    {!uploading && (
-                                        <button
-                                            onClick={() => removeFile(index)}
-                                            className="text-red-500 hover:text-red-700 p-1"
-                                        >
-                                            ❌
-                                        </button>
-                                    )}
-                                </div>
-                            );
-                        })}
-                    </div>
-                </div>
-            )}
-
-            {/* Overall Upload Progress */}
-            {uploading && files.length > 0 && (
-                <div className="mt-6">
-                    <div className="flex items-center justify-between mb-2">
-                        <span className="text-sm font-medium text-gray-700">Overall Progress</span>
-                        <span className="text-sm text-gray-600">{getOverallProgress()}%</span>
-                    </div>
-                    <div className="w-full bg-gray-200 rounded-full h-2">
+                    <div className="h-1.5 overflow-hidden rounded-full bg-[#E8EDEA]">
                         <div
-                            className="bg-blue-600 h-2 rounded-full transition-all"
-                            style={{ width: `${getOverallProgress()}%` }}
+                            className="h-full rounded-full bg-[#84A98C] transition-all duration-200"
+                            style={{ width: `${progress}%` }}
                         />
                     </div>
                 </div>
             )}
+        </div>
+    );
 
-            {/* Upload Results Summary */}
-            {uploadResults.length > 0 && !uploading && (
-                <div className="mt-4 p-4 bg-gray-50 rounded-lg">
-                    <div className="text-sm text-gray-700">
-                        Upload completed: {uploadResults.filter(r => r.success).length} successful, {' '}
-                        {uploadResults.filter(r => !r.success).length} failed
+    const queueList = queue.length > 0 && (
+        <ul className="mt-4 space-y-2">
+            {queue.map((file) => (
+                <li
+                    key={file.publicId}
+                    className="flex items-center gap-3 rounded-lg border border-[#E8EDEA] bg-white px-3 py-2"
+                >
+                    <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-lg bg-[#F4F8F6]">
+                        {file.type === 'video' ? (
+                            <div className="flex h-full w-full items-center justify-center">
+                                <Film className="h-4 w-4 text-[#52796F]" />
+                            </div>
+                        ) : (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img src={file.url} alt="" className="h-full w-full object-cover" />
+                        )}
                     </div>
+                    <div className="min-w-0 flex-1">
+                        <p className="truncate text-xs font-medium text-[#354F52]">{file.filename}</p>
+                        <p className="text-[0.625rem] text-[#52796F]">{formatFileSize(file.size)}</p>
+                    </div>
+                    <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-600" aria-hidden />
+                    <button
+                        type="button"
+                        onClick={() => removeQueued(file.publicId)}
+                        className="rounded-md p-1 text-[#94A3B8] hover:bg-red-50 hover:text-red-600"
+                        aria-label={`Remove ${file.filename}`}
+                    >
+                        <X className="h-4 w-4" />
+                    </button>
+                </li>
+            ))}
+        </ul>
+    );
+
+    if (embedded) {
+        return (
+            <div>
+                {demoMode && (
+                    <p className="mb-3 rounded-lg bg-[#354F52]/5 px-3 py-2 text-[0.6875rem] text-[#52796F]">
+                        Demo mode — files stay in your browser session. Cloud upload coming soon.
+                    </p>
+                )}
+                {error && (
+                    <div className="mb-3 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700">
+                        {error}
+                    </div>
+                )}
+                {dropzone}
+                {queueList}
+            </div>
+        );
+    }
+
+    return (
+        <div className="rounded-2xl border border-[#B8C9C0] bg-white p-6 shadow-sm">
+            <h3 className="mb-4 text-lg font-semibold text-[#354F52]">Upload files</h3>
+            {error && (
+                <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+                    {error}
                 </div>
             )}
+            {dropzone}
+            {queueList}
         </div>
     );
 }

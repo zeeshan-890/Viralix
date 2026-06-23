@@ -9,6 +9,14 @@ module.exports = {
     theme: {
         extend: {
             colors: {
+                viralix: {
+                    primary: '#84A98C',
+                    dark: '#354F52',
+                    sidebar: '#2F3E46',
+                    bg: '#F7FAF8',
+                    sage: '#CAD2C5',
+                    teal: '#52796F',
+                },
                 border: "hsl(var(--border))",
                 input: "hsl(var(--input))",
                 ring: "hsl(var(--ring))",

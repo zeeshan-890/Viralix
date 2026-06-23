@@ -1,2 +1,161 @@
 @import "tailwindcss";
 
+:root {
+    --viralix-primary: #84A98C;
+    --viralix-primary-dark: #52796F;
+    --viralix-accent: #354F52;
+    --viralix-sidebar: #2F3E46;
+    --viralix-bg: #F7FAF8;
+    --viralix-surface: #FFFFFF;
+    --viralix-border: #E2E8E4;
+    --viralix-border-strong: #D1D5DB;
+    --viralix-muted: #52796F;
+
+    --background: 120 20% 98%;
+    --foreground: 180 15% 22%;
+    --primary: 130 18% 59%;
+    --primary-foreground: 0 0% 100%;
+    --muted: 120 10% 94%;
+    --muted-foreground: 160 8% 42%;
+    --border: 140 12% 88%;
+    --radius: 0.5rem;
+}
+
+html {
+    font-size: 15px;
+}
+
+body {
+    background-color: var(--viralix-bg);
+    color: var(--viralix-accent);
+    font-feature-settings: "rlig" 1, "calt" 1;
+    -webkit-font-smoothing: antialiased;
+}
+
+.app-main h1 {
+    font-size: 1.25rem;
+    line-height: 1.625rem;
+    font-weight: 600;
+    color: var(--viralix-accent);
+}
+
+.app-main h2 {
+    font-size: 1.0625rem;
+    line-height: 1.5rem;
+    font-weight: 600;
+}
+
+.app-main h3 {
+    font-size: 0.9375rem;
+    line-height: 1.375rem;
+    font-weight: 600;
+}
+
+.app-main p,
+.app-main li,
+.app-main label,
+.app-main td,
+.app-main th {
+    font-size: 0.875rem;
+}
+
+.sidebar-scroll::-webkit-scrollbar,
+.tabs-scroll::-webkit-scrollbar {
+    width: 4px;
+    height: 4px;
+}
+
+.sidebar-scroll::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 4px;
+}
+
+/* ─── Landing page animations ─── */
+@keyframes landing-float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+}
+
+@keyframes landing-marquee {
+    0% { transform: translateX(0); }
+    100% { transform: translateX(-33.333%); }
+}
+
+@keyframes landing-bar-grow {
+    from { transform: scaleY(0); transform-origin: bottom; }
+    to { transform: scaleY(1); transform-origin: bottom; }
+}
+
+@keyframes landing-fade-up {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes landing-orb {
+    0%, 100% { transform: translate(0, 0) scale(1); }
+    33% { transform: translate(20px, -15px) scale(1.05); }
+    66% { transform: translate(-10px, 10px) scale(0.95); }
+}
+
+.landing-float { animation: landing-float 5s ease-in-out infinite; }
+.landing-float-delay { animation: landing-float 5s ease-in-out 1.5s infinite; }
+.landing-orb { animation: landing-orb 12s ease-in-out infinite; }
+.landing-orb-delay { animation: landing-orb 12s ease-in-out 4s infinite; }
+
+.landing-marquee { animation: landing-marquee 28s linear infinite; }
+.landing-marquee-mask {
+    mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent);
+}
+
+.landing-bar-grow { animation: landing-bar-grow 0.8s ease-out forwards; }
+
+.landing-fade-up { animation: landing-fade-up 0.7s ease-out forwards; }
+.landing-fade-up-delay { animation: landing-fade-up 0.7s ease-out 0.1s forwards; opacity: 0; }
+.landing-fade-up-delay-2 { animation: landing-fade-up 0.7s ease-out 0.2s forwards; opacity: 0; }
+.landing-fade-up-delay-3 { animation: landing-fade-up 0.7s ease-out 0.35s forwards; opacity: 0; }
+
+@media (prefers-reduced-motion: reduce) {
+    .landing .landing-float,
+    .landing .landing-float-delay,
+    .landing .landing-orb,
+    .landing .landing-orb-delay,
+    .landing .landing-marquee,
+    .landing .landing-bar-grow,
+    .landing .landing-fade-up,
+    .landing .landing-fade-up-delay,
+    .landing .landing-fade-up-delay-2,
+    .landing .landing-fade-up-delay-3,
+    .landing .landing-feature-slide,
+    .landing .landing-feature-chip,
+    .landing .landing-feature-orbit,
+    .landing .landing-feature-expand {
+        animation: none !important;
+        opacity: 1 !important;
+        transform: none !important;
+    }
+}
+
+@keyframes landing-feature-slide-in {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes landing-feature-expand {
+    from { opacity: 0; max-height: 0; }
+    to { opacity: 1; max-height: 200px; }
+}
+
+@keyframes landing-feature-chip-in {
+    from { opacity: 0; transform: scale(0.85); }
+    to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes landing-feature-orbit-in {
+    from { opacity: 0; transform: translate(-50%, 0) scale(0.5); }
+    to { opacity: 1; transform: translate(-50%, 0) scale(1); }
+}
+
+.landing-feature-slide { animation: landing-feature-slide-in 0.4s ease-out forwards; }
+.landing-feature-expand { animation: landing-feature-expand 0.35s ease-out forwards; overflow: hidden; }
+.landing-feature-chip { animation: landing-feature-chip-in 0.35s ease-out forwards; opacity: 0; }
+.landing-feature-orbit { animation: landing-feature-orbit-in 0.5s ease-out forwards; opacity: 0; }

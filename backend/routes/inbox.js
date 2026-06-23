@@ -3,6 +3,8 @@ const mongoose = require('mongoose');
 const auth = require('../middleware/auth');
 const Conversation = require('../models/Conversation');
 const Message = require('../models/Message');
+const InboxReplySettings = require('../models/InboxReplySettings');
+const { suggestInboxReply } = require('../services/ai');
 
 const router = express.Router();
 const toObjectId = (id) => new mongoose.Types.ObjectId(id);
@@ -130,6 +132,50 @@ router.get('/:conversationId/messages', auth, async (req, res) => {
     } catch (e) {
         console.error('[Inbox] Messages error:', e.message);
         res.status(500).json({ message: 'Failed to load messages' });
+    }
+});
+
+// POST /api/inbox/:conversationId/ai-suggest — AI reply suggestions
+router.post('/:conversationId/ai-suggest', auth, async (req, res) => {
+    try {
+        const conversation = await Conversation.findOne({
+            _id: req.params.conversationId,
+            userId: req.user.id
+        });
+        if (!conversation) return res.status(404).json({ message: 'Conversation not found' });
+
+        const settings = await InboxReplySettings.getOrCreate(req.user.id);
+        if (!settings.aiEnabled) {
+            return res.status(400).json({ message: 'AI replies are disabled in settings' });
+        }
+
+        const tone = req.body.tone || settings.defaultTone || 'friendly';
+
+        const lastInbound = await Message.findOne({
+            conversationId: conversation._id,
+            direction: 'inbound'
+        }).sort({ createdAt: -1 }).lean();
+
+        const lastMessage = lastInbound?.text
+            || conversation.lastMessage?.text
+            || '';
+
+        const suggestions = await suggestInboxReply({
+            participantName: conversation.participantName,
+            lastMessage,
+            tone,
+            includeContext: settings.includeContext !== false,
+            signOff: settings.signOff || ''
+        });
+
+        res.json({
+            suggestions,
+            tone,
+            aiMode: settings.aiMode || 'suggest'
+        });
+    } catch (e) {
+        console.error('[Inbox] AI suggest error:', e.message);
+        res.status(500).json({ message: 'AI suggestion failed' });
     }
 });
 

@@ -1,0 +1,281 @@
+'use client';
+
+import { useState, useEffect, useMemo } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { toast } from 'react-hot-toast';
+import { postsAPI } from '@/lib/api';
+import { useAccounts } from '@/hooks/useAccounts';
+import { cn } from '@/lib/utils';
+import TikTokSettings, { useTikTokSettingsValidation } from '../../../app/dashboard/upload/components/TikTokSettings';
+import UploadSidebar from './UploadSidebar';
+import UploadMediaCanvas from './UploadMediaCanvas';
+import { Image as ImageIcon, Layers, PenLine, Rocket, Calendar, FileText } from 'lucide-react';
+import Link from 'next/link';
+
+const STEPS = [
+    { id: 'media', label: 'Media', icon: ImageIcon },
+    { id: 'copy', label: 'Copy', icon: PenLine },
+    { id: 'targets', label: 'Targets', icon: Layers },
+    { id: 'publish', label: 'Publish', icon: Rocket },
+];
+
+export default function UploadPage() {
+    const router = useRouter();
+    const searchParams = useSearchParams();
+    const { accounts: connectedAccounts, isLoading: accountsLoading } = useAccounts();
+    const [uploadedFiles, setUploadedFiles] = useState([]);
+    const [activeFileIndex, setActiveFileIndex] = useState(0);
+    const [actionError, setActionError] = useState('');
+    const [actionLoading, setActionLoading] = useState(false);
+    const [connectedTargets, setConnectedTargets] = useState([]);
+    const [selectedPlatforms, setSelectedPlatforms] = useState([]);
+    const [scheduleType, setScheduleType] = useState('now');
+    const [date, setDate] = useState('');
+    const [time, setTime] = useState('');
+    const [contentForm, setContentForm] = useState({ title: '', description: '', tags: [], category: '' });
+    const [tiktokSettings, setTiktokSettings] = useState({
+        privacyLevel: '',
+        allowComment: false,
+        allowDuet: false,
+        allowStitch: false,
+        commercialDisclosure: false,
+        brandOrganic: false,
+        brandedContent: false,
+        creatorInfo: null,
+    });
+
+    useEffect(() => {
+        if (accountsLoading) return;
+        setConnectedTargets(
+            connectedAccounts.map((acc) => ({
+                key: `${acc.platform}:${acc.platformAccountId}`,
+                name: acc.platform,
+                accountId: acc.platformAccountId,
+                label: `${acc.platform.charAt(0).toUpperCase() + acc.platform.slice(1)} — ${acc.accountName}`,
+            }))
+        );
+    }, [connectedAccounts, accountsLoading]);
+
+    useEffect(() => {
+        const raw = searchParams.get('date');
+        if (!raw) return;
+        const dt = new Date(raw);
+        if (Number.isNaN(dt.getTime())) return;
+        setScheduleType('later');
+        setDate(dt.toISOString().split('T')[0]);
+        setTime(`${String(dt.getHours()).padStart(2, '0')}:${String(dt.getMinutes()).padStart(2, '0')}`);
+    }, [searchParams]);
+
+    const handleFormChange = (field, value) => setContentForm((prev) => ({ ...prev, [field]: value }));
+
+    const toggleTarget = (t) => {
+        setSelectedPlatforms((prev) => {
+            const exists = prev.some((p) => p.name === t.name && p.accountId === t.accountId);
+            return exists ? prev.filter((p) => !(p.name === t.name && p.accountId === t.accountId)) : [...prev, { name: t.name, accountId: t.accountId }];
+        });
+    };
+
+    const addFiles = (files) => {
+        setUploadedFiles((prev) => [...prev, ...files]);
+    };
+
+    const removeFile = (publicId) => {
+        setUploadedFiles((prev) => {
+            const next = prev.filter((f) => f.publicId !== publicId);
+            setActiveFileIndex((i) => Math.min(i, Math.max(0, next.length - 1)));
+            return next;
+        });
+    };
+
+    const hasIG = selectedPlatforms.some((p) => p.name === 'instagram');
+    const hasTT = selectedPlatforms.some((p) => p.name === 'tiktok');
+    const hasYT = selectedPlatforms.some((p) => p.name === 'youtube');
+    const hasVideo = uploadedFiles.some((f) => f.type === 'video');
+    const selectedTiktokAccount = useMemo(() => selectedPlatforms.find((p) => p.name === 'tiktok')?.accountId || null, [selectedPlatforms]);
+    const tiktokValidation = useTikTokSettingsValidation(tiktokSettings);
+
+    const stepState = useMemo(() => ({
+        media: uploadedFiles.length > 0,
+        copy: Boolean(contentForm.title && contentForm.description),
+        targets: selectedPlatforms.length > 0,
+        publish: false,
+    }), [uploadedFiles.length, contentForm.title, contentForm.description, selectedPlatforms.length]);
+
+    const canSubmit = useMemo(() => {
+        if (!contentForm.title || !contentForm.description) return false;
+        if (!selectedPlatforms.length) return false;
+        if (hasIG && !uploadedFiles.length) return false;
+        if ((hasTT || hasYT) && !hasVideo) return false;
+        if (scheduleType === 'later' && (!date || !time)) return false;
+        if (hasTT && !tiktokValidation.isValid) return false;
+        return true;
+    }, [contentForm, selectedPlatforms, uploadedFiles, hasIG, hasTT, hasYT, hasVideo, scheduleType, date, time, tiktokValidation.isValid]);
+
+    stepState.publish = canSubmit;
+
+    const validationHints = useMemo(() => {
+        const hints = [];
+        if (hasIG && !uploadedFiles.length && selectedPlatforms.length) hints.push({ type: 'warn', message: 'Instagram requires a photo or video.' });
+        if (hasTT && !hasVideo && selectedPlatforms.length) hints.push({ type: 'warn', message: 'TikTok requires a video file.' });
+        if (hasTT && tiktokValidation.errors[0]) hints.push({ type: 'error', message: tiktokValidation.errors[0] });
+        return hints;
+    }, [hasIG, hasTT, hasVideo, uploadedFiles.length, selectedPlatforms.length, tiktokValidation.errors]);
+
+    const buildMediaPayload = () => uploadedFiles.map((f) => ({ type: f.type, url: f.url, filename: f.filename, size: f.size, mimetype: f.mimetype }));
+
+    const tiktokPanel = hasTT && selectedTiktokAccount ? (
+        <div className="rounded-xl border border-pink-200 bg-pink-50/50 p-3">
+            <p className="mb-2 text-xs font-semibold text-[#354F52]">TikTok options</p>
+            <TikTokSettings accountId={selectedTiktokAccount} settings={tiktokSettings} onSettingsChange={setTiktokSettings} isPhotoPost={!hasVideo} />
+        </div>
+    ) : null;
+
+    const ttPayload = hasTT
+        ? {
+              privacyLevel: tiktokSettings.privacyLevel,
+              disableComment: !tiktokSettings.allowComment,
+              disableDuet: !tiktokSettings.allowDuet,
+              disableStitch: !tiktokSettings.allowStitch,
+              brandOrganic: tiktokSettings.brandOrganic,
+              brandedContent: tiktokSettings.brandedContent,
+          }
+        : undefined;
+
+    const handleSaveDraft = async () => {
+        try {
+            setActionError('');
+            setActionLoading(true);
+            const res = await postsAPI.create({
+                title: contentForm.title,
+                content: contentForm.description,
+                platforms: selectedPlatforms,
+                media: buildMediaPayload(),
+                hashtags: contentForm.tags,
+                isScheduled: false,
+            });
+            if (res.data?._id) router.push(`/dashboard/preview/${res.data._id}`);
+        } catch (e) {
+            setActionError(e?.response?.data?.message || 'Failed to save draft');
+        } finally {
+            setActionLoading(false);
+        }
+    };
+
+    const handlePublishNow = async () => {
+        try {
+            setActionError('');
+            setActionLoading(true);
+            const createRes = await postsAPI.create({
+                title: contentForm.title,
+                content: contentForm.description,
+                platforms: selectedPlatforms,
+                media: buildMediaPayload(),
+                hashtags: contentForm.tags,
+                isScheduled: false,
+                tiktokSettings: ttPayload,
+            });
+            const postId = createRes.data?._id;
+            if (!postId) throw new Error('Post creation failed');
+            await postsAPI.publishNow(postId);
+            toast.success('Published! It may take a few minutes to appear on platforms.', { duration: 5000 });
+            router.push('/dashboard');
+        } catch (e) {
+            setActionError(e?.response?.data?.message || e.message || 'Failed to publish');
+        } finally {
+            setActionLoading(false);
+        }
+    };
+
+    const handleSchedule = async () => {
+        try {
+            setActionError('');
+            setActionLoading(true);
+            const scheduledDate = new Date(`${date}T${time}:00`).toISOString();
+            await postsAPI.create({
+                title: contentForm.title,
+                content: contentForm.description,
+                platforms: selectedPlatforms,
+                media: buildMediaPayload(),
+                hashtags: contentForm.tags,
+                scheduledDate,
+                isScheduled: true,
+                tiktokSettings: ttPayload,
+            });
+            router.push('/dashboard/schedule');
+        } catch (e) {
+            setActionError(e?.response?.data?.message || e.message || 'Failed to schedule');
+        } finally {
+            setActionLoading(false);
+        }
+    };
+
+    return (
+        <div className="overflow-hidden rounded-2xl border border-[#B8C9C0] bg-white shadow-[0_8px_30px_rgba(47,62,70,0.08)]">
+            {/* Header with step rail */}
+            <div className="bg-gradient-to-r from-[#354F52] via-[#2F3E46] to-[#354F52] px-5 py-4 sm:px-6">
+                <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+                    <div>
+                        <h1 className="text-xl font-semibold tracking-tight text-white">Create content</h1>
+                        <p className="mt-0.5 text-sm text-white/60">Upload · write · publish</p>
+                    </div>
+                    <div className="flex flex-wrap items-center gap-2">
+                        <Link href="/dashboard/schedule" className="inline-flex items-center gap-1 rounded-lg bg-white/10 px-2.5 py-1.5 text-xs text-white/80 hover:bg-white/20">
+                            <Calendar className="h-3.5 w-3.5" /> Calendar
+                        </Link>
+                        <Link href="/dashboard/preview" className="inline-flex items-center gap-1 rounded-lg bg-white/10 px-2.5 py-1.5 text-xs text-white/80 hover:bg-white/20">
+                            <FileText className="h-3.5 w-3.5" /> Posts
+                        </Link>
+                        {STEPS.map(({ id, label, icon: Icon }) => {
+                            const done = stepState[id];
+                            return (
+                                <div
+                                    key={id}
+                                    className={cn(
+                                        'flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-medium',
+                                        done ? 'bg-emerald-500/25 text-emerald-100' : 'bg-white/10 text-white/70'
+                                    )}
+                                >
+                                    <Icon className="h-3.5 w-3.5" />
+                                    {label}
+                                    {done && <span className="text-emerald-300">✓</span>}
+                                </div>
+                            );
+                        })}
+                    </div>
+                </div>
+            </div>
+
+            <div className="grid lg:grid-cols-[1fr_400px] xl:grid-cols-[1fr_420px]">
+                <UploadMediaCanvas
+                    files={uploadedFiles}
+                    activeIndex={activeFileIndex}
+                    onActiveChange={setActiveFileIndex}
+                    onAdd={addFiles}
+                    onRemove={removeFile}
+                />
+                <UploadSidebar
+                    contentForm={contentForm}
+                    onFormChange={handleFormChange}
+                    connectedTargets={connectedTargets}
+                    selectedPlatforms={selectedPlatforms}
+                    onTogglePlatform={toggleTarget}
+                    scheduleType={scheduleType}
+                    onScheduleTypeChange={setScheduleType}
+                    date={date}
+                    time={time}
+                    onDateChange={setDate}
+                    onTimeChange={setTime}
+                    uploadedFiles={uploadedFiles}
+                    canSubmit={canSubmit}
+                    actionLoading={actionLoading}
+                    actionError={actionError}
+                    validationHints={validationHints}
+                    onSaveDraft={handleSaveDraft}
+                    onPublish={handlePublishNow}
+                    onSchedule={handleSchedule}
+                    tiktokPanel={tiktokPanel}
+                />
+            </div>
+        </div>
+    );
+}

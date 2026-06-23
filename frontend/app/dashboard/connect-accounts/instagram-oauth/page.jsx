@@ -3,10 +3,7 @@ import { useState, useEffect } from 'react';
 import { CheckCircle2, XCircle, Loader2, ExternalLink, RefreshCw } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
-import axios from 'axios';
-
-// const API_URL = 'https://viralix-b3ff86cb412f.herokuapp.com' ;
-const API_URL = 'https://viralix-b3ff86cb412f.herokuapp.com';
+import { instagramOAuthAPI } from '@/lib/api';
 
 export default function InstagramOAuthPage() {
     const [accounts, setAccounts] = useState([]);
@@ -60,10 +57,7 @@ export default function InstagramOAuthPage() {
     const loadInstagramStatus = async () => {
         setLoading(true);
         try {
-            const token = localStorage.getItem('auth_token');
-            const response = await axios.get(`${API_URL}/api/instagram-oauth/status`, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
+            const response = await instagramOAuthAPI.status();
             setAccounts(response.data.accounts || []);
         } catch (error) {
             console.error('Failed to load Instagram status:', error);
@@ -81,12 +75,7 @@ export default function InstagramOAuthPage() {
         setMessage({ type: '', text: '' });
 
         try {
-            const token = localStorage.getItem('auth_token');
-            const response = await axios.get(`${API_URL}/api/instagram-oauth/connect`, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
-
-            // Redirect to Instagram OAuth
+            const response = await instagramOAuthAPI.connect();
             window.location.href = response.data.authUrl;
         } catch (error) {
             console.error('Failed to initiate Instagram connection:', error);
@@ -102,11 +91,7 @@ export default function InstagramOAuthPage() {
         if (!confirm('Are you sure you want to disconnect this Instagram account?')) return;
 
         try {
-            const token = localStorage.getItem('auth_token');
-            await axios.delete(`${API_URL}/api/instagram-oauth/disconnect/${accountId}`, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
-
+            await instagramOAuthAPI.disconnect(accountId);
             setMessage({ type: 'success', text: 'Instagram account disconnected' });
             loadInstagramStatus();
         } catch (error) {

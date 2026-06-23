@@ -3,6 +3,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useForm } from 'react-hook-form';
 import { useAuthStore } from '@/store/authStore';
+import { getApiUrl } from '@/lib/api';
 // Using plain HTML inputs and buttons with same styling as the design
 
 export default function SignupForm() {
@@ -36,13 +37,11 @@ export default function SignupForm() {
     };
 
     const handleGoogleSignup = () => {
-        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
-        window.location.href = `${apiUrl}/api/auth/google`;
+        window.location.href = getApiUrl('/auth/google');
     };
 
     const handleFacebookSignup = () => {
-        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
-        window.location.href = `${apiUrl}/api/auth/facebook`;
+        window.location.href = getApiUrl('/auth/facebook');
     };
 
     return (
