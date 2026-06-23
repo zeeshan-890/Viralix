@@ -1,8 +1,8 @@
 import Link from 'next/link';
 import { Lightbulb, TrendingUp, Target, Zap } from 'lucide-react';
 
-export default function AiInsightsPanel({ overview = {}, posts = [] }) {
-    const failedCount = posts.filter((p) => p.status === 'failed').length;
+export default function AiInsightsPanel({ overview = {} }) {
+    const failedCount = overview.failedPosts || 0;
     const insights = [];
 
     if (overview.engagementRate > 0) {

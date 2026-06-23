@@ -40,12 +40,18 @@ export default function FacebookDetailPage() {
         }
     };
 
-    const reconnect = () => {
+    const reconnect = async () => {
         const w = 600, h = 700;
         const y = window.top.outerHeight / 2 + window.top.screenY - (h / 2);
         const x = window.top.outerWidth / 2 + window.top.screenX - (w / 2);
-        const base = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
-        window.open(`${base}/facebook/oauth/start`, 'fbconnect', `popup=yes,width=${w},height=${h},top=${y},left=${x}`);
+        try {
+            const { data } = await facebookAPI.startUrl();
+            if (data?.url) {
+                window.open(data.url, 'fbconnect', `popup=yes,width=${w},height=${h},top=${y},left=${x}`);
+            }
+        } catch (e) {
+            console.error('Facebook reconnect failed:', e);
+        }
     };
 
     return (

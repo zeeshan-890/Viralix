@@ -154,6 +154,7 @@ export function buildAnalyticsOverview() {
             scheduledPosts: posts.filter((p) => p.status === 'scheduled').length,
             draftPosts: posts.filter((p) => p.status === 'draft').length,
             failedPosts: posts.filter((p) => p.status === 'failed').length,
+            totalViews: totalViews || 128400,
             totalLikes: totalLikes || 9840,
             totalComments: totalComments || 742,
             totalShares: totalShares || 389,

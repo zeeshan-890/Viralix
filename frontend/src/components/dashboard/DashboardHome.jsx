@@ -144,7 +144,7 @@ export default function DashboardHome() {
                 <div className="space-y-4 lg:col-span-5">
                     <InboxPreview conversations={conversations} unreadTotal={unreadTotal} />
                     <QuickActionsPanel />
-                    <AiInsightsPanel overview={overview} posts={posts} />
+                    <AiInsightsPanel overview={overview} />
                 </div>
             </div>
         </div>

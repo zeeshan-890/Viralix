@@ -70,6 +70,8 @@ export const authAPI = {
     forgotPassword: (email) => api.post('/auth/forgot-password', { email }),
     resetPassword: (token, password) => api.post('/auth/reset-password', { token, password }),
     me: () => api.get('/auth/me'),
+    updateProfile: (data) => api.put('/auth/profile', data),
+    changePassword: (data) => api.post('/auth/change-password', data),
     logout: async () => {
         try { await api.post('/auth/logout'); } catch (_) { }
         if (typeof window !== 'undefined') localStorage.removeItem('auth_token');
@@ -98,13 +100,34 @@ export const postsAPI = {
         if (res.data) res.data = normalizePost(res.data);
         return res;
     },
-    create: (data) => api.post('/posts', data),
-    updatePost: (id, data) => api.put(`/posts/${id}`, data),
-    update: (id, data) => api.put(`/posts/${id}`, data),
+    create: async (data) => {
+        const res = await api.post('/posts', data);
+        if (res.data) res.data = normalizePost(res.data);
+        return res;
+    },
+    updatePost: async (id, data) => {
+        const res = await api.put(`/posts/${id}`, data);
+        if (res.data) res.data = normalizePost(res.data);
+        return res;
+    },
+    update: async (id, data) => {
+        const res = await api.put(`/posts/${id}`, data);
+        if (res.data) res.data = normalizePost(res.data);
+        return res;
+    },
     remove: (id) => api.delete(`/posts/${id}`),
-    publishNow: (id) => api.post(`/posts/${id}/publish`),
+    publishNow: async (id) => {
+        const res = await api.post(`/posts/${id}/publish`);
+        if (res.data?.post) res.data.post = normalizePost(res.data.post);
+        return res;
+    },
     remix: (id, { tone, platform } = {}) => api.post(`/posts/${id}/remix`, { tone, platform }),
 };
+
+export const usersAPI = {
+    deleteAccount: () => api.delete('/users/account'),
+};
+
 export const campaignsAPI = {
     getAll: () => api.get('/campaigns'),
     getById: (id) => api.get(`/campaigns/${id}`),

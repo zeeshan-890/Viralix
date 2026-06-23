@@ -1,7 +1,7 @@
 'use client';
 import { useState } from 'react';
 import Link from 'next/link';
-import api from '@/lib/api';
+import { authAPI } from '@/lib/api';
 
 export default function ResetForm() {
     const [email, setEmail] = useState('');
@@ -15,7 +15,7 @@ export default function ResetForm() {
         setError('');
 
         try {
-            await api.post('/auth/forgot-password', { email });
+            await authAPI.forgotPassword(email);
             setSuccess(true);
         } catch (err) {
             setError(err.response?.data?.message || 'Failed to send reset email. Please try again.');

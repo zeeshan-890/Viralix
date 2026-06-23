@@ -23,15 +23,13 @@ export const isAuthenticated = () => {
     return !!getStoredUser();
 };
 export const logout = async () => {
-    // Hit server to clear cookie; ignore errors
     try {
-        await fetch((process.env.NEXT_PUBLIC_API_URL || 'https://api.viralix.dev/api') + '/auth/logout', {
-            method: 'POST',
-            credentials: 'include',
-        });
-    } catch { }
+        const { authAPI } = await import('./api');
+        await authAPI.logout();
+    } catch { /* ignore */ }
     removeStoredUser();
     if (typeof window !== 'undefined') {
+        localStorage.removeItem('auth_token');
         window.location.href = '/auth/login';
     }
 };

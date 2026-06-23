@@ -2,7 +2,7 @@
 import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import api from '@/lib/api';
+import { authAPI } from '@/lib/api';
 
 function ResetPasswordContent() {
     const router = useRouter();
@@ -38,7 +38,7 @@ function ResetPasswordContent() {
         setError('');
 
         try {
-            await api.post('/auth/reset-password', { token, password });
+            await authAPI.resetPassword(token, password);
             setSuccess(true);
             setTimeout(() => router.push('/auth/login'), 3000);
         } catch (err) {

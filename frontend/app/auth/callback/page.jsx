@@ -1,7 +1,10 @@
 'use client';
+
 import { useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuthStore } from '@/store/authStore';
+import { authAPI } from '@/lib/api';
+import { setStoredUser } from '@/lib/auth';
 
 function AuthCallbackContent() {
     const router = useRouter();
@@ -13,33 +16,26 @@ function AuthCallbackContent() {
         const error = searchParams.get('error');
 
         if (error) {
-            // Handle OAuth error
             console.error('OAuth error:', error);
             router.replace(`/auth/login?error=${error}`);
             return;
         }
 
         if (token) {
-            // Store token and fetch user data
             localStorage.setItem('auth_token', token);
 
-            // Fetch user data
-            fetch(`${process.env.NEXT_PUBLIC_API_URL || 'https://api.viralix.dev/api'}/auth/me`, {
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                }
-            })
-                .then(res => res.json())
-                .then(user => {
+            authAPI.me()
+                .then((res) => {
+                    const user = res.data;
+                    setStoredUser(user);
                     setAuth(user, token);
                     router.replace('/dashboard');
                 })
-                .catch(err => {
+                .catch((err) => {
                     console.error('Failed to fetch user:', err);
                     router.replace('/auth/login?error=auth_failed');
                 });
         } else {
-            // No token, redirect to login
             router.replace('/auth/login');
         }
     }, [searchParams, router, setAuth]);

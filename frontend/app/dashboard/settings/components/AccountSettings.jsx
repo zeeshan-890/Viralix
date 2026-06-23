@@ -1,7 +1,7 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { useAuthStore } from '@/store/authStore';
-import api from '@/lib/api';
+import { authAPI, usersAPI } from '@/lib/api';
 import { useRouter } from 'next/navigation';
 import { AlertTriangle, Trash2 } from 'lucide-react';
 
@@ -68,7 +68,7 @@ export default function AccountSettings() {
         setMessage('');
 
         try {
-            const response = await api.put('/auth/profile', {
+            const response = await authAPI.updateProfile({
                 name: formData.name,
                 profilePicture: profilePicture,
                 timezone: formData.timezone
@@ -99,7 +99,7 @@ export default function AccountSettings() {
         setMessage('');
 
         try {
-            await api.post('/auth/change-password', {
+            await authAPI.changePassword({
                 currentPassword: formData.currentPassword,
                 newPassword: formData.newPassword
             });
@@ -124,7 +124,7 @@ export default function AccountSettings() {
 
         setDeleting(true);
         try {
-            await api.delete('/users/account');
+            await usersAPI.deleteAccount();
             logout();
             router.push('/');
         } catch (error) {
