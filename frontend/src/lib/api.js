@@ -139,6 +139,7 @@ export const campaignsAPI = {
 export const analyticsAPI = {
     getOverview: (params) => api.get('/analytics/overview', { params }),
     getPlatformMetrics: (platform, params) => api.get(`/analytics/platform/${platform}`, { params }),
+    getDeepAnalytics: (platform, params) => api.get(`/analytics/deep/${platform}`, { params }),
     getContentPerformance: (params) => api.get('/analytics/content-performance', { params }),
     getPerformance: (params) => api.get('/analytics/performance', { params }),
     refresh: () => api.post('/analytics/refresh'),

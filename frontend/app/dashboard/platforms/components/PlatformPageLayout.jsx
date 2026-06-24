@@ -1,7 +1,7 @@
 'use client';
 import Image from 'next/image';
 import Link from 'next/link';
-import { RefreshCw, ExternalLink, ArrowLeft } from 'lucide-react';
+import { RefreshCw, ExternalLink, ArrowLeft, BarChart3 } from 'lucide-react';
 import { getPlatform, platformButtonClass } from '@/config/platforms';
 import PlatformIcon from '@/components/ui/PlatformIcon';
 import TikTokAccountTypeBadge from '@/components/tiktok/TikTokAccountTypeBadge';
@@ -82,14 +82,26 @@ export default function PlatformPageLayout({
                         </div>
                     </div>
                     {hasAccounts && (
-                        <button
-                            onClick={onRefresh}
-                            disabled={refreshing}
-                            className={`px-5 py-2.5 dash-card rounded-xl border border-[var(--viralix-border)] hover:bg-gray-50 transition-all flex items-center gap-2 shadow-sm ${refreshing ? 'opacity-50' : ''}`}
-                        >
-                            <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} style={{ color: '#52796F' }} />
-                            {refreshing ? 'Refreshing...' : 'Refresh'}
-                        </button>
+                        <div className="flex items-center gap-2">
+                            {(platform === 'tiktok' || platform === 'instagram') && (
+                                <Link
+                                    href={`/dashboard/analytics?platform=${platform}`}
+                                    className="px-5 py-2.5 dash-card rounded-xl border border-[var(--viralix-border)] hover:bg-gray-50 transition-all flex items-center gap-2 shadow-sm text-sm font-medium"
+                                    style={{ color: '#354F52' }}
+                                >
+                                    <BarChart3 className="w-4 h-4" style={{ color: '#84A98C' }} />
+                                    Analytics
+                                </Link>
+                            )}
+                            <button
+                                onClick={onRefresh}
+                                disabled={refreshing}
+                                className={`px-5 py-2.5 dash-card rounded-xl border border-[var(--viralix-border)] hover:bg-gray-50 transition-all flex items-center gap-2 shadow-sm ${refreshing ? 'opacity-50' : ''}`}
+                            >
+                                <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} style={{ color: '#52796F' }} />
+                                {refreshing ? 'Refreshing...' : 'Refresh'}
+                            </button>
+                        </div>
                     )}
                 </div>
             </div>
@@ -119,8 +131,12 @@ export default function PlatformPageLayout({
                 <>
                     {/* Connected Accounts */}
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
-                        {accounts.map((account) => (
-                            <div key={account.platformAccountId || account._id} className="dash-card dash-card-hover rounded-xl border border-[var(--viralix-border)] p-5 shadow-sm hover:shadow-md transition-all">
+                        {accounts.map((account) => {
+                            const accountKey = account.platformAccountId || account._id;
+                            const analyticsHref = (platform === 'tiktok' || platform === 'instagram')
+                                ? `/dashboard/analytics?platform=${platform}&account=${account.platformAccountId || ''}`
+                                : null;
+                            const cardInner = (
                                 <div className="flex items-center gap-4">
                                     <div className="relative">
                                         {account.avatarUrl ? (
@@ -160,8 +176,17 @@ export default function PlatformPageLayout({
                                         </a>
                                     )}
                                 </div>
-                            </div>
-                        ))}
+                            );
+                            return analyticsHref ? (
+                                <Link key={accountKey} href={analyticsHref} className="dash-card dash-card-hover rounded-xl border border-[var(--viralix-border)] p-5 shadow-sm hover:shadow-md transition-all block">
+                                    {cardInner}
+                                </Link>
+                            ) : (
+                                <div key={accountKey} className="dash-card dash-card-hover rounded-xl border border-[var(--viralix-border)] p-5 shadow-sm hover:shadow-md transition-all">
+                                    {cardInner}
+                                </div>
+                            );
+                        })}
                     </div>
 
                     {/* Stats Cards */}
@@ -210,7 +235,8 @@ export default function PlatformPageLayout({
                     {/* Content Grid */}
                     {content.length > 0 && (
                         <div className="dash-card dash-card-hover rounded-xl border border-[var(--viralix-border)] p-6 shadow-sm">
-                            <h2 className="text-xl font-semibold mb-6" style={{ color: '#354F52' }}>Recent Content</h2>
+                            <h2 className="text-xl font-semibold mb-1" style={{ color: '#354F52' }}>Recent Content</h2>
+                            <p className="text-sm text-gray-500 mb-6">Click any post for detailed analytics</p>
                             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                                 {content.map((item, index) => {
                                     // Create clickable link for Instagram posts

@@ -7,6 +7,7 @@ const { getPageInsights, getPostMetrics } = require('../services/facebook');
 const { getIgUserInsights, getIgFeed, getIgMediaInsights } = require('../services/instagram');
 const youtubeService = require('../services/youtube');
 const tiktokService = require('../services/tiktok');
+const { buildDeepAnalytics } = require('../services/analytics/platformDeepAnalytics');
 
 const router = express.Router();
 
@@ -147,6 +148,7 @@ router.get('/overview', auth, async (req, res) => {
                 totalLikes,
                 totalComments,
                 totalShares,
+                totalViews,
                 totalReach,
                 totalFollowers,
                 totalEngagement,
@@ -381,6 +383,22 @@ router.get('/content-performance', auth, async (req, res) => {
         });
     } catch (error) {
         res.status(500).json({ message: 'Server error' });
+    }
+});
+
+// GET /api/analytics/deep/:platform — TikTok & Instagram native content analytics
+router.get('/deep/:platform', auth, async (req, res) => {
+    try {
+        const { platform } = req.params;
+        const { period = '30d', accountId } = req.query;
+        const data = await buildDeepAnalytics(req.user.id, platform, { period, accountId });
+        res.json(data);
+    } catch (error) {
+        console.error('[ANALYTICS] /deep error', error.message);
+        if (error.message === 'Unsupported platform') {
+            return res.status(400).json({ message: error.message });
+        }
+        res.status(500).json({ message: 'Failed to load platform analytics' });
     }
 });
 

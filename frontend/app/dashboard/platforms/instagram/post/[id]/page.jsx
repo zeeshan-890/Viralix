@@ -1,9 +1,9 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
-import Link from 'next/link';
-import PlatformIcon from '@/components/ui/PlatformIcon';
-import { ArrowLeft, Heart, MessageCircle, Eye, Bookmark, Share2, Users, ExternalLink, Play, Sparkles, Zap, Tag, MessageSquare, ToggleLeft, ToggleRight } from 'lucide-react';
+import PostAnalyticsHeader from '@/components/analytics/shared/PostAnalyticsHeader';
+import EngagementMetricGrid, { EngagementBreakdownPanel } from '@/components/analytics/shared/EngagementMetrics';
+import { Heart, MessageCircle, Eye, Bookmark, Share2, Play, Sparkles, Zap, Tag, MessageSquare, ToggleLeft, ToggleRight } from 'lucide-react';
 import { instagramAPI } from '@/lib/api';
 
 export default function InstagramPostDetailPage() {
@@ -12,6 +12,7 @@ export default function InstagramPostDetailPage() {
 
     const [data, setData] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [refreshing, setRefreshing] = useState(false);
     const [error, setError] = useState(null);
     const [autoReplyRule, setAutoReplyRule] = useState(null);
     const [ruleLoading, setRuleLoading] = useState(false);
@@ -23,16 +24,17 @@ export default function InstagramPostDetailPage() {
         }
     }, [mediaId]);
 
-    const loadInsights = async () => {
+    const loadInsights = async (isRefresh = false) => {
         try {
-            setLoading(true);
+            if (isRefresh) setRefreshing(true);
+            else setLoading(true);
             const response = await instagramAPI.getMediaInsights(mediaId);
             setData(response.data);
         } catch (e) {
-            console.error('Failed to load insights:', e);
             setError(e.response?.data?.message || e.message);
         } finally {
             setLoading(false);
+            setRefreshing(false);
         }
     };
 
@@ -70,14 +72,10 @@ export default function InstagramPostDetailPage() {
 
     if (loading) {
         return (
-            <div className="max-w-6xl mx-auto">
-                <Link href="/dashboard/platforms/instagram" className="inline-flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-6">
-                    <ArrowLeft className="w-4 h-4" />
-                    Back to Instagram
-                </Link>
+            <div className="max-w-6xl mx-auto p-6">
                 <div className="dash-card rounded-xl border border-[var(--viralix-border)] p-12 text-center">
-                    <div className="animate-spin w-12 h-12 border-4 border-gray-200 rounded-full mx-auto mb-4" style={{ borderTopColor: '#E4405F' }}></div>
-                    <p className="text-gray-500">Loading post insights...</p>
+                    <div className="animate-spin w-12 h-12 border-4 border-gray-200 rounded-full mx-auto mb-4" style={{ borderTopColor: '#E4405F' }} />
+                    <p className="text-gray-500">Loading post analytics…</p>
                 </div>
             </div>
         );
@@ -85,15 +83,9 @@ export default function InstagramPostDetailPage() {
 
     if (error) {
         return (
-            <div className="max-w-6xl mx-auto">
-                <Link href="/dashboard/platforms/instagram" className="inline-flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-6">
-                    <ArrowLeft className="w-4 h-4" />
-                    Back to Instagram
-                </Link>
+            <div className="max-w-6xl mx-auto p-6">
+                <PostAnalyticsHeader platform="instagram" title="Post analytics" live={false} />
                 <div className="bg-white rounded-xl border border-red-200 p-12 text-center">
-                    <div className="w-16 h-16 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-4">
-                        <span className="text-3xl">⚠️</span>
-                    </div>
                     <h2 className="text-xl font-semibold text-red-600 mb-2">Failed to load insights</h2>
                     <p className="text-gray-600">{error}</p>
                 </div>
@@ -103,61 +95,36 @@ export default function InstagramPostDetailPage() {
 
     const { media, engagement, comments } = data || {};
     const isVideo = media?.mediaType === 'VIDEO' || media?.mediaType === 'REELS';
+    const views = engagement?.views || engagement?.plays || 0;
+
+    const metricCards = [
+        ...(isVideo ? [{ label: 'Views', value: views, icon: Eye, iconBg: 'bg-purple-50 text-purple-600' }] : []),
+        { label: 'Likes', value: engagement?.likes, icon: Heart, iconBg: 'bg-pink-50 text-pink-600', rate: views ? ((engagement?.likes / views) * 100).toFixed(2) : null },
+        { label: 'Comments', value: engagement?.comments, icon: MessageCircle, iconBg: 'bg-blue-50 text-blue-600', rate: views ? ((engagement?.comments / views) * 100).toFixed(2) : null },
+        { label: 'Saves', value: engagement?.saves, icon: Bookmark, iconBg: 'bg-orange-50 text-orange-600' },
+        { label: 'Shares', value: engagement?.shares, icon: Share2, iconBg: 'bg-green-50 text-green-600' },
+    ];
 
     return (
-        <div className="max-w-6xl mx-auto">
-            {/* Header */}
-            <div className="mb-6">
-                <Link href="/dashboard/platforms/instagram" className="inline-flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-4 transition-colors">
-                    <ArrowLeft className="w-4 h-4" />
-                    Back to Instagram
-                </Link>
-                <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                        <div className="w-12 h-12 bg-pink-50 rounded-xl flex items-center justify-center border border-gray-100">
-                            <PlatformIcon platform="instagram" size={28} />
-                        </div>
-                        <div>
-                            <h1 className="text-2xl font-bold" style={{ color: '#354F52' }}>Post Insights</h1>
-                            <p className="text-sm text-gray-500">@{media?.username} • {formatDate(media?.timestamp)}</p>
-                        </div>
-                    </div>
-                    <a
-                        href={media?.permalink}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-200 text-gray-700 hover:bg-gray-50 transition-colors"
-                    >
-                        <ExternalLink className="w-4 h-4" />
-                        View on Instagram
-                    </a>
-                </div>
-            </div>
+        <div className="max-w-6xl mx-auto p-6">
+            <PostAnalyticsHeader
+                platform="instagram"
+                title="Instagram post analytics"
+                subtitle={`@${media?.username} · ${formatDate(media?.timestamp)}`}
+                permalink={media?.permalink}
+                onRefresh={() => loadInsights(true)}
+                refreshing={refreshing}
+            />
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {/* Media Preview */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
                 <div className="dash-card rounded-xl border border-[var(--viralix-border)] overflow-hidden shadow-sm">
                     <div className="relative aspect-square bg-gray-900">
                         {isVideo && media?.mediaUrl ? (
-                            <video
-                                src={media.mediaUrl}
-                                poster={media.thumbnailUrl}
-                                controls
-                                className="w-full h-full object-contain"
-                            >
-                                Your browser does not support video playback.
-                            </video>
+                            <video src={media.mediaUrl} poster={media.thumbnailUrl} controls className="w-full h-full object-contain" />
                         ) : media?.mediaUrl ? (
-                            <Image
-                                src={media.mediaUrl}
-                                alt={media.caption || 'Instagram post'}
-                                fill
-                                className="object-contain"
-                            />
+                            <img src={media.mediaUrl} alt={media.caption || 'Instagram post'} className="w-full h-full object-contain" />
                         ) : (
-                            <div className="w-full h-full flex items-center justify-center">
-                                <span className="text-6xl">📷</span>
-                            </div>
+                            <div className="w-full h-full flex items-center justify-center text-6xl">📷</div>
                         )}
                         {isVideo && (
                             <div className="absolute top-4 left-4 bg-black/60 text-white text-sm px-3 py-1 rounded-full flex items-center gap-1">
@@ -173,80 +140,23 @@ export default function InstagramPostDetailPage() {
                     )}
                 </div>
 
-                {/* Insights Panel */}
                 <div className="space-y-6">
-                    {/* Engagement Stats */}
-                    <div className="dash-card rounded-xl border border-[var(--viralix-border)] p-6 shadow-sm">
-                        <h2 className="text-lg font-semibold mb-4" style={{ color: '#354F52' }}>Engagement</h2>
-                        <div className="grid grid-cols-2 gap-4">
-                            {/* Views - show for videos/reels */}
-                            {isVideo && (
-                                <div className="p-4 bg-purple-50 rounded-xl flex items-center gap-3 col-span-2">
-                                    <div className="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center">
-                                        <Eye className="w-5 h-5 text-purple-600" />
-                                    </div>
-                                    <div>
-                                        <p className="text-2xl font-bold text-purple-600">{formatNumber(engagement?.views || engagement?.plays)}</p>
-                                        <p className="text-xs text-gray-600">Views</p>
-                                    </div>
-                                </div>
-                            )}
-                            <div className="p-4 bg-pink-50 rounded-xl flex items-center gap-3">
-                                <div className="w-10 h-10 bg-pink-100 rounded-full flex items-center justify-center">
-                                    <Heart className="w-5 h-5 text-pink-600" />
-                                </div>
-                                <div>
-                                    <p className="text-2xl font-bold text-pink-600">{formatNumber(engagement?.likes)}</p>
-                                    <p className="text-xs text-gray-600">Likes</p>
-                                </div>
-                            </div>
-                            <div className="p-4 bg-blue-50 rounded-xl flex items-center gap-3">
-                                <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
-                                    <MessageCircle className="w-5 h-5 text-blue-600" />
-                                </div>
-                                <div>
-                                    <p className="text-2xl font-bold text-blue-600">{formatNumber(engagement?.comments)}</p>
-                                    <p className="text-xs text-gray-600">Comments</p>
-                                </div>
-                            </div>
-                            <div className="p-4 bg-orange-50 rounded-xl flex items-center gap-3">
-                                <div className="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center">
-                                    <Bookmark className="w-5 h-5 text-orange-600" />
-                                </div>
-                                <div>
-                                    <p className="text-2xl font-bold text-orange-600">{formatNumber(engagement?.saves)}</p>
-                                    <p className="text-xs text-gray-600">Saves</p>
-                                </div>
-                            </div>
-                            <div className="p-4 bg-green-50 rounded-xl flex items-center gap-3">
-                                <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
-                                    <Share2 className="w-5 h-5 text-green-600" />
-                                </div>
-                                <div>
-                                    <p className="text-2xl font-bold text-green-600">{formatNumber(engagement?.shares)}</p>
-                                    <p className="text-xs text-gray-600">Shares</p>
-                                </div>
-                            </div>
-                            <div className="p-4 bg-gray-50 rounded-xl flex items-center gap-3">
-                                <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center">
-                                    <Users className="w-5 h-5 text-gray-600" />
-                                </div>
-                                <div>
-                                    <p className="text-2xl font-bold" style={{ color: '#354F52' }}>{formatNumber(engagement?.reach)}</p>
-                                    <p className="text-xs text-gray-600">Reach</p>
-                                </div>
-                            </div>
-                        </div>
-                        {engagement?.totalInteractions > 0 && (
-                            <div className="mt-4 p-4 border border-gray-200 rounded-xl bg-gradient-to-r from-purple-50 to-pink-50">
-                                <p className="text-sm text-gray-600">Total Interactions</p>
-                                <p className="text-3xl font-bold" style={{ color: '#E4405F' }}>{formatNumber(engagement?.totalInteractions)}</p>
-                            </div>
-                        )}
-                    </div>
+                    <EngagementMetricGrid metrics={metricCards} columns={isVideo ? 3 : 2} />
+                    <EngagementBreakdownPanel
+                        views={views}
+                        likes={engagement?.likes}
+                        comments={engagement?.comments}
+                        shares={engagement?.shares}
+                        saves={engagement?.saves}
+                        reach={engagement?.reach}
+                        totalInteractions={engagement?.totalInteractions}
+                    />
+                </div>
+            </div>
 
-                    {/* Auto-Reply Rules Section */}
-                    <div className="dash-card rounded-xl border border-[var(--viralix-border)] p-6 shadow-sm">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* Auto-Reply Rules Section */}
+                <div className="dash-card rounded-xl border border-[var(--viralix-border)] p-6 shadow-sm">
                         <div className="flex items-center gap-3 mb-4">
                             <div className="w-10 h-10 bg-purple-100 rounded-xl flex items-center justify-center">
                                 <Sparkles className="w-5 h-5 text-purple-600" />
@@ -346,8 +256,8 @@ export default function InstagramPostDetailPage() {
                         )}
                     </div>
 
-                    {/* Comments Section */}
-                    <div className="dash-card rounded-xl border border-[var(--viralix-border)] p-6 shadow-sm">
+                {/* Comments Section */}
+                <div className="dash-card rounded-xl border border-[var(--viralix-border)] p-6 shadow-sm">
                         <h2 className="text-lg font-semibold mb-4" style={{ color: '#354F52' }}>
                             Comments ({comments?.length || 0})
                         </h2>
@@ -392,7 +302,6 @@ export default function InstagramPostDetailPage() {
                                 <p>No comments yet</p>
                             </div>
                         )}
-                    </div>
                 </div>
             </div>
         </div>
