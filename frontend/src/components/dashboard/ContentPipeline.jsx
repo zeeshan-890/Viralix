@@ -17,7 +17,7 @@ function PipelineTooltip({ active, payload, total }) {
     const { name, value } = payload[0];
     const pct = total ? Math.round((value / total) * 100) : 0;
     return (
-        <div className="rounded-lg border border-[var(--viralix-border)] bg-white px-3 py-2 shadow-md">
+        <div className="dash-card rounded-lg border border-[var(--viralix-border)] px-3 py-2 shadow-md">
             <p className="text-xs font-medium text-[var(--viralix-accent)]">{name}</p>
             <p className="text-sm tabular-nums text-gray-500">
                 {value} posts · {pct}%

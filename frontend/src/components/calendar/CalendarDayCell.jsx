@@ -73,7 +73,7 @@ export default function CalendarDayCell({
                                 e.stopPropagation();
                                 onAddPost?.(dateKey);
                             }}
-                            className="rounded p-1 text-[#52796F] opacity-0 transition-all hover:bg-white group-hover:opacity-100"
+                            className="rounded p-1 text-[#52796F] opacity-0 transition-all hover:bg-[var(--viralix-surface)] group-hover:opacity-100"
                             aria-label={`Add post on ${dateKey}`}
                         >
                             <Plus className="h-3.5 w-3.5" />

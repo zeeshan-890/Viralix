@@ -60,9 +60,9 @@ export default function PostEditorSidebar({
     };
 
     return (
-        <aside className="flex flex-col bg-[#F4F8F6] lg:max-h-[calc(100vh-7rem)] lg:overflow-hidden">
+        <aside className="flex flex-col bg-[var(--viralix-inset)] lg:max-h-[calc(100vh-7rem)] lg:overflow-hidden">
             {/* Sidebar header */}
-            <div className="shrink-0 border-b border-[#D5DFD9] bg-gradient-to-r from-[#354F52] to-[#2F3E46] px-4 py-3.5 sm:px-5">
+            <div className="shrink-0 border-b border-[var(--viralix-border)] bg-gradient-to-r from-[#354F52] to-[#2F3E46] px-4 py-3.5 sm:px-5">
                 <div className="flex items-center justify-between gap-2">
                     <div>
                         <p className="text-sm font-semibold text-white">
@@ -87,7 +87,7 @@ export default function PostEditorSidebar({
                                 className={cn(
                                     'flex flex-1 items-center justify-center gap-1.5 rounded-md px-2 py-2 text-xs font-medium transition-all',
                                     activeTab === id
-                                        ? 'bg-white text-[#354F52] shadow-sm'
+                                        ? 'bg-[var(--viralix-surface)] text-[var(--viralix-accent)] shadow-sm'
                                         : 'text-white/75 hover:text-white'
                                 )}
                             >
@@ -124,8 +124,8 @@ export default function PostEditorSidebar({
                             <div className="flex items-start gap-3">
                                 <CheckCircle2 className="h-5 w-5 shrink-0 text-emerald-600" aria-hidden />
                                 <div>
-                                    <p className="text-sm font-semibold text-[#354F52]">Fully published</p>
-                                    <p className="mt-1 text-xs leading-relaxed text-[#52796F]">
+                                    <p className="text-sm font-semibold text-[var(--viralix-accent)]">Fully published</p>
+                                    <p className="mt-1 text-xs leading-relaxed text-[var(--viralix-muted)]">
                                         Live on all {platforms.length} platform{platforms.length !== 1 ? 's' : ''}.
                                         View engagement in the preview panel.
                                     </p>
@@ -133,18 +133,18 @@ export default function PostEditorSidebar({
                             </div>
                         </div>
                         <div>
-                            <label className="mb-1.5 block text-xs font-medium text-[#52796F]">Title</label>
+                            <label className="mb-1.5 block text-xs font-medium text-[var(--viralix-muted)]">Title</label>
                             <input
                                 type="text"
                                 value={post.title || ''}
                                 disabled
-                                className="w-full rounded-lg border border-[#D5DFD9] bg-white px-3 py-2 text-sm text-[#52796F] opacity-80"
+                                className="w-full rounded-lg border border-[var(--viralix-border)] bg-[var(--viralix-surface)] px-3 py-2 text-sm text-[var(--viralix-muted)] opacity-80"
                             />
                         </div>
                         {post.content && (
                             <div>
-                                <label className="mb-1.5 block text-xs font-medium text-[#52796F]">Caption</label>
-                                <div className="max-h-40 overflow-y-auto rounded-lg border border-[#D5DFD9] bg-white px-3 py-2.5 text-sm leading-relaxed text-[#354F52]">
+                                <label className="mb-1.5 block text-xs font-medium text-[var(--viralix-muted)]">Caption</label>
+                                <div className="max-h-40 overflow-y-auto rounded-lg border border-[var(--viralix-border)] bg-[var(--viralix-surface)] px-3 py-2.5 text-sm leading-relaxed text-[var(--viralix-accent)]">
                                     {post.content}
                                 </div>
                             </div>
@@ -152,21 +152,21 @@ export default function PostEditorSidebar({
                     </div>
                 ) : activeTab === 'compose' ? (
                     <div className="space-y-4">
-                        <div className="rounded-xl border border-[#D5DFD9] bg-white p-4 shadow-sm">
-                            <label className="mb-1.5 block text-xs font-semibold text-[#354F52]">Post title</label>
+                        <div className="rounded-xl border border-[var(--viralix-border)] bg-[var(--viralix-surface)] p-4 shadow-sm">
+                            <label className="mb-1.5 block text-xs font-semibold text-[var(--viralix-accent)]">Post title</label>
                             <input
                                 type="text"
                                 value={post.title || ''}
                                 onChange={(e) => onUpdatePost({ title: e.target.value })}
                                 placeholder="Give your post a name…"
-                                className="w-full rounded-lg border border-[#C8D4CE] bg-[#FAFCFB] px-3 py-2.5 text-sm text-[#354F52] placeholder:text-[#94A3B8] focus:border-[#84A98C] focus:outline-none focus:ring-2 focus:ring-[#84A98C]/25"
+                                className="w-full rounded-lg border border-[var(--viralix-border)] bg-[var(--viralix-bg)] px-3 py-2.5 text-sm text-[var(--viralix-accent)] placeholder:text-[#94A3B8] focus:border-[#84A98C] focus:outline-none focus:ring-2 focus:ring-[#84A98C]/25"
                             />
                         </div>
 
-                        <div className="rounded-xl border border-[#D5DFD9] bg-white p-4 shadow-sm">
+                        <div className="rounded-xl border border-[var(--viralix-border)] bg-[var(--viralix-surface)] p-4 shadow-sm">
                             <div className="mb-3 flex items-center justify-between">
-                                <label className="text-xs font-semibold text-[#354F52]">Caption</label>
-                                <span className="rounded-full bg-[#F4F8F6] px-2 py-0.5 text-[0.625rem] tabular-nums text-[#52796F]">
+                                <label className="text-xs font-semibold text-[var(--viralix-accent)]">Caption</label>
+                                <span className="rounded-full bg-[var(--viralix-inset)] px-2 py-0.5 text-[0.625rem] tabular-nums text-[var(--viralix-muted)]">
                                     {captionLength} chars
                                 </span>
                             </div>
@@ -182,10 +182,10 @@ export default function PostEditorSidebar({
                     </div>
                 ) : (
                     <div className="space-y-4">
-                        <div className="rounded-xl border border-[#D5DFD9] bg-white p-4 shadow-sm">
+                        <div className="rounded-xl border border-[var(--viralix-border)] bg-[var(--viralix-surface)] p-4 shadow-sm">
                             <div className="mb-3 flex items-center justify-between">
-                                <p className="text-xs font-semibold text-[#354F52]">Target accounts</p>
-                                <span className="rounded-full bg-[#84A98C]/15 px-2 py-0.5 text-[0.625rem] font-medium text-[#52796F]">
+                                <p className="text-xs font-semibold text-[var(--viralix-accent)]">Target accounts</p>
+                                <span className="rounded-full bg-[#84A98C]/15 px-2 py-0.5 text-[0.625rem] font-medium text-[var(--viralix-muted)]">
                                     {selectedCount} selected
                                 </span>
                             </div>
@@ -193,15 +193,15 @@ export default function PostEditorSidebar({
                         </div>
 
                         {publishedPlatforms.length > 0 && (
-                            <div className="rounded-xl border border-[#D5DFD9] bg-white p-4 shadow-sm">
-                                <p className="mb-2 text-xs font-semibold text-[#354F52]">Already live</p>
+                            <div className="rounded-xl border border-[var(--viralix-border)] bg-[var(--viralix-surface)] p-4 shadow-sm">
+                                <p className="mb-2 text-xs font-semibold text-[var(--viralix-accent)]">Already live</p>
                                 <ul className="space-y-1.5">
                                     {publishedPlatforms.map((p, i) => (
                                         <li
                                             key={i}
                                             className="flex items-center justify-between rounded-lg bg-emerald-50 px-3 py-2 text-xs"
                                         >
-                                            <span className="capitalize text-[#354F52]">{p.name}</span>
+                                            <span className="capitalize text-[var(--viralix-accent)]">{p.name}</span>
                                             <span className="font-medium text-emerald-700">Published</span>
                                         </li>
                                     ))}
@@ -213,7 +213,7 @@ export default function PostEditorSidebar({
             </div>
 
             {/* Sticky actions */}
-            <div className="shrink-0 border-t border-[#D5DFD9] bg-white p-4 shadow-[0_-4px_20px_rgba(47,62,70,0.06)] sm:p-5">
+            <div className="shrink-0 border-t border-[var(--viralix-border)] bg-[var(--viralix-surface)] p-4 shadow-[0_-4px_20px_rgba(47,62,70,0.06)] sm:p-5">
                 {publishedPlatforms.length > 0 && remainingPlatforms.length > 0 && (
                     <p className="mb-3 rounded-lg bg-blue-50 px-3 py-2 text-[0.6875rem] leading-relaxed text-blue-800">
                         {remainingPlatforms.length} platform{remainingPlatforms.length !== 1 ? 's' : ''} still
@@ -227,12 +227,12 @@ export default function PostEditorSidebar({
                             type="button"
                             onClick={onSchedule}
                             disabled={saving || platforms.length === 0}
-                            className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-[#C8D4CE] bg-white px-3 py-2.5 text-sm font-medium text-[#354F52] transition-colors hover:bg-[#F4F8F6] disabled:opacity-50"
+                            className="inline-flex items-center justify-center gap-1.5 rounded-lg dash-card border border-[var(--viralix-border)] px-3 py-2.5 text-sm font-medium text-[var(--viralix-accent)] transition-colors hover:bg-[var(--viralix-bg)] disabled:opacity-50"
                         >
                             {saving ? (
                                 <Loader2 className="h-4 w-4 animate-spin" />
                             ) : (
-                                <Calendar className="h-4 w-4 text-[#52796F]" />
+                                <Calendar className="h-4 w-4 text-[var(--viralix-muted)]" />
                             )}
                             Schedule
                         </button>
@@ -240,7 +240,7 @@ export default function PostEditorSidebar({
                             type="button"
                             onClick={onPublish}
                             disabled={publishing || platforms.length === 0}
-                            className="inline-flex items-center justify-center gap-1.5 rounded-lg bg-emerald-600 px-3 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-emerald-700 disabled:opacity-50"
+                            className="btn btn-success disabled:opacity-50"
                         >
                             {publishing ? (
                                 <Loader2 className="h-4 w-4 animate-spin" />
@@ -258,7 +258,7 @@ export default function PostEditorSidebar({
                             type="button"
                             onClick={onSaveDraft}
                             disabled={saving}
-                            className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium text-[#52796F] transition-colors hover:bg-[#F4F8F6] disabled:opacity-50"
+                            className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium text-[var(--viralix-muted)] transition-colors hover:bg-[var(--viralix-bg)] disabled:opacity-50"
                             style={{ backgroundColor: '#84A98C18' }}
                         >
                             {saving ? (
@@ -274,7 +274,7 @@ export default function PostEditorSidebar({
                         onClick={onDelete}
                         disabled={deleting}
                         className={cn(
-                            'inline-flex items-center justify-center gap-1.5 rounded-lg border border-red-200 px-3 py-2 text-sm font-medium text-red-600 transition-colors hover:bg-red-50 disabled:opacity-50',
+                            'inline-flex items-center justify-center gap-1.5 btn btn-danger disabled:opacity-50',
                             allPublished ? 'flex-1' : 'shrink-0'
                         )}
                     >

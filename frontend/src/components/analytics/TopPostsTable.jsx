@@ -39,14 +39,14 @@ export default function TopPostsTable() {
         });
 
     return (
-        <div className="overflow-hidden rounded-xl border border-[#B8C9C0] bg-white shadow-sm">
-            <div className="flex flex-col gap-3 border-b border-[#E8EDEA] bg-[#FAFCFB] px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:px-5">
+        <div className="dash-card overflow-hidden rounded-xl border border-[var(--viralix-border)]">
+            <div className="flex flex-col gap-3 border-b border-[var(--viralix-border)] bg-[var(--viralix-bg)] px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:px-5">
                 <PanelLabel>Top performing posts</PanelLabel>
                 <div className="flex gap-2">
                     <select
                         value={filter}
                         onChange={(e) => setFilter(e.target.value)}
-                        className="rounded-lg border border-[#D5DFD9] bg-white px-2 py-1 text-xs text-[#52796F] focus:border-[#84A98C] focus:outline-none"
+                        className="rounded-lg border border-[var(--viralix-border)] bg-[var(--viralix-surface)] px-2 py-1 text-xs text-[#52796F] focus:border-[#84A98C] focus:outline-none"
                     >
                         <option value="all">All platforms</option>
                         <option value="instagram">Instagram</option>
@@ -57,7 +57,7 @@ export default function TopPostsTable() {
                     <select
                         value={sortBy}
                         onChange={(e) => setSortBy(e.target.value)}
-                        className="rounded-lg border border-[#D5DFD9] bg-white px-2 py-1 text-xs text-[#52796F] focus:border-[#84A98C] focus:outline-none"
+                        className="rounded-lg border border-[var(--viralix-border)] bg-[var(--viralix-surface)] px-2 py-1 text-xs text-[#52796F] focus:border-[#84A98C] focus:outline-none"
                     >
                         <option value="totalEngagement">Engagement</option>
                         <option value="totalViews">Views</option>
@@ -78,7 +78,7 @@ export default function TopPostsTable() {
                 <div className="overflow-x-auto">
                     <table className="w-full min-w-[640px] border-collapse text-left text-sm">
                         <thead>
-                            <tr className="border-b border-[#E8EDEA] text-[0.6875rem] font-semibold uppercase tracking-wider text-[#52796F]">
+                            <tr className="border-b border-[var(--viralix-border)] text-[0.6875rem] font-semibold uppercase tracking-wider text-[#52796F]">
                                 <th className="px-4 py-2.5">Post</th>
                                 <th className="hidden px-4 py-2.5 sm:table-cell">Platforms</th>
                                 <th className="px-4 py-2.5 text-right">Views</th>
@@ -88,7 +88,7 @@ export default function TopPostsTable() {
                         </thead>
                         <tbody>
                             {filtered.map((post, idx) => (
-                                <tr key={post.id} className="border-b border-[#E8EDEA] last:border-b-0 hover:bg-[#F4F8F6]">
+                                <tr key={post.id} className="border-b border-[var(--viralix-border)] last:border-b-0 hover:bg-[var(--viralix-bg)]">
                                     <td className="px-4 py-3">
                                         <Link href={`/dashboard/preview/${post.id}`} className="flex items-center gap-3">
                                             <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-[#354F52]/8 text-xs font-bold text-[#52796F]">

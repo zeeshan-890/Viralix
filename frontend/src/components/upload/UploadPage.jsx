@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { toast } from 'react-hot-toast';
+import notify from '@/lib/notify';
 import { postsAPI } from '@/lib/api';
 import { useAccounts } from '@/hooks/useAccounts';
 import { cn } from '@/lib/utils';
@@ -155,7 +155,9 @@ export default function UploadPage() {
             });
             if (res.data?._id) router.push(`/dashboard/preview/${res.data._id}`);
         } catch (e) {
-            setActionError(e?.response?.data?.message || 'Failed to save draft');
+            const msg = e?.response?.data?.message || 'Failed to save draft';
+            setActionError(msg);
+            notify.error(msg);
         } finally {
             setActionLoading(false);
         }
@@ -177,10 +179,12 @@ export default function UploadPage() {
             const postId = createRes.data?._id;
             if (!postId) throw new Error('Post creation failed');
             await postsAPI.publishNow(postId);
-            toast.success('Published! It may take a few minutes to appear on platforms.', { duration: 5000 });
+            notify.success('Published! It may take a few minutes to appear on platforms.', { duration: 5000 });
             router.push('/dashboard');
         } catch (e) {
-            setActionError(e?.response?.data?.message || e.message || 'Failed to publish');
+            const msg = e?.response?.data?.message || e.message || 'Failed to publish';
+            setActionError(msg);
+            notify.error(msg);
         } finally {
             setActionLoading(false);
         }
@@ -203,14 +207,16 @@ export default function UploadPage() {
             });
             router.push('/dashboard/schedule');
         } catch (e) {
-            setActionError(e?.response?.data?.message || e.message || 'Failed to schedule');
+            const msg = e?.response?.data?.message || e.message || 'Failed to schedule';
+            setActionError(msg);
+            notify.error(msg);
         } finally {
             setActionLoading(false);
         }
     };
 
     return (
-        <div className="overflow-hidden rounded-2xl border border-[#B8C9C0] bg-white shadow-[0_8px_30px_rgba(47,62,70,0.08)]">
+        <div className="dash-card overflow-hidden rounded-2xl border border-[var(--viralix-border)]">
             {/* Header with step rail */}
             <div className="bg-gradient-to-r from-[#354F52] via-[#2F3E46] to-[#354F52] px-5 py-4 sm:px-6">
                 <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
@@ -219,10 +225,10 @@ export default function UploadPage() {
                         <p className="mt-0.5 text-sm text-white/60">Upload · write · publish</p>
                     </div>
                     <div className="flex flex-wrap items-center gap-2">
-                        <Link href="/dashboard/schedule" className="inline-flex items-center gap-1 rounded-lg bg-white/10 px-2.5 py-1.5 text-xs text-white/80 hover:bg-white/20">
+                        <Link href="/dashboard/schedule" className="inline-flex items-center gap-1 rounded-lg bg-white/10 px-2.5 py-1.5 text-xs text-white/80 hover:bg-[var(--viralix-surface)]/20">
                             <Calendar className="h-3.5 w-3.5" /> Calendar
                         </Link>
-                        <Link href="/dashboard/preview" className="inline-flex items-center gap-1 rounded-lg bg-white/10 px-2.5 py-1.5 text-xs text-white/80 hover:bg-white/20">
+                        <Link href="/dashboard/preview" className="inline-flex items-center gap-1 rounded-lg bg-white/10 px-2.5 py-1.5 text-xs text-white/80 hover:bg-[var(--viralix-surface)]/20">
                             <FileText className="h-3.5 w-3.5" /> Posts
                         </Link>
                         {STEPS.map(({ id, label, icon: Icon }) => {

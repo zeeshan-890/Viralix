@@ -1,4 +1,5 @@
 'use client';
+import notify from '@/lib/notify';
 import { useState, useEffect } from 'react';
 import { bioPagesAPI } from '@/lib/api';
 import { useRouter } from 'next/navigation';
@@ -55,7 +56,7 @@ export default function BioPageBuilder() {
             setButtons([]);
             setSocials([]);
         } catch (e) {
-            alert(e.response?.data?.message || 'Failed to create page');
+            notify.error(e.response?.data?.message || 'Failed to create page');
         } finally {
             setLoading(false);
         }
@@ -68,9 +69,9 @@ export default function BioPageBuilder() {
             await bioPagesAPI.update(page._id, {
                 profile, theme, buttons, socials
             });
-            alert('Changes saved!');
+            notify.success('Changes saved!');
         } catch (e) {
-            alert('Save failed');
+            notify.error('Save failed');
         } finally {
             setSaving(false);
         }
@@ -95,14 +96,14 @@ export default function BioPageBuilder() {
 
     if (!page) {
         return (
-            <div className="max-w-md mx-auto mt-20 p-8 bg-white rounded-lg border shadow-sm text-center">
+            <div className="dash-card max-w-md mx-auto mt-20 p-8 rounded-lg border border-[var(--viralix-border)] text-center">
                 <h2 className="text-xl font-bold mb-4">Create your Bio Page</h2>
                 <form onSubmit={(e) => { e.preventDefault(); handleCreatePage(e.target.slug.value); }}>
                     <div className="flex gap-2">
                         <span className="py-2 text-gray-500 bg-gray-50 px-3 rounded-l-lg border-y border-l">viralix.com/b/</span>
                         <input name="slug" placeholder="username" required className="flex-1 border rounded-r-lg px-3 outline-none focus:ring-2 focus:ring-blue-500" />
                     </div>
-                    <button className="mt-4 w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700">Claim URL</button>
+                    <button className="mt-4 w-full btn btn-confirm text-white py-2 rounded-lg ">Claim URL</button>
                 </form>
             </div>
         );
@@ -111,18 +112,18 @@ export default function BioPageBuilder() {
     return (
         <div className="h-[calc(100vh-100px)] flex gap-6">
             {/* 🛠️ Editor Panel */}
-            <div className="flex-1 bg-white rounded-xl border border-gray-200 flex flex-col overflow-hidden">
+            <div className="flex-1 dash-card dash-card-hover rounded-xl border border-[var(--viralix-border)] flex flex-col overflow-hidden">
                 {/* Header */}
                 <div className="p-4 border-b flex justify-between items-center bg-gray-50">
                     <div className="flex gap-4">
                         {['links', 'appearance', 'settings'].map(tab => (
                             <button key={tab} onClick={() => setActiveTab(tab)}
-                                className={`text-sm font-medium px-3 py-1.5 rounded-lg transition ${activeTab === tab ? 'bg-white shadow text-blue-600' : 'text-gray-500 hover:text-gray-700'}`}>
+                                className={`text-sm font-medium px-3 py-1.5 rounded-lg transition ${activeTab === tab ? 'bg-[var(--viralix-surface)] shadow text-blue-600' : 'text-gray-500 hover:text-gray-700'}`}>
                                 {tab.charAt(0).toUpperCase() + tab.slice(1)}
                             </button>
                         ))}
                     </div>
-                    <button onClick={handleSave} disabled={saving} className="bg-blue-600 text-white px-4 py-1.5 rounded-lg text-sm font-medium hover:bg-blue-700 disabled:opacity-50">
+                    <button onClick={handleSave} disabled={saving} className="btn btn-confirm text-white px-4 py-1.5 rounded-lg text-sm font-medium  disabled:opacity-50">
                         {saving ? 'Saving...' : 'Save Changes'}
                     </button>
                 </div>
@@ -159,7 +160,7 @@ export default function BioPageBuilder() {
                                 </div>
                                 <div className="space-y-3">
                                     {buttons.map((btn, i) => (
-                                        <div key={i} className="bg-white p-3 rounded-lg border border-gray-200 group hover:border-blue-300 transition shadow-sm">
+                                        <div key={i} className="dash-card p-3 rounded-lg border border-[var(--viralix-border)] group hover:border-blue-300 transition shadow-sm">
                                             <div className="flex gap-3 items-start">
                                                 <div className="flex-1 space-y-2">
                                                     <input value={btn.label} onChange={e => updateButton(i, 'label', e.target.value)}
@@ -211,7 +212,7 @@ export default function BioPageBuilder() {
                                 <div className="flex bg-gray-100 p-1 rounded-lg">
                                     {['rounded', 'square', 'pill', 'shadow'].map(s => (
                                         <button key={s} onClick={() => setTheme({ ...theme, buttonStyle: s })}
-                                            className={`flex-1 py-1.5 text-xs font-medium rounded-md capitalize transition ${theme.buttonStyle === s ? 'bg-white shadow text-gray-900' : 'text-gray-500 hover:text-gray-700'}`}>
+                                            className={`flex-1 py-1.5 text-xs font-medium rounded-md capitalize transition ${theme.buttonStyle === s ? 'bg-[var(--viralix-surface)] shadow text-gray-900' : 'text-gray-500 hover:text-gray-700'}`}>
                                             {s}
                                         </button>
                                     ))}
@@ -225,10 +226,10 @@ export default function BioPageBuilder() {
                             <div className="bg-blue-50 p-4 rounded-lg border border-blue-100">
                                 <h3 className="text-sm font-semibold text-blue-900 mb-1">Your Bio Link</h3>
                                 <div className="flex gap-2 items-center">
-                                    <code className="text-sm bg-white px-2 py-1 rounded text-blue-600 flex-1">
+                                    <code className="text-sm bg-[var(--viralix-surface)] px-2 py-1 rounded text-blue-600 flex-1 border border-[var(--viralix-border)]">
                                         {typeof window !== 'undefined' ? window.location.origin : ''}/b/{page.slug}
                                     </code>
-                                    <a href={`/b/${page.slug}`} target="_blank" className="text-xs bg-blue-600 text-white px-3 py-1.5 rounded-lg hover:bg-blue-700">
+                                    <a href={`/b/${page.slug}`} target="_blank" className="text-xs btn btn-confirm text-white px-3 py-1.5 rounded-lg ">
                                         Visit
                                     </a>
                                 </div>
@@ -236,11 +237,11 @@ export default function BioPageBuilder() {
                             <div className="p-4 bg-gray-50 rounded-lg">
                                 <h3 className="text-sm font-semibold text-gray-900 mb-2">Analytics</h3>
                                 <div className="grid grid-cols-2 gap-4">
-                                    <div className="bg-white p-3 rounded border text-center">
+                                    <div className="dash-card p-3 rounded border border-[var(--viralix-border)] text-center">
                                         <div className="text-2xl font-bold text-gray-900">{page.stats?.views || 0}</div>
                                         <div className="text-xs text-gray-500">Page Views</div>
                                     </div>
-                                    <div className="bg-white p-3 rounded border text-center">
+                                    <div className="dash-card p-3 rounded border border-[var(--viralix-border)] text-center">
                                         <div className="text-2xl font-bold text-gray-900">{buttons.reduce((a, b) => a + (b.clicks || 0), 0)}</div>
                                         <div className="text-xs text-gray-500">Button Clicks</div>
                                     </div>

@@ -11,7 +11,7 @@ export default function DashboardHeader({ title = "Dashboard", subtitle, showNot
         { id: 3, message: "Analytics report ready", time: "3 hours ago", unread: false },
     ];
     const unreadCount = notifications.filter(n => n.unread).length;
-    return (<header className="bg-white border-b border-gray-200 px-6 py-4">
+    return (<header className="dash-card border-b border-[var(--viralix-border)] bg-[var(--viralix-surface)] px-6 py-4">
             <div className="flex items-center justify-between">
                 {/* Title Section */}
                 <div>
@@ -37,7 +37,7 @@ export default function DashboardHeader({ title = "Dashboard", subtitle, showNot
                             </button>
 
                             {/* Notification Dropdown */}
-                            {isNotificationOpen && (<div className="absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-lg border border-gray-200 z-50">
+                            {isNotificationOpen && (<div className="absolute right-0 mt-2 w-80 dash-card rounded-lg shadow-lg border border-[var(--viralix-border)] z-50">
                                     <div className="p-4 border-b border-gray-200">
                                         <h3 className="text-lg font-semibold text-gray-900">Notifications</h3>
                                     </div>
@@ -65,7 +65,7 @@ export default function DashboardHeader({ title = "Dashboard", subtitle, showNot
                             </button>
 
                             {/* User Dropdown */}
-                            {isUserMenuOpen && (<div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 z-50">
+                            {isUserMenuOpen && (<div className="absolute right-0 mt-2 w-48 dash-card rounded-lg shadow-lg border border-[var(--viralix-border)] z-50">
                                     <div className="p-3 border-b border-gray-200">
                                         <p className="text-sm font-medium text-gray-900">John Doe</p>
                                         <p className="text-xs text-gray-500">john@example.com</p>

@@ -43,7 +43,7 @@ export default function PostCard({ post, onClick }) {
     return (
         <div
             onClick={onClick}
-            className="p-2.5 rounded-lg border border-gray-100 bg-white hover:shadow-md hover:border-blue-200 cursor-pointer transition-all duration-150 group"
+            className="p-2.5 rounded-lg border border-[var(--viralix-border)] bg-[var(--viralix-surface)] hover:shadow-md hover:border-blue-200 cursor-pointer transition-all duration-150 group"
         >
             {/* Platform icons */}
             <div className="flex items-center gap-1 mb-1.5">

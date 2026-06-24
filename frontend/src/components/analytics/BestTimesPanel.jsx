@@ -8,7 +8,7 @@ import { Clock, Loader2 } from 'lucide-react';
 const DAY_LABELS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
 function PanelLabel({ children }) {
-    return <p className="text-[0.6875rem] font-semibold uppercase tracking-wider text-[#52796F]">{children}</p>;
+    return <p className="text-[0.6875rem] font-semibold uppercase tracking-wider text-[var(--viralix-muted)]">{children}</p>;
 }
 
 export default function BestTimesPanel() {
@@ -47,19 +47,19 @@ export default function BestTimesPanel() {
     };
 
     return (
-        <div className="overflow-hidden rounded-xl border border-[#B8C9C0] bg-white shadow-sm">
-            <div className="flex items-center justify-between border-b border-[#E8EDEA] bg-[#FAFCFB] px-4 py-2.5 sm:px-5">
+        <div className="dash-card overflow-hidden rounded-xl border border-[var(--viralix-border)]">
+            <div className="flex items-center justify-between border-b border-[var(--viralix-border)] bg-[var(--viralix-bg)] px-4 py-2.5 sm:px-5">
                 <PanelLabel>Best times to post</PanelLabel>
                 <Clock className="h-4 w-4 text-[#84A98C]" aria-hidden />
             </div>
 
             {loading ? (
-                <div className="flex items-center justify-center gap-2 py-12 text-sm text-[#52796F]">
+                <div className="flex items-center justify-center gap-2 py-12 text-sm text-[var(--viralix-muted)]">
                     <Loader2 className="h-5 w-5 animate-spin" />
                     Loading…
                 </div>
             ) : !data?.topSlots?.length ? (
-                <p className="py-12 text-center text-sm text-[#52796F]">Publish more to unlock timing insights</p>
+                <p className="py-12 text-center text-sm text-[var(--viralix-muted)]">Publish more to unlock timing insights</p>
             ) : (
                 <div className="p-4 sm:p-5">
                     <div className="mb-4 grid grid-cols-1 gap-2">
@@ -68,15 +68,15 @@ export default function BestTimesPanel() {
                                 key={i}
                                 className={cn(
                                     'flex items-center justify-between rounded-lg px-3 py-2.5',
-                                    i === 0 ? 'bg-[#84A98C]/15 ring-1 ring-[#84A98C]/30' : 'bg-[#F4F8F6]'
+                                    i === 0 ? 'bg-[#84A98C]/15 ring-1 ring-[#84A98C]/30' : 'bg-[var(--viralix-inset)]'
                                 )}
                             >
                                 <div>
-                                    <p className="text-xs font-semibold text-[#354F52]">{slot.dayName}</p>
-                                    <p className="text-[0.625rem] text-[#52796F]">{slot.totalPosts} posts analyzed</p>
+                                    <p className="text-xs font-semibold text-[var(--viralix-accent)]">{slot.dayName}</p>
+                                    <p className="text-[0.625rem] text-[var(--viralix-muted)]">{slot.totalPosts} posts analyzed</p>
                                 </div>
                                 <div className="text-right">
-                                    <p className="text-sm font-bold text-[#354F52]">{slot.timeLabel}</p>
+                                    <p className="text-sm font-bold text-[var(--viralix-accent)]">{slot.timeLabel}</p>
                                     <p className="text-[0.625rem] text-emerald-700">{slot.avgEngagement}% avg</p>
                                 </div>
                             </div>
@@ -89,7 +89,7 @@ export default function BestTimesPanel() {
                             <tbody>
                                 {DAY_LABELS.map((day, di) => (
                                     <tr key={day}>
-                                        <td className="w-8 pr-1 text-[0.625rem] font-medium text-[#52796F]">{day}</td>
+                                        <td className="w-8 pr-1 text-[0.625rem] font-medium text-[var(--viralix-muted)]">{day}</td>
                                         {Array.from({ length: 24 }, (_, h) => {
                                             const val = data.heatmap?.[di]?.[h] ?? data.heatmap?.[String(di)]?.[h] ?? 0;
                                             return (

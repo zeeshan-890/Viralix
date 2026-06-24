@@ -55,10 +55,10 @@ export default function ContentPerformance() {
 
     const getPlatformColor = (platform) => {
         const colors = {
-            facebook: 'bg-white border border-gray-200 text-gray-800',
-            instagram: 'bg-white border border-gray-200 text-gray-800',
-            tiktok: 'bg-white border border-gray-200 text-gray-800',
-            youtube: 'bg-white border border-gray-200 text-gray-800',
+            facebook: 'bg-[var(--viralix-surface)] border border-[var(--viralix-border)] text-gray-800',
+            instagram: 'bg-[var(--viralix-surface)] border border-[var(--viralix-border)] text-gray-800',
+            tiktok: 'bg-[var(--viralix-surface)] border border-[var(--viralix-border)] text-gray-800',
+            youtube: 'bg-[var(--viralix-surface)] border border-[var(--viralix-border)] text-gray-800',
             twitter: 'bg-blue-400 text-white',
             linkedin: 'bg-blue-700 text-white'
         };
@@ -85,7 +85,7 @@ export default function ContentPerformance() {
 
     if (loading) {
         return (
-            <div className="bg-white rounded-lg border border-gray-200 p-6">
+            <div className="dash-card rounded-lg border border-[var(--viralix-border)] p-6">
                 <div className="text-center py-8">
                     <div className="text-gray-500">Loading content performance...</div>
                 </div>
@@ -95,7 +95,7 @@ export default function ContentPerformance() {
 
     if (error) {
         return (
-            <div className="bg-white rounded-lg border border-gray-200 p-6">
+            <div className="dash-card rounded-lg border border-[var(--viralix-border)] p-6">
                 <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
                     {error}
                 </div>
@@ -103,7 +103,7 @@ export default function ContentPerformance() {
         );
     }
 
-    return (<div className="bg-white rounded-lg border border-gray-200 p-6">
+    return (<div className="dash-card rounded-lg border border-[var(--viralix-border)] p-6">
         <div className="flex items-center justify-between mb-6">
             <h3 className="text-lg font-semibold text-gray-900">Content Performance</h3>
 

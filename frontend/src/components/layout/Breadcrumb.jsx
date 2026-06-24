@@ -41,7 +41,7 @@ export default function Breadcrumb() {
             </Link>
             {crumbs.slice(1).map((crumb) => (
                 <span key={crumb.href} className="flex items-center gap-1">
-                    <ChevronRight className="h-3 w-3 text-[#CAD2C5]" />
+                    <ChevronRight className="h-3 w-3 text-[var(--viralix-border)]" />
                     {crumb.isLast ? (
                         <span className="font-medium text-[#354F52]">{crumb.label}</span>
                     ) : (

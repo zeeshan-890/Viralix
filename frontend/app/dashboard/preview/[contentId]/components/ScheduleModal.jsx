@@ -23,7 +23,7 @@ export default function ScheduleModal({ isOpen, onClose, onConfirm, loading }) {
             <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
 
             {/* Modal */}
-            <div className="relative bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden animate-in fade-in zoom-in duration-200">
+            <div className="relative dash-card bg-[var(--viralix-surface)] rounded-2xl shadow-2xl max-w-md w-full overflow-hidden animate-in fade-in zoom-in duration-200">
                 {/* Header */}
                 <div className="px-6 py-5 border-b border-gray-100 bg-gradient-to-br from-gray-50 to-white flex items-center justify-between">
                     <div className="flex items-center gap-3">
@@ -74,14 +74,14 @@ export default function ScheduleModal({ isOpen, onClose, onConfirm, loading }) {
                         <button
                             type="button"
                             onClick={onClose}
-                            className="flex-1 px-4 py-3 rounded-xl font-bold text-gray-600 bg-gray-50 hover:bg-gray-100 transition-colors"
+                            className="btn btn-cancel flex-1"
                         >
                             Cancel
                         </button>
                         <button
                             type="submit"
                             disabled={loading || !date || !time}
-                            className="flex-1 px-4 py-3 rounded-xl font-bold text-white bg-gradient-to-br from-[#84A98C] to-[#52796F] hover:shadow-lg hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                            className="btn btn-confirm flex-1 disabled:opacity-50 flex items-center justify-center gap-2"
                         >
                             {loading ? (
                                 <>

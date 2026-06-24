@@ -28,7 +28,7 @@ const EMPTY_RULE = {
 };
 
 function PanelLabel({ children }) {
-    return <p className="text-[0.6875rem] font-semibold uppercase tracking-wider text-[#52796F]">{children}</p>;
+    return <p className="text-[0.6875rem] font-semibold uppercase tracking-wider text-[var(--viralix-muted)]">{children}</p>;
 }
 
 export default function RuleEditor({ rule, onSave, onCancel, saving }) {
@@ -59,8 +59,8 @@ export default function RuleEditor({ rule, onSave, onCancel, saving }) {
     return (
         <form onSubmit={handleSubmit} className="space-y-5">
             <div className="flex items-center justify-between">
-                <h3 className="text-sm font-semibold text-[#354F52]">{rule?._id ? 'Edit rule' : 'New auto-reply rule'}</h3>
-                <button type="button" onClick={onCancel} className="rounded-lg p-1.5 text-[#94A3B8] hover:bg-[#F4F8F6]">
+                <h3 className="text-sm font-semibold text-[var(--viralix-accent)]">{rule?._id ? 'Edit rule' : 'New auto-reply rule'}</h3>
+                <button type="button" onClick={onCancel} className="rounded-lg p-1.5 text-[#94A3B8] hover:bg-[var(--viralix-bg)]">
                     <X className="h-4 w-4" />
                 </button>
             </div>
@@ -72,7 +72,7 @@ export default function RuleEditor({ rule, onSave, onCancel, saving }) {
                     onChange={(e) => set('name', e.target.value)}
                     required
                     placeholder="e.g. Pricing inquiries"
-                    className="mt-1.5 w-full rounded-lg border border-[#D5DFD9] px-3 py-2 text-sm focus:border-[#84A98C] focus:outline-none"
+                    className="mt-1.5 w-full rounded-lg border border-[var(--viralix-border)] px-3 py-2 text-sm focus:border-[#84A98C] focus:outline-none"
                 />
             </div>
 
@@ -86,11 +86,11 @@ export default function RuleEditor({ rule, onSave, onCancel, saving }) {
                             onClick={() => set('type', t.id)}
                             className={cn(
                                 'rounded-xl border p-3 text-left transition',
-                                form.type === t.id ? 'border-[#84A98C] bg-[#84A98C]/10' : 'border-[#E8EDEA] hover:border-[#B8C9C0]'
+                                form.type === t.id ? 'border-[#84A98C] bg-[#84A98C]/10' : 'border-[var(--viralix-border)] hover:border-[var(--viralix-border)]'
                             )}
                         >
-                            <p className="text-xs font-semibold text-[#354F52]">{t.label}</p>
-                            <p className="mt-0.5 text-[0.625rem] text-[#52796F]">{t.desc}</p>
+                            <p className="text-xs font-semibold text-[var(--viralix-accent)]">{t.label}</p>
+                            <p className="mt-0.5 text-[0.625rem] text-[var(--viralix-muted)]">{t.desc}</p>
                         </button>
                     ))}
                 </div>
@@ -132,7 +132,7 @@ export default function RuleEditor({ rule, onSave, onCancel, saving }) {
                                 onClick={() => set('triggerType', t)}
                                 className={cn(
                                     'flex-1 rounded-lg py-2 text-xs font-medium capitalize transition',
-                                    form.triggerType === t ? 'bg-[#354F52] text-white' : 'bg-[#F4F8F6] text-[#52796F]'
+                                    form.triggerType === t ? 'bg-[#354F52] text-white' : 'bg-[var(--viralix-inset)] text-[var(--viralix-muted)]'
                                 )}
                             >
                                 {t === 'any' ? 'Any message' : 'Keywords'}
@@ -151,15 +151,15 @@ export default function RuleEditor({ rule, onSave, onCancel, saving }) {
                             onChange={(e) => setKeywordInput(e.target.value)}
                             onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addKeyword())}
                             placeholder="info, price, help…"
-                            className="flex-1 rounded-lg border border-[#D5DFD9] px-3 py-2 text-sm focus:border-[#84A98C] focus:outline-none"
+                            className="flex-1 rounded-lg border border-[var(--viralix-border)] px-3 py-2 text-sm focus:border-[#84A98C] focus:outline-none"
                         />
-                        <button type="button" onClick={addKeyword} className="rounded-lg bg-[#84A98C]/20 px-3 text-[#52796F] hover:bg-[#84A98C]/30">
+                        <button type="button" onClick={addKeyword} className="rounded-lg bg-[#84A98C]/20 px-3 text-[var(--viralix-muted)] hover:bg-[#84A98C]/30">
                             <Plus className="h-4 w-4" />
                         </button>
                     </div>
                     <div className="mt-2 flex flex-wrap gap-1.5">
                         {form.keywords.map((kw) => (
-                            <span key={kw} className="inline-flex items-center gap-1 rounded-full bg-[#F4F8F6] px-2 py-0.5 text-xs text-[#354F52]">
+                            <span key={kw} className="inline-flex items-center gap-1 rounded-full bg-[var(--viralix-inset)] px-2 py-0.5 text-xs text-[var(--viralix-accent)]">
                                 {kw}
                                 <button type="button" onClick={() => set('keywords', form.keywords.filter((k) => k !== kw))} className="text-[#94A3B8] hover:text-red-500">×</button>
                             </span>
@@ -181,7 +181,7 @@ export default function RuleEditor({ rule, onSave, onCancel, saving }) {
                             onClick={() => set('replyType', id)}
                             className={cn(
                                 'flex-1 rounded-lg py-2 text-xs font-medium transition',
-                                form.replyType === id ? 'bg-[#52796F] text-white' : 'bg-[#F4F8F6] text-[#52796F]'
+                                form.replyType === id ? 'bg-[#52796F] text-white' : 'bg-[var(--viralix-inset)] text-[var(--viralix-muted)]'
                             )}
                         >
                             {label}
@@ -199,7 +199,7 @@ export default function RuleEditor({ rule, onSave, onCancel, saving }) {
                         rows={3}
                         required
                         placeholder="Hey! Thanks for reaching out…"
-                        className="mt-1.5 w-full resize-none rounded-lg border border-[#D5DFD9] px-3 py-2 text-sm focus:border-[#84A98C] focus:outline-none"
+                        className="mt-1.5 w-full resize-none rounded-lg border border-[var(--viralix-border)] px-3 py-2 text-sm focus:border-[#84A98C] focus:outline-none"
                     />
                 </div>
             ) : (
@@ -213,7 +213,7 @@ export default function RuleEditor({ rule, onSave, onCancel, saving }) {
                                 onClick={() => set('aiTone', t)}
                                 className={cn(
                                     'rounded-lg px-3 py-1.5 text-xs font-medium capitalize transition',
-                                    form.aiTone === t ? 'bg-[#354F52] text-white' : 'bg-[#F4F8F6] text-[#52796F]'
+                                    form.aiTone === t ? 'bg-[#354F52] text-white' : 'bg-[var(--viralix-inset)] text-[var(--viralix-muted)]'
                                 )}
                             >
                                 {t}
@@ -224,10 +224,10 @@ export default function RuleEditor({ rule, onSave, onCancel, saving }) {
             )}
 
             <div className="flex gap-2 pt-2">
-                <button type="button" onClick={onCancel} className="flex-1 rounded-xl border border-[#D5DFD9] py-2.5 text-sm font-medium text-[#52796F] hover:bg-[#F4F8F6]">
+                <button type="button" onClick={onCancel} className="btn btn-cancel flex-1">
                     Cancel
                 </button>
-                <button type="submit" disabled={saving} className="flex-1 rounded-xl bg-[#52796F] py-2.5 text-sm font-medium text-white hover:bg-[#354F52] disabled:opacity-50">
+                <button type="submit" disabled={saving} className="btn btn-confirm flex-1 disabled:opacity-50">
                     {saving ? 'Saving…' : 'Save rule'}
                 </button>
             </div>

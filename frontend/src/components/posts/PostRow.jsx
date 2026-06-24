@@ -12,7 +12,7 @@ function PostThumbnail({ post }) {
     const media = post.media?.[0];
     if (media?.url) {
         return (
-            <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-lg border border-[#D5DFD9] bg-[#F0F4F2]">
+            <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-lg border border-[var(--viralix-border)] bg-[var(--viralix-inset)]">
                 <Image src={media.url} alt="" fill className="object-cover" sizes="64px" unoptimized />
                 {media.type === 'video' && (
                     <div className="absolute inset-0 flex items-center justify-center bg-black/30">
@@ -23,8 +23,8 @@ function PostThumbnail({ post }) {
         );
     }
     return (
-        <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-lg border border-[#D5DFD9] bg-[#EEF3F0]">
-            <FileText className="h-5 w-5 text-[#52796F]" aria-hidden />
+        <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-lg border border-[var(--viralix-border)] bg-[var(--viralix-inset)]">
+            <FileText className="h-5 w-5 text-[var(--viralix-muted)]" aria-hidden />
         </div>
     );
 }
@@ -46,15 +46,15 @@ export default function PostRow({ post }) {
         <Link
             href={`/dashboard/preview/${post._id}`}
             className={cn(
-                'group flex items-center gap-3 border-b border-[#E2E8E4] px-4 py-3 transition-colors last:border-b-0 hover:bg-[#F0F4F2]',
-                'border-l-[3px] bg-white',
+                'group flex items-center gap-3 border-b border-[var(--viralix-border)] px-4 py-3 transition-colors last:border-b-0 hover:bg-[var(--viralix-bg)]/50',
+                'border-l-[3px] bg-[var(--viralix-surface)]',
                 statusBorder[status] || statusBorder.draft
             )}
         >
             <PostThumbnail post={post} />
             <div className="min-w-0 flex-1">
                 <div className="flex flex-wrap items-center gap-2">
-                    <h4 className="truncate text-sm font-semibold text-[#354F52]">
+                    <h4 className="truncate text-sm font-semibold text-[var(--viralix-accent)]">
                         {post.title || 'Untitled Post'}
                     </h4>
                     <span
@@ -66,8 +66,8 @@ export default function PostRow({ post }) {
                         {STATUS_LABELS[status] || status}
                     </span>
                 </div>
-                <p className="mt-0.5 line-clamp-1 text-xs text-[#52796F]">{post.content || 'No caption'}</p>
-                <div className="mt-1.5 flex flex-wrap items-center gap-3 text-[0.6875rem] text-[#52796F]">
+                <p className="mt-0.5 line-clamp-1 text-xs text-[var(--viralix-muted)]">{post.content || 'No caption'}</p>
+                <div className="mt-1.5 flex flex-wrap items-center gap-3 text-[0.6875rem] text-[var(--viralix-muted)]">
                     <span className="inline-flex items-center gap-1">
                         <Calendar className="h-3 w-3" aria-hidden />
                         {dateLabel}
@@ -93,7 +93,7 @@ export default function PostRow({ post }) {
                     )}
                 </div>
             </div>
-            <ChevronRight className="h-4 w-4 shrink-0 text-[#CAD2C5] transition-colors group-hover:text-[#52796F]" aria-hidden />
+            <ChevronRight className="h-4 w-4 shrink-0 text-[var(--viralix-border)] transition-colors group-hover:text-[var(--viralix-muted)]" aria-hidden />
         </Link>
     );
 }

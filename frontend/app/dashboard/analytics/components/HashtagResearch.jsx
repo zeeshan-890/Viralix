@@ -1,4 +1,5 @@
 'use client';
+import notify from '@/lib/notify';
 import { useState, useEffect } from 'react';
 import { hashtagResearchAPI } from '@/lib/api';
 
@@ -77,7 +78,7 @@ export default function HashtagResearch() {
             const res = await hashtagResearchAPI.suggest({ topic: topic.trim(), platform: suggestPlatform });
             setSuggestions(res.data);
         } catch (err) {
-            alert('Suggest failed');
+            notify.error('Suggest failed');
         } finally {
             setSuggestLoading(false);
         }
@@ -93,7 +94,7 @@ export default function HashtagResearch() {
             setSetName(''); setSetTags('');
             loadSets();
         } catch (err) {
-            alert(err.response?.data?.message || 'Create failed');
+            notify.error(err.response?.data?.message || 'Create failed');
         } finally {
             setCreating(false);
         }
@@ -104,7 +105,7 @@ export default function HashtagResearch() {
         try {
             await hashtagResearchAPI.deleteSet(id);
             loadSets();
-        } catch (_) { alert('Delete failed'); }
+        } catch (_) { notify.error('Delete failed'); }
     };
 
     const handleCopySet = async (set) => {
@@ -129,7 +130,7 @@ export default function HashtagResearch() {
     };
 
     return (
-        <div className="bg-white rounded-lg border border-gray-200 p-6">
+        <div className="dash-card rounded-lg border border-[var(--viralix-border)] p-6">
             <div className="mb-5">
                 <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
                     #️⃣ Hashtag Research Tool
@@ -226,7 +227,7 @@ export default function HashtagResearch() {
                         <div>
                             <label className="block text-xs font-medium text-gray-600 mb-1">Platform</label>
                             <select value={suggestPlatform} onChange={(e) => setSuggestPlatform(e.target.value)}
-                                className="border rounded-lg px-3 py-2 text-sm bg-white">
+                                className="border border-[var(--viralix-border)] rounded-lg px-3 py-2 text-sm bg-[var(--viralix-surface)]">
                                 <option value="instagram">Instagram</option>
                                 <option value="twitter">Twitter</option>
                                 <option value="tiktok">TikTok</option>
@@ -234,7 +235,7 @@ export default function HashtagResearch() {
                             </select>
                         </div>
                         <button type="submit" disabled={suggestLoading}
-                            className="px-4 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 disabled:opacity-50 whitespace-nowrap">
+                            className="px-4 py-2 btn btn-confirm text-white text-sm rounded-lg  disabled:opacity-50 whitespace-nowrap">
                             {suggestLoading ? '⏳ Generating...' : '✨ Suggest'}
                         </button>
                     </form>
@@ -354,7 +355,7 @@ export default function HashtagResearch() {
                             <div>
                                 <label className="block text-xs font-medium text-gray-600 mb-1">Platform</label>
                                 <select value={setPlatform} onChange={(e) => setSetPlatform(e.target.value)}
-                                    className="border rounded-lg px-3 py-2 text-sm bg-white">
+                                    className="border border-[var(--viralix-border)] rounded-lg px-3 py-2 text-sm bg-[var(--viralix-surface)]">
                                     <option value="all">All</option>
                                     <option value="instagram">Instagram</option>
                                     <option value="twitter">Twitter</option>
@@ -370,7 +371,7 @@ export default function HashtagResearch() {
                                 className="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none resize-none" />
                         </div>
                         <button type="submit" disabled={creating}
-                            className="px-4 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 disabled:opacity-50">
+                            className="px-4 py-2 btn btn-confirm text-white text-sm rounded-lg  disabled:opacity-50">
                             {creating ? '...' : '💾 Save Set'}
                         </button>
                     </form>

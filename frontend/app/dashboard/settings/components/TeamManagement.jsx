@@ -1,4 +1,5 @@
 'use client';
+import notify from '@/lib/notify';
 import { useState, useEffect } from 'react';
 import { teamAPI } from '@/lib/api';
 
@@ -38,7 +39,7 @@ export default function TeamManagement() {
             setInviteEmail('');
             loadData();
         } catch (err) {
-            alert(err.response?.data?.message || 'Invite failed');
+            notify.error(err.response?.data?.message || 'Invite failed');
         } finally {
             setInviting(false);
         }
@@ -49,7 +50,7 @@ export default function TeamManagement() {
             await teamAPI.updateRole(userId, newRole);
             loadData();
         } catch (err) {
-            alert(err.response?.data?.message || 'Role update failed');
+            notify.error(err.response?.data?.message || 'Role update failed');
         }
     };
 
@@ -59,7 +60,7 @@ export default function TeamManagement() {
             await teamAPI.remove(userId);
             loadData();
         } catch (err) {
-            alert(err.response?.data?.message || 'Remove failed');
+            notify.error(err.response?.data?.message || 'Remove failed');
         }
     };
 
@@ -68,7 +69,7 @@ export default function TeamManagement() {
             await teamAPI.approvePost(postId, '');
             setPending(pending.filter(p => p._id !== postId));
         } catch (err) {
-            alert(err.response?.data?.message || 'Approve failed');
+            notify.error(err.response?.data?.message || 'Approve failed');
         }
     };
 
@@ -78,7 +79,7 @@ export default function TeamManagement() {
             await teamAPI.rejectPost(postId, note);
             setPending(pending.filter(p => p._id !== postId));
         } catch (err) {
-            alert(err.response?.data?.message || 'Reject failed');
+            notify.error(err.response?.data?.message || 'Reject failed');
         }
     };
 
@@ -90,7 +91,7 @@ export default function TeamManagement() {
     };
 
     return (
-        <div className="bg-white rounded-lg border border-gray-200 p-6">
+        <div className="dash-card rounded-lg border border-[var(--viralix-border)] p-6">
             <div className="mb-6">
                 <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
                     👥 Team & Approvals
@@ -144,7 +145,7 @@ export default function TeamManagement() {
                             <select
                                 value={inviteRole}
                                 onChange={(e) => setInviteRole(e.target.value)}
-                                className="border rounded-lg px-3 py-2 text-sm bg-white"
+                                className="border border-[var(--viralix-border)] rounded-lg px-3 py-2 text-sm bg-[var(--viralix-surface)]"
                             >
                                 <option value="editor">Editor</option>
                                 <option value="viewer">Viewer</option>
@@ -153,7 +154,7 @@ export default function TeamManagement() {
                         <button
                             type="submit"
                             disabled={inviting}
-                            className="px-4 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 disabled:opacity-50 whitespace-nowrap"
+                            className="px-4 py-2 btn btn-confirm text-white text-sm rounded-lg  disabled:opacity-50 whitespace-nowrap"
                         >
                             {inviting ? '...' : '+ Invite'}
                         </button>
@@ -192,7 +193,7 @@ export default function TeamManagement() {
                                                 <select
                                                     value={member.role}
                                                     onChange={(e) => handleRoleChange(member._id, e.target.value)}
-                                                    className="text-xs border rounded px-2 py-1 bg-white"
+                                                    className="text-xs border border-[var(--viralix-border)] rounded px-2 py-1 bg-[var(--viralix-surface)]"
                                                 >
                                                     <option value="editor">Editor</option>
                                                     <option value="viewer">Viewer</option>

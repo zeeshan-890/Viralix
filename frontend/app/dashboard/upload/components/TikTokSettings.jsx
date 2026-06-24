@@ -207,7 +207,7 @@ export default function TikTokSettings({ accountId, settings, onSettingsChange, 
             </div>
 
             {/* Privacy Level */}
-            <div className="bg-white rounded-xl p-4 border border-gray-200">
+            <div className="dash-card rounded-xl p-4 border border-[var(--viralix-border)]">
                 <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-3">
                     <Shield className="w-4 h-4 text-gray-500" />
                     Privacy Level *
@@ -238,7 +238,7 @@ export default function TikTokSettings({ accountId, settings, onSettingsChange, 
             </div>
 
             {/* Interaction Settings */}
-            <div className="bg-white rounded-xl p-4 border border-gray-200">
+            <div className="dash-card rounded-xl p-4 border border-[var(--viralix-border)]">
                 <p className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-3">
                     <MessageSquare className="w-4 h-4 text-gray-500" />
                     Interaction Settings
@@ -311,7 +311,7 @@ export default function TikTokSettings({ accountId, settings, onSettingsChange, 
             </div>
 
             {/* Commercial Content Disclosure */}
-            <div className="bg-white rounded-xl p-4 border border-gray-200">
+            <div className="dash-card rounded-xl p-4 border border-[var(--viralix-border)]">
                 <div className="flex items-center justify-between mb-3">
                     <p className="flex items-center gap-2 text-sm font-medium text-gray-700">
                         <Tag className="w-4 h-4 text-gray-500" />

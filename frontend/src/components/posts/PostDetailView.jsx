@@ -23,7 +23,7 @@ import { getPostStatus, STATUS_LABELS } from './postUtils';
 
 function PanelLabel({ children }) {
     return (
-        <p className="text-[0.6875rem] font-semibold uppercase tracking-wider text-[#52796F]">{children}</p>
+        <p className="text-[0.6875rem] font-semibold uppercase tracking-wider text-[var(--viralix-muted)]">{children}</p>
     );
 }
 
@@ -160,7 +160,7 @@ export default function PostDetailView({ contentId }) {
         return (
             <div className="flex flex-col items-center justify-center gap-3 py-24">
                 <Loader2 className="h-8 w-8 animate-spin text-[#84A98C]" />
-                <p className="text-sm text-[#52796F]">Loading post…</p>
+                <p className="text-sm text-[var(--viralix-muted)]">Loading post…</p>
             </div>
         );
     }
@@ -174,7 +174,7 @@ export default function PostDetailView({ contentId }) {
                 <button
                     type="button"
                     onClick={() => router.push('/dashboard/preview')}
-                    className="inline-flex items-center gap-2 rounded-lg border border-[#C8D4CE] px-4 py-2 text-sm text-[#354F52] hover:bg-[#EEF3F0]"
+                    className="inline-flex items-center gap-2 rounded-lg border border-[var(--viralix-border)] px-4 py-2 text-sm text-[var(--viralix-accent)] hover:bg-[var(--viralix-inset)]"
                 >
                     <ArrowLeft className="h-4 w-4" />
                     Back to posts
@@ -184,7 +184,7 @@ export default function PostDetailView({ contentId }) {
     }
 
     return (
-        <div className="overflow-hidden rounded-2xl border border-[#B8C9C0] bg-white shadow-[0_8px_30px_rgba(47,62,70,0.08)]">
+        <div className="dash-card overflow-hidden rounded-2xl border border-[var(--viralix-border)]">
             {/* Hero header */}
             <div className="bg-gradient-to-r from-[#354F52] via-[#2F3E46] to-[#354F52] px-5 py-4 text-white sm:px-6">
                 <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
@@ -192,7 +192,7 @@ export default function PostDetailView({ contentId }) {
                         <button
                             type="button"
                             onClick={() => router.push('/dashboard/preview')}
-                            className="shrink-0 rounded-lg bg-white/10 p-2 text-white hover:bg-white/20"
+                            className="shrink-0 rounded-lg bg-white/10 p-2 text-white hover:bg-[var(--viralix-surface)]/20"
                             aria-label="Back to posts"
                         >
                             <ArrowLeft className="h-4 w-4" />
@@ -228,21 +228,21 @@ export default function PostDetailView({ contentId }) {
             {/* Split layout */}
             <div className="grid lg:grid-cols-[minmax(0,1fr)_400px] xl:grid-cols-[minmax(0,1fr)_440px]">
                 {/* Left — preview & analytics */}
-                <div className="min-w-0 border-b border-[#E8EDEA] lg:border-b-0 lg:border-r">
-                    <div className="flex items-center justify-between border-b border-[#E8EDEA] bg-[#FAFCFB] px-4 py-2.5 sm:px-5">
+                <div className="min-w-0 border-b border-[var(--viralix-border)] lg:border-b-0 lg:border-r">
+                    <div className="flex items-center justify-between border-b border-[var(--viralix-border)] bg-[var(--viralix-bg)] px-4 py-2.5 sm:px-5">
                         <PanelLabel>Platform preview</PanelLabel>
                     </div>
                     <PlatformTabs post={post} embedded />
 
                     {platforms.length > 0 && (
                         <>
-                            <div className="border-t border-[#E8EDEA] bg-[#FAFCFB] px-4 py-2.5 sm:px-5">
+                            <div className="border-t border-[var(--viralix-border)] bg-[var(--viralix-bg)] px-4 py-2.5 sm:px-5">
                                 <PanelLabel>Platform status</PanelLabel>
                             </div>
                             <div className="overflow-x-auto">
                                 <table className="w-full min-w-[480px] border-collapse text-left text-sm">
                                     <thead>
-                                        <tr className="border-b border-[#E8EDEA] text-[0.6875rem] font-semibold uppercase tracking-wider text-[#52796F]">
+                                        <tr className="border-b border-[var(--viralix-border)] text-[0.6875rem] font-semibold uppercase tracking-wider text-[var(--viralix-muted)]">
                                             <th className="px-4 py-2 font-semibold sm:px-5">Platform</th>
                                             <th className="px-4 py-2 font-semibold sm:px-5">Account</th>
                                             <th className="px-4 py-2 text-right font-semibold sm:px-5">Status</th>
@@ -256,10 +256,10 @@ export default function PostDetailView({ contentId }) {
                                             return (
                                                 <tr
                                                     key={idx}
-                                                    className="border-b border-[#E8EDEA] last:border-b-0 hover:bg-[#F4F8F6]"
+                                                    className="border-b border-[var(--viralix-border)] last:border-b-0 hover:bg-[var(--viralix-bg)]"
                                                 >
                                                     <td className="px-4 py-2.5 sm:px-5">
-                                                        <span className="flex items-center gap-2 capitalize text-[#354F52]">
+                                                        <span className="flex items-center gap-2 capitalize text-[var(--viralix-accent)]">
                                                             {cfg && Icon && (
                                                                 <span
                                                                     className="flex h-7 w-7 items-center justify-center rounded-md"
@@ -275,7 +275,7 @@ export default function PostDetailView({ contentId }) {
                                                             {p.name}
                                                         </span>
                                                     </td>
-                                                    <td className="px-4 py-2.5 text-xs text-[#52796F] sm:px-5">
+                                                    <td className="px-4 py-2.5 text-xs text-[var(--viralix-muted)] sm:px-5">
                                                         {p.accountId ? `${p.accountId.slice(0, 16)}…` : '—'}
                                                     </td>
                                                     <td className="px-4 py-2.5 text-right sm:px-5">
@@ -302,7 +302,7 @@ export default function PostDetailView({ contentId }) {
                                 </table>
                             </div>
                             {platforms.some((p) => p.errorMessage) && (
-                                <div className="space-y-2 border-t border-[#E8EDEA] px-4 py-3 sm:px-5">
+                                <div className="space-y-2 border-t border-[var(--viralix-border)] px-4 py-3 sm:px-5">
                                     {platforms
                                         .filter((p) => p.errorMessage)
                                         .map((p, i) => (
@@ -320,13 +320,13 @@ export default function PostDetailView({ contentId }) {
 
                     {publishedPlatforms.length > 0 && (
                         <>
-                            <div className="flex items-center justify-between border-t border-[#E8EDEA] bg-[#FAFCFB] px-4 py-2.5 sm:px-5">
+                            <div className="flex items-center justify-between border-t border-[var(--viralix-border)] bg-[var(--viralix-bg)] px-4 py-2.5 sm:px-5">
                                 <PanelLabel>Performance</PanelLabel>
                                 <button
                                     type="button"
                                     onClick={refreshMetrics}
                                     disabled={refreshing}
-                                    className="inline-flex items-center gap-1 rounded-lg bg-white px-2.5 py-1 text-xs font-medium text-[#52796F] shadow-sm ring-1 ring-[#D5DFD9] hover:text-[#354F52] disabled:opacity-50"
+                                    className="inline-flex items-center gap-1 rounded-lg bg-[var(--viralix-surface)] px-2.5 py-1 text-xs font-medium text-[var(--viralix-muted)] shadow-sm ring-1 ring-[var(--viralix-border)] hover:text-[var(--viralix-accent)] disabled:opacity-50"
                                 >
                                     <RefreshCw className={cn('h-3 w-3', refreshing && 'animate-spin')} />
                                     Refresh
@@ -337,7 +337,7 @@ export default function PostDetailView({ contentId }) {
                                 const cfg = PLATFORM_CONFIG[p.name];
                                 const Icon = cfg?.icon;
                                 return (
-                                    <div key={idx} className="border-t border-[#E8EDEA]">
+                                    <div key={idx} className="border-t border-[var(--viralix-border)]">
                                         <div className="flex items-center gap-2 bg-[#354F52]/5 px-4 py-2 sm:px-5">
                                             {cfg && Icon && (
                                                 <span
@@ -347,14 +347,14 @@ export default function PostDetailView({ contentId }) {
                                                     <Icon className="h-3 w-3" style={{ color: cfg.color }} aria-hidden />
                                                 </span>
                                             )}
-                                            <span className="text-sm font-medium capitalize text-[#354F52]">{p.name}</span>
+                                            <span className="text-sm font-medium capitalize text-[var(--viralix-accent)]">{p.name}</span>
                                             {p.publishedAt && (
-                                                <span className="ml-auto text-[0.6875rem] text-[#52796F]">
+                                                <span className="ml-auto text-[0.6875rem] text-[var(--viralix-muted)]">
                                                     {new Date(p.publishedAt).toLocaleDateString()}
                                                 </span>
                                             )}
                                         </div>
-                                        <div className="grid grid-cols-2 divide-x divide-[#E8EDEA] sm:grid-cols-4">
+                                        <div className="grid grid-cols-2 divide-x divide-[var(--viralix-border)] sm:grid-cols-4">
                                             {[
                                                 { label: 'Views', value: e.views, icon: Eye },
                                                 { label: 'Likes', value: e.likes, icon: Heart },
@@ -362,11 +362,11 @@ export default function PostDetailView({ contentId }) {
                                                 { label: 'Shares', value: e.shares, icon: Share2 },
                                             ].map(({ label, value, icon: MetricIcon }) => (
                                                 <div key={label} className="px-3 py-3 text-center sm:px-4">
-                                                    <div className="flex items-center justify-center gap-1 text-[0.625rem] text-[#52796F]">
+                                                    <div className="flex items-center justify-center gap-1 text-[0.625rem] text-[var(--viralix-muted)]">
                                                         <MetricIcon className="h-3 w-3" aria-hidden />
                                                         {label}
                                                     </div>
-                                                    <p className="mt-0.5 text-base font-semibold tabular-nums text-[#354F52] sm:text-lg">
+                                                    <p className="mt-0.5 text-base font-semibold tabular-nums text-[var(--viralix-accent)] sm:text-lg">
                                                         {formatNumber(value || 0)}
                                                     </p>
                                                 </div>

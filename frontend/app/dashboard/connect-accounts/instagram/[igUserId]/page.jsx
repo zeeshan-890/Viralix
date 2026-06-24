@@ -69,7 +69,7 @@ export default function InstagramDetailPage() {
             {loading ? <div>Loading…</div> : (
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                     <div className="lg:col-span-2 space-y-4">
-                        <div className="bg-white border rounded p-4">
+                        <div className="dash-card border border-[var(--viralix-border)] rounded p-4">
                             <div className="font-medium mb-3">Recent Media</div>
                             {feed?.length ? (
                                 <ul className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -97,7 +97,7 @@ export default function InstagramDetailPage() {
                     </div>
 
                     <div className="space-y-4">
-                        <div className="bg-white border rounded p-4">
+                        <div className="dash-card border border-[var(--viralix-border)] rounded p-4">
                             <div className="font-medium mb-2">Insights</div>
                             {insights?.length ? (
                                 <ul className="space-y-2 text-sm">
@@ -117,7 +117,7 @@ export default function InstagramDetailPage() {
 
             {open && (
                 <div className="fixed inset-0 bg-black/40 flex items-center justify-center p-4 z-50">
-                    <div className="bg-white rounded-lg w-full max-w-lg p-4 space-y-3">
+                    <div className="dash-card rounded-lg w-full max-w-lg p-4 border border-[var(--viralix-border)] space-y-3">
                         <div className="flex items-center justify-between">
                             <div className="font-medium">Create Instagram Post</div>
                             <button onClick={() => setOpen(false)} className="text-gray-500">✕</button>

@@ -34,7 +34,7 @@ const platforms = [
         name: 'Facebook',
         description: 'Posts, Photos, and Videos',
         icon: '/facebook.png',
-        bgColor: 'bg-blue-600',
+        bgColor: 'btn btn-confirm',
         lightBg: 'bg-blue-50'
     }
 ];
@@ -61,7 +61,7 @@ export default function PlatformsPage() {
             </div>
 
             {isLoading ? (
-                <div className="bg-white rounded-xl border border-gray-200 p-12 text-center">
+                <div className="dash-card dash-card-hover rounded-xl border border-[var(--viralix-border)] p-12 text-center">
                     <div className="animate-spin w-12 h-12 border-4 border-gray-200 rounded-full mx-auto mb-4" style={{ borderTopColor: '#84A98C' }}></div>
                     <p className="text-gray-500">Loading platforms...</p>
                 </div>
@@ -76,7 +76,7 @@ export default function PlatformsPage() {
                             <Link
                                 key={platform.id}
                                 href={`/dashboard/platforms/${platform.id}`}
-                                className="group bg-white rounded-2xl border border-gray-200 p-6 shadow-sm hover:shadow-lg transition-all duration-300 hover:border-gray-300"
+                                className="group dash-card rounded-2xl border border-[var(--viralix-border)] p-6 shadow-sm hover:shadow-lg transition-all duration-300 hover:border-gray-300"
                             >
                                 <div className="flex items-start gap-5">
                                     <div className={`w-16 h-16 ${platform.lightBg} rounded-2xl flex items-center justify-center shadow-sm group-hover:scale-110 transition-transform duration-300 border border-gray-100`}>
@@ -132,7 +132,7 @@ export default function PlatformsPage() {
             )}
 
             {/* Quick Actions */}
-            <div className="mt-8 bg-white rounded-2xl border border-gray-200 p-6 shadow-sm">
+            <div className="mt-8 dash-card rounded-2xl border border-[var(--viralix-border)] p-6 shadow-sm">
                 <h2 className="text-lg font-semibold mb-4" style={{ color: '#354F52' }}>Quick Actions</h2>
                 <div className="flex flex-wrap gap-3">
                     <Link

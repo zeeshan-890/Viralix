@@ -33,7 +33,7 @@ export const platformConfig = {
         name: 'Facebook',
         icon: '/facebook.png',
         color: '#1877F2',
-        bgColor: 'bg-blue-600',
+        bgColor: 'btn btn-confirm',
         lightBg: 'bg-blue-50',
         textColor: 'text-blue-600'
     }
@@ -69,7 +69,7 @@ export default function PlatformPageLayout({
                     </Link>
                     <h1 className="text-3xl font-bold" style={{ color: '#354F52' }}>{config.name}</h1>
                 </div>
-                <div className="bg-white rounded-xl border border-gray-200 p-12 text-center">
+                <div className="dash-card dash-card-hover rounded-xl border border-[var(--viralix-border)] p-12 text-center">
                     <div className="animate-spin w-12 h-12 border-4 border-gray-200 rounded-full mx-auto mb-4" style={{ borderTopColor: '#84A98C' }}></div>
                     <p className="text-gray-500">Loading {config.name} data...</p>
                 </div>
@@ -101,7 +101,7 @@ export default function PlatformPageLayout({
                         <button
                             onClick={onRefresh}
                             disabled={refreshing}
-                            className={`px-5 py-2.5 rounded-xl border border-gray-200 bg-white hover:bg-gray-50 transition-all flex items-center gap-2 shadow-sm ${refreshing ? 'opacity-50' : ''}`}
+                            className={`px-5 py-2.5 dash-card rounded-xl border border-[var(--viralix-border)] hover:bg-gray-50 transition-all flex items-center gap-2 shadow-sm ${refreshing ? 'opacity-50' : ''}`}
                         >
                             <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} style={{ color: '#52796F' }} />
                             {refreshing ? 'Refreshing...' : 'Refresh'}
@@ -112,7 +112,7 @@ export default function PlatformPageLayout({
 
             {!hasAccounts ? (
                 /* No Accounts Connected State */
-                <div className="bg-white rounded-xl border border-gray-200 p-12 text-center shadow-sm">
+                <div className="dash-card dash-card-hover rounded-xl border border-[var(--viralix-border)] p-12 text-center shadow-sm">
                     <div className={`w-20 h-20 ${config.lightBg} rounded-2xl flex items-center justify-center mx-auto mb-6`}>
                         <Image src={config.icon} alt={config.name} width={40} height={40} />
                     </div>
@@ -134,7 +134,7 @@ export default function PlatformPageLayout({
                     {/* Connected Accounts */}
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
                         {accounts.map((account) => (
-                            <div key={account.platformAccountId || account._id} className="bg-white rounded-xl border border-gray-200 p-5 shadow-sm hover:shadow-md transition-all">
+                            <div key={account.platformAccountId || account._id} className="dash-card dash-card-hover rounded-xl border border-[var(--viralix-border)] p-5 shadow-sm hover:shadow-md transition-all">
                                 <div className="flex items-center gap-4">
                                     <div className="relative">
                                         {account.avatarUrl ? (
@@ -173,7 +173,7 @@ export default function PlatformPageLayout({
 
                     {/* Stats Cards */}
                     <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-                        <div className="bg-white rounded-xl border border-gray-200 p-5 shadow-sm">
+                        <div className="dash-card dash-card-hover rounded-xl border border-[var(--viralix-border)] p-5 shadow-sm">
                             <div className="flex items-center justify-between mb-2">
                                 <span className="text-sm font-medium text-gray-600">Total Views</span>
                                 <span className="text-xl">👁️</span>
@@ -182,7 +182,7 @@ export default function PlatformPageLayout({
                                 {formatNumber(metrics.totalViews || 0)}
                             </p>
                         </div>
-                        <div className="bg-white rounded-xl border border-gray-200 p-5 shadow-sm">
+                        <div className="dash-card dash-card-hover rounded-xl border border-[var(--viralix-border)] p-5 shadow-sm">
                             <div className="flex items-center justify-between mb-2">
                                 <span className="text-sm font-medium text-gray-600">Total Likes</span>
                                 <span className="text-xl">❤️</span>
@@ -191,7 +191,7 @@ export default function PlatformPageLayout({
                                 {formatNumber(metrics.totalLikes || 0)}
                             </p>
                         </div>
-                        <div className="bg-white rounded-xl border border-gray-200 p-5 shadow-sm">
+                        <div className="dash-card dash-card-hover rounded-xl border border-[var(--viralix-border)] p-5 shadow-sm">
                             <div className="flex items-center justify-between mb-2">
                                 <span className="text-sm font-medium text-gray-600">Comments</span>
                                 <span className="text-xl">💬</span>
@@ -200,7 +200,7 @@ export default function PlatformPageLayout({
                                 {formatNumber(metrics.totalComments || 0)}
                             </p>
                         </div>
-                        <div className="bg-white rounded-xl border border-gray-200 p-5 shadow-sm">
+                        <div className="dash-card dash-card-hover rounded-xl border border-[var(--viralix-border)] p-5 shadow-sm">
                             <div className="flex items-center justify-between mb-2">
                                 <span className="text-sm font-medium text-gray-600">Posts</span>
                                 <span className="text-xl">📝</span>
@@ -216,7 +216,7 @@ export default function PlatformPageLayout({
 
                     {/* Content Grid */}
                     {content.length > 0 && (
-                        <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
+                        <div className="dash-card dash-card-hover rounded-xl border border-[var(--viralix-border)] p-6 shadow-sm">
                             <h2 className="text-xl font-semibold mb-6" style={{ color: '#354F52' }}>Recent Content</h2>
                             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                                 {content.map((item, index) => {
@@ -280,7 +280,7 @@ export default function PlatformPageLayout({
 
                     {/* Empty Content State */}
                     {content.length === 0 && (
-                        <div className="bg-white rounded-xl border border-gray-200 p-12 text-center shadow-sm">
+                        <div className="dash-card dash-card-hover rounded-xl border border-[var(--viralix-border)] p-12 text-center shadow-sm">
                             <div className={`w-16 h-16 ${config.lightBg} rounded-2xl flex items-center justify-center mx-auto mb-4 border border-gray-100`}>
                                 <Image src={config.icon} alt={config.name} width={32} height={32} className="object-contain" />
                             </div>

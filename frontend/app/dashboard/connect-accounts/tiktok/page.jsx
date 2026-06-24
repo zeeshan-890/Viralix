@@ -124,7 +124,7 @@ export default function TikTokManagePage() {
                     Back to Connect Accounts
                 </Link>
                 <div className="flex items-center gap-4">
-                    <div className="w-14 h-14 rounded-xl flex items-center justify-center bg-white border border-gray-100 shadow-sm">
+                    <div className="w-14 h-14 rounded-xl flex items-center justify-center bg-[var(--viralix-surface)] border border-[var(--viralix-border)] shadow-sm">
                         <Image src="/tiktok.png" alt="TikTok" width={28} height={28} className="w-7 h-7 object-contain" />
                     </div>
                     <div>
@@ -150,13 +150,13 @@ export default function TikTokManagePage() {
             )}
 
             {loading ? (
-                <div className="bg-white rounded-xl border border-gray-200 p-12 text-center">
+                <div className="dash-card dash-card-hover rounded-xl border border-[var(--viralix-border)] p-12 text-center">
                     <Loader2 className="w-12 h-12 mx-auto mb-4 animate-spin" style={{ color: '#84A98C' }} />
                     <p className="text-gray-600">Loading TikTok accounts...</p>
                 </div>
             ) : !status.connected || status.accounts?.length === 0 ? (
-                <div className="bg-white rounded-xl border border-gray-200 p-12 text-center">
-                    <div className="w-20 h-20 rounded-full bg-white border border-gray-100 flex items-center justify-center mx-auto mb-4 shadow-sm">
+                <div className="dash-card dash-card-hover rounded-xl border border-[var(--viralix-border)] p-12 text-center">
+                    <div className="w-20 h-20 rounded-full bg-[var(--viralix-surface)] border border-[var(--viralix-border)] flex items-center justify-center mx-auto mb-4 shadow-sm">
                         <Image src="/tiktok.png" alt="TikTok" width={40} height={40} className="w-10 h-10 object-contain" />
                     </div>
                     <h2 className="text-xl font-semibold mb-2" style={{ color: '#354F52' }}>No TikTok Accounts Connected</h2>
@@ -174,7 +174,7 @@ export default function TikTokManagePage() {
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                     {/* Account List */}
                     <div className="lg:col-span-1">
-                        <div className="bg-white rounded-xl border border-gray-200 p-4">
+                        <div className="dash-card dash-card-hover rounded-xl border border-[var(--viralix-border)] p-4">
                             <h3 className="font-semibold text-gray-900 mb-4">Connected Accounts</h3>
                             <div className="space-y-2">
                                 {status.accounts.map(account => (
@@ -187,7 +187,7 @@ export default function TikTokManagePage() {
                                             }`}
                                     >
                                         <div className="flex items-center gap-3">
-                                            <div className="w-10 h-10 rounded-full bg-white border border-gray-100 flex items-center justify-center shadow-sm">
+                                            <div className="w-10 h-10 rounded-full bg-[var(--viralix-surface)] border border-[var(--viralix-border)] flex items-center justify-center shadow-sm">
                                                 <Image src="/tiktok.png" alt="TikTok" width={20} height={20} className="w-5 h-5 object-contain" />
                                             </div>
                                             <div className="flex-1 min-w-0">
@@ -221,10 +221,10 @@ export default function TikTokManagePage() {
                         {selectedAccount ? (
                             <div className="space-y-6">
                                 {/* Profile Card */}
-                                <div className="bg-white rounded-xl border border-gray-200 p-6">
+                                <div className="dash-card dash-card-hover rounded-xl border border-[var(--viralix-border)] p-6">
                                     <div className="flex items-start justify-between mb-6">
                                         <div className="flex items-center gap-4">
-                                            <div className="w-16 h-16 rounded-full bg-white border border-gray-100 flex items-center justify-center shadow-sm">
+                                            <div className="w-16 h-16 rounded-full bg-[var(--viralix-surface)] border border-[var(--viralix-border)] flex items-center justify-center shadow-sm">
                                                 {accountDetails?.profile?.avatarUrl ? (
                                                     <img
                                                         src={accountDetails.profile.avatarUrl}
@@ -306,7 +306,7 @@ export default function TikTokManagePage() {
                                 </div>
 
                                 {/* Recent Videos */}
-                                <div className="bg-white rounded-xl border border-gray-200 p-6">
+                                <div className="dash-card dash-card-hover rounded-xl border border-[var(--viralix-border)] p-6">
                                     <h3 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
                                         <Video className="w-5 h-5" />
                                         Recent Videos
@@ -368,8 +368,8 @@ export default function TikTokManagePage() {
                                 </div>
                             </div>
                         ) : (
-                            <div className="bg-white rounded-xl border border-gray-200 p-12 text-center">
-                                <div className="w-12 h-12 mx-auto mb-4 bg-white border border-gray-100 rounded-full flex items-center justify-center shadow-sm">
+                            <div className="dash-card dash-card-hover rounded-xl border border-[var(--viralix-border)] p-12 text-center">
+                                <div className="w-12 h-12 mx-auto mb-4 bg-[var(--viralix-surface)] border border-[var(--viralix-border)] rounded-full flex items-center justify-center shadow-sm">
                                     <Image src="/tiktok.png" alt="Select" width={24} height={24} className="w-6 h-6 object-contain" />
                                 </div>
                                 <p className="text-gray-600">Select an account to view details</p>

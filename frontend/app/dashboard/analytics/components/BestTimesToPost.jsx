@@ -50,7 +50,7 @@ export default function BestTimesToPost() {
     };
 
     return (
-        <div className="bg-white rounded-lg border border-gray-200 p-6">
+        <div className="dash-card rounded-lg border border-[var(--viralix-border)] p-6">
             <div className="flex items-center justify-between mb-6">
                 <div>
                     <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
@@ -64,7 +64,7 @@ export default function BestTimesToPost() {
                     <select
                         value={platform}
                         onChange={(e) => setPlatform(e.target.value)}
-                        className="text-sm border rounded-lg px-3 py-1.5 bg-white"
+                        className="text-sm border border-[var(--viralix-border)] rounded-lg px-3 py-1.5 bg-[var(--viralix-surface)]"
                     >
                         <option value="">All Platforms</option>
                         <option value="instagram">Instagram</option>
@@ -75,7 +75,7 @@ export default function BestTimesToPost() {
                     <select
                         value={days}
                         onChange={(e) => setDays(Number(e.target.value))}
-                        className="text-sm border rounded-lg px-3 py-1.5 bg-white"
+                        className="text-sm border border-[var(--viralix-border)] rounded-lg px-3 py-1.5 bg-[var(--viralix-surface)]"
                     >
                         <option value={30}>30 days</option>
                         <option value={60}>60 days</option>

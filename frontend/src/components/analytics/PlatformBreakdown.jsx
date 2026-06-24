@@ -4,7 +4,7 @@ import { formatNumber } from '@/lib/utils';
 import { PLATFORM_CONFIG } from '@/components/dashboard/constants';
 
 function PanelLabel({ children }) {
-    return <p className="text-[0.6875rem] font-semibold uppercase tracking-wider text-[#52796F]">{children}</p>;
+    return <p className="text-[0.6875rem] font-semibold uppercase tracking-wider text-[var(--viralix-muted)]">{children}</p>;
 }
 
 export default function PlatformBreakdown({ analytics }) {
@@ -18,23 +18,23 @@ export default function PlatformBreakdown({ analytics }) {
 
     if (!platforms.length) {
         return (
-            <div className="rounded-xl border border-[#B8C9C0] bg-white p-6 text-center text-sm text-[#52796F] shadow-sm">
+            <div className="dash-card rounded-xl border border-[var(--viralix-border)] p-6 text-center text-sm text-[var(--viralix-muted)] shadow-sm">
                 Connect platforms to see breakdown
             </div>
         );
     }
 
     return (
-        <div className="overflow-hidden rounded-xl border border-[#B8C9C0] bg-white shadow-sm">
-            <div className="border-b border-[#E8EDEA] bg-[#FAFCFB] px-4 py-2.5 sm:px-5">
+        <div className="dash-card overflow-hidden rounded-xl border border-[var(--viralix-border)]">
+            <div className="border-b border-[var(--viralix-border)] bg-[var(--viralix-bg)] px-4 py-2.5 sm:px-5">
                 <PanelLabel>By platform</PanelLabel>
             </div>
-            <ul className="divide-y divide-[#E8EDEA]">
+            <ul className="divide-y divide-[var(--viralix-border)]">
                 {platforms.map(({ name, data, eng, rate }) => {
                     const cfg = PLATFORM_CONFIG[name];
                     const Icon = cfg?.icon;
                     return (
-                        <li key={name} className="px-4 py-3 transition-colors hover:bg-[#F4F8F6] sm:px-5">
+                        <li key={name} className="px-4 py-3 transition-colors hover:bg-[var(--viralix-bg)] sm:px-5">
                             <div className="flex items-center gap-3">
                                 {cfg && Icon && (
                                     <span
@@ -45,13 +45,13 @@ export default function PlatformBreakdown({ analytics }) {
                                     </span>
                                 )}
                                 <div className="min-w-0 flex-1">
-                                    <p className="text-sm font-semibold capitalize text-[#354F52]">{name}</p>
-                                    <p className="text-xs text-[#52796F]">
+                                    <p className="text-sm font-semibold capitalize text-[var(--viralix-accent)]">{name}</p>
+                                    <p className="text-xs text-[var(--viralix-muted)]">
                                         {data.published || 0} live · {data.scheduled || 0} scheduled
                                     </p>
                                 </div>
                                 <div className="text-right">
-                                    <p className="text-sm font-semibold tabular-nums text-[#354F52]">{rate}%</p>
+                                    <p className="text-sm font-semibold tabular-nums text-[var(--viralix-accent)]">{rate}%</p>
                                     <p className="text-[0.625rem] text-[#94A3B8]">eng. rate</p>
                                 </div>
                             </div>
@@ -61,8 +61,8 @@ export default function PlatformBreakdown({ analytics }) {
                                     { label: 'Likes', value: eng.likes },
                                     { label: 'Comments', value: eng.comments },
                                 ].map(({ label, value }) => (
-                                    <div key={label} className="rounded-lg bg-[#F4F8F6] px-2 py-1.5">
-                                        <p className="text-xs font-semibold tabular-nums text-[#354F52]">{formatNumber(value || 0)}</p>
+                                    <div key={label} className="rounded-lg bg-[var(--viralix-inset)] px-2 py-1.5">
+                                        <p className="text-xs font-semibold tabular-nums text-[var(--viralix-accent)]">{formatNumber(value || 0)}</p>
                                         <p className="text-[0.5625rem] uppercase text-[#94A3B8]">{label}</p>
                                     </div>
                                 ))}

@@ -105,7 +105,7 @@ export default function YouTubePage() {
 
                 {/* YouTube-specific subscriber stats */}
                 {ytAccounts.length > 0 && (
-                    <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm mb-8">
+                    <div className="dash-card dash-card-hover rounded-xl border border-[var(--viralix-border)] p-6 shadow-sm mb-8">
                         <h2 className="text-lg font-semibold mb-4" style={{ color: '#354F52' }}>Channel Overview</h2>
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                             <div className="text-center p-4 bg-red-50 rounded-xl">

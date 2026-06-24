@@ -236,7 +236,7 @@ export default function CalendarView({ onStatsChange = () => { } }) {
 
     const gridDays = getVisibleGridDays();
 
-    return (<div className="bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden"
+    return (<div className="dash-card rounded-2xl shadow-2xl border border-[var(--viralix-border)] overflow-hidden"
         style={{ fontFamily: 'Inter, Poppins, sans-serif' }}>
         {/* Calendar Header */}
         <div className="px-6 py-5 border-b border-gray-100"
@@ -256,7 +256,7 @@ export default function CalendarView({ onStatsChange = () => { } }) {
                 <div className="flex items-center gap-2">
                     <button
                         onClick={() => navigateMonth('prev')}
-                        className="p-2.5 rounded-xl bg-white/20 hover:bg-white/30 backdrop-blur-sm transition-all border border-white/20 shadow-lg hover:scale-110">
+                        className="p-2.5 rounded-xl bg-white/20 hover:bg-[var(--viralix-surface)]/30 backdrop-blur-sm transition-all border border-white/20 shadow-lg hover:scale-110">
                         <ChevronLeft className="w-5 h-5 text-white" />
                     </button>
                     <button
@@ -266,7 +266,7 @@ export default function CalendarView({ onStatsChange = () => { } }) {
                     </button>
                     <button
                         onClick={() => navigateMonth('next')}
-                        className="p-2.5 rounded-xl bg-white/20 hover:bg-white/30 backdrop-blur-sm transition-all border border-white/20 shadow-lg hover:scale-110">
+                        className="p-2.5 rounded-xl bg-white/20 hover:bg-[var(--viralix-surface)]/30 backdrop-blur-sm transition-all border border-white/20 shadow-lg hover:scale-110">
                         <ChevronRight className="w-5 h-5 text-white" />
                     </button>
                 </div>
@@ -276,7 +276,7 @@ export default function CalendarView({ onStatsChange = () => { } }) {
             <div className="flex gap-2 bg-white/20 backdrop-blur-sm rounded-xl p-1.5 shadow-lg border border-white/20">
                 {['month', 'week', 'day'].map((mode) => (<button key={mode} onClick={() => setViewMode(mode)} className={`flex-1 px-4 py-2.5 rounded-lg text-sm font-bold transition-all ${viewMode === mode
                     ? 'bg-white text-gray-900 shadow-lg scale-105'
-                    : 'text-white hover:bg-white/10'}`}>
+                    : 'text-white hover:bg-[var(--viralix-surface)]/10'}`}>
                     {mode.charAt(0).toUpperCase() + mode.slice(1)}
                 </button>))}
             </div>
@@ -307,7 +307,7 @@ export default function CalendarView({ onStatsChange = () => { } }) {
                         // Day View Render
                         const dayPosts = postsByDay.get(dateKey) || [];
                         return (
-                            <div key={dateKey} className="min-h-[500px] bg-white rounded-2xl p-4 sm:p-6 border-2 border-gray-100 shadow-sm">
+                            <div key={dateKey} className="min-h-[500px] dash-card rounded-2xl p-4 sm:p-6 border-2 border-[var(--viralix-border)]">
                                 <div className="flex items-center justify-between mb-6">
                                     <h3 className="text-xl font-bold text-gray-900">{day.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}</h3>
                                     <span className="px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm font-medium">

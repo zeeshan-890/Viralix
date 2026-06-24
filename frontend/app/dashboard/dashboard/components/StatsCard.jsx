@@ -27,7 +27,7 @@ export default function StatsCard({ title, value, change, icon, color }) {
     const colorStyle = colorClasses[color] || colorClasses.blue;
 
     return (
-        <div className="bg-white rounded-xl border border-gray-200 p-6 hover:shadow-lg transition-all duration-300">
+        <div className="dash-card dash-card-hover rounded-xl border border-[var(--viralix-border)] p-6 hover:shadow-lg transition-all duration-300">
             <div className="flex items-start justify-between">
                 <div className="flex-1">
                     <p className="text-sm font-medium text-gray-600 mb-1">{title}</p>
@@ -49,7 +49,7 @@ export default function StatsCard({ title, value, change, icon, color }) {
                 </div>
                 <div
                     className={`p-3 rounded-xl ${colorStyle.bg}`}
-                    style={{ backgroundColor: color === 'green' ? '#CAD2C5' : undefined }}
+                    style={{ backgroundColor: color === 'green' ? 'var(--viralix-primary)' : undefined }}
                 >
                     <span className="text-2xl">{icon}</span>
                 </div>

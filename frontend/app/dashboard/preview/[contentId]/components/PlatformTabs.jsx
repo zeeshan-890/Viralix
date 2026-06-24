@@ -10,7 +10,7 @@ export default function PlatformTabs({ post, embedded = false }) {
     );
 
     const platforms = [
-        { id: 'facebook', name: 'Facebook', icon: <PlatformIcon src="/facebook.png" alt="FB" />, color: 'bg-blue-600' },
+        { id: 'facebook', name: 'Facebook', icon: <PlatformIcon src="/facebook.png" alt="FB" />, color: 'btn btn-confirm' },
         { id: 'instagram', name: 'Instagram', icon: <PlatformIcon src="/instagram.png" alt="IG" />, color: 'bg-gradient-to-r from-purple-500 to-pink-500' },
         { id: 'twitter', name: 'Twitter', icon: '🐦', color: 'bg-blue-400' },
         { id: 'linkedin', name: 'LinkedIn', icon: '💼', color: 'bg-blue-700' },
@@ -71,10 +71,10 @@ export default function PlatformTabs({ post, embedded = false }) {
         switch (currentTab) {
             case 'facebook':
                 return (
-                    <div className="bg-white rounded-lg border border-gray-200 max-w-lg mx-auto shadow-sm">
+                    <div className="dash-card rounded-lg border border-[var(--viralix-border)] max-w-lg mx-auto shadow-sm">
                         {/* Facebook Header */}
                         <div className="flex items-center p-4 border-b border-gray-200">
-                            <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center text-white font-bold">
+                            <div className="w-10 h-10 btn btn-confirm rounded-full flex items-center justify-center text-white font-bold">
                                 AU
                             </div>
                             <div className="ml-3">
@@ -115,7 +115,7 @@ export default function PlatformTabs({ post, embedded = false }) {
 
             case 'instagram':
                 return (
-                    <div className="bg-white rounded-lg border border-gray-200 max-w-md mx-auto shadow-sm">
+                    <div className="dash-card rounded-lg border border-[var(--viralix-border)] max-w-md mx-auto shadow-sm">
                         {/* Instagram Header */}
                         <div className="flex items-center p-3 border-b border-gray-200">
                             <div className="w-8 h-8 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full"></div>
@@ -174,7 +174,7 @@ export default function PlatformTabs({ post, embedded = false }) {
 
             case 'twitter':
                 return (
-                    <div className="bg-white rounded-lg border border-gray-200 max-w-lg mx-auto shadow-sm">
+                    <div className="dash-card rounded-lg border border-[var(--viralix-border)] max-w-lg mx-auto shadow-sm">
                         {/* Twitter Header */}
                         <div className="flex items-start p-4">
                             <div className="w-12 h-12 bg-blue-400 rounded-full flex items-center justify-center text-white font-bold mr-3">
@@ -228,7 +228,7 @@ export default function PlatformTabs({ post, embedded = false }) {
 
             case 'linkedin':
                 return (
-                    <div className="bg-white rounded-lg border border-gray-200 max-w-lg mx-auto shadow-sm">
+                    <div className="dash-card rounded-lg border border-[var(--viralix-border)] max-w-lg mx-auto shadow-sm">
                         {/* LinkedIn Header */}
                         <div className="flex items-center p-4 border-b border-gray-200">
                             <div className="w-10 h-10 bg-blue-700 rounded-full flex items-center justify-center text-white font-bold">
@@ -357,7 +357,7 @@ export default function PlatformTabs({ post, embedded = false }) {
 
     if (!post) {
         return (
-            <div className={embedded ? 'p-6 text-center' : 'rounded-lg border border-gray-200 bg-white p-6'}>
+            <div className={embedded ? 'p-6 text-center' : 'dash-card rounded-lg border border-[var(--viralix-border)] p-6'}>
                 {!embedded && <h3 className="mb-4 text-lg font-semibold">Platform Preview</h3>}
                 <p className="text-sm text-gray-500">No post data available</p>
             </div>
@@ -366,7 +366,7 @@ export default function PlatformTabs({ post, embedded = false }) {
 
     const content = (
         <>
-            <div className="mb-4 flex gap-1 overflow-x-auto rounded-lg border border-[#D5DFD9] bg-[#EEF3F0] p-1">
+            <div className="mb-4 flex gap-1 overflow-x-auto rounded-lg border border-[var(--viralix-border)] bg-[var(--viralix-inset)] p-1">
                 {displayPlatforms.map((platform) => (
                     <button
                         key={platform.id}
@@ -374,8 +374,8 @@ export default function PlatformTabs({ post, embedded = false }) {
                         onClick={() => setActiveTab(platform.id)}
                         className={`flex shrink-0 items-center gap-2 whitespace-nowrap rounded-md px-3 py-2 text-xs font-medium transition-colors ${
                             currentTab === platform.id
-                                ? 'bg-white text-[#354F52] shadow-sm'
-                                : 'text-[#52796F] hover:text-[#354F52]'
+                                ? 'bg-[var(--viralix-surface)] text-[var(--viralix-accent)] shadow-sm'
+                                : 'text-[var(--viralix-muted)] hover:text-[var(--viralix-accent)]'
                         }`}
                     >
                         <span>{platform.icon}</span>
@@ -385,7 +385,7 @@ export default function PlatformTabs({ post, embedded = false }) {
             </div>
 
             {availablePlatforms.length > 0 && availablePlatforms.length < platforms.length && (
-                <div className="mb-4 rounded-lg border border-[#C8D4CE] bg-[#FAFCFB] px-3 py-2 text-xs text-[#52796F]">
+                <div className="mb-4 rounded-lg border border-[var(--viralix-border)] bg-[var(--viralix-bg)] px-3 py-2 text-xs text-[var(--viralix-muted)]">
                     Configured for: {availablePlatforms.map((p) => p.name).join(', ')}
                 </div>
             )}
@@ -399,7 +399,7 @@ export default function PlatformTabs({ post, embedded = false }) {
     }
 
     return (
-        <div className="rounded-lg border border-gray-200 bg-white p-6">
+        <div className="dash-card rounded-lg border border-[var(--viralix-border)] p-6">
             <h3 className="mb-4 text-lg font-semibold">Platform Preview</h3>
             {content}
         </div>

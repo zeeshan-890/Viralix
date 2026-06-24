@@ -103,7 +103,7 @@ export default function YouTubePostDetailPage() {
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 {/* Main Content - Video Embed */}
                 <div className="lg:col-span-1 space-y-6">
-                    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                    <div className="dash-card rounded-2xl border border-[var(--viralix-border)] overflow-hidden">
                         <div className="p-4 border-b border-gray-50 flex items-center justify-between bg-gray-50/50">
                             <h2 className="font-semibold text-gray-900">Video Preview</h2>
                             <Youtube className="w-5 h-5 text-red-600" />
@@ -139,7 +139,7 @@ export default function YouTubePostDetailPage() {
                     </div>
 
                     {/* Post Information */}
-                    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+                    <div className="dash-card rounded-2xl border border-[var(--viralix-border)] p-6">
                         <h3 className="font-semibold text-gray-900 mb-4">Video Details</h3>
                         <div className="space-y-3 text-sm">
                             <div className="flex justify-between py-2 border-b border-gray-50">
@@ -158,7 +158,7 @@ export default function YouTubePostDetailPage() {
                 <div className="lg:col-span-2 space-y-6">
                     {/* Top Stats Cards */}
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                        <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm">
+                        <div className="dash-card p-5 rounded-2xl border border-[var(--viralix-border)]">
                             <div className="flex items-center gap-3 mb-2">
                                 <div className="p-2 bg-red-50 rounded-lg text-red-600">
                                     <Eye className="w-5 h-5" />
@@ -168,7 +168,7 @@ export default function YouTubePostDetailPage() {
                             <div className="text-2xl font-bold text-gray-900">{formatNumber(metrics.views)}</div>
                         </div>
 
-                        <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm">
+                        <div className="dash-card p-5 rounded-2xl border border-[var(--viralix-border)]">
                             <div className="flex items-center gap-3 mb-2">
                                 <div className="p-2 bg-pink-50 rounded-lg text-pink-600">
                                     <Heart className="w-5 h-5" />
@@ -178,7 +178,7 @@ export default function YouTubePostDetailPage() {
                             <div className="text-2xl font-bold text-gray-900">{formatNumber(metrics.likes)}</div>
                         </div>
 
-                        <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm">
+                        <div className="dash-card p-5 rounded-2xl border border-[var(--viralix-border)]">
                             <div className="flex items-center gap-3 mb-2">
                                 <div className="p-2 bg-blue-50 rounded-lg text-blue-600">
                                     <MessageCircle className="w-5 h-5" />
@@ -190,7 +190,7 @@ export default function YouTubePostDetailPage() {
                     </div>
 
                     {/* Engagement Overview */}
-                    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+                    <div className="dash-card rounded-2xl border border-[var(--viralix-border)] shadow-sm p-6">
                         <div className="flex items-center justify-between mb-6">
                             <h3 className="text-lg font-semibold text-gray-900">Engagement Overview</h3>
                             <div className="p-2 bg-purple-50 rounded-lg text-purple-600">

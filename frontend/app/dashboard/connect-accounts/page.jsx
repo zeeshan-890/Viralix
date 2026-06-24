@@ -1,6 +1,7 @@
 "use client";
 import { useCallback, useEffect, useState } from "react";
 import { facebookAPI, tiktokAPI, youtubeAPI } from "@/lib/api";
+import notify from "@/lib/notify";
 import Link from "next/link";
 import { CheckCircle2, ExternalLink, Loader2, AlertCircle, HelpCircle, BookOpen } from "lucide-react";
 import { useAccounts } from "@/hooks/useAccounts";
@@ -11,7 +12,6 @@ export default function ConnectAccountsPage() {
     const [connecting, setConnecting] = useState(false);
     const [connectingTikTok, setConnectingTikTok] = useState(false);
     const [connectingYouTube, setConnectingYouTube] = useState(false);
-    const [message, setMessage] = useState({ type: '', text: '' });
 
     // Derive statuses from unified accounts list
     // All platforms now come from the unified useAccounts() hook
@@ -50,13 +50,11 @@ export default function ConnectAccountsPage() {
             if (success === 'tiktok_connected') text = 'TikTok account connected successfully!';
             if (success === 'youtube_connected') text = 'YouTube channel connected successfully!';
 
-            setMessage({ type: 'success', text });
+            notify.success(text);
             window.history.replaceState({}, '', window.location.pathname);
-            setTimeout(() => setMessage({ type: '', text: '' }), 5000);
         } else if (error) {
-            setMessage({ type: 'error', text: decodeURIComponent(error) });
+            notify.error(decodeURIComponent(error));
             window.history.replaceState({}, '', window.location.pathname);
-            setTimeout(() => setMessage({ type: '', text: '' }), 7000);
         }
     }, []);
 
@@ -64,10 +62,9 @@ export default function ConnectAccountsPage() {
         if (!confirm(`Are you sure you want to disconnect this ${platform} account?`)) return;
         try {
             await disconnect({ platform, accountId });
-            setMessage({ type: 'success', text: `${platform} account disconnected.` });
-            setTimeout(() => setMessage({ type: '', text: '' }), 3000);
+            notify.success(`${platform} account disconnected.`);
         } catch (e) {
-            setMessage({ type: 'error', text: `Failed to disconnect.` });
+            notify.error('Failed to disconnect.');
         }
     };
 
@@ -101,7 +98,7 @@ export default function ConnectAccountsPage() {
             const { data } = await tiktokAPI.connect();
             if (data?.authUrl) window.location.href = data.authUrl;
         } catch (e) {
-            setMessage({ type: 'error', text: 'Failed to connect TikTok.' });
+            notify.error('Failed to connect TikTok.');
             setConnectingTikTok(false);
         }
     };
@@ -112,7 +109,7 @@ export default function ConnectAccountsPage() {
             const { data } = await youtubeAPI.connect();
             if (data?.authUrl) window.location.href = data.authUrl;
         } catch (e) {
-            setMessage({ type: 'error', text: 'Failed to connect YouTube.' });
+            notify.error('Failed to connect YouTube.');
             setConnectingYouTube(false);
         }
     };
@@ -147,24 +144,18 @@ export default function ConnectAccountsPage() {
                 </div>
             </div>
 
-            {message.text && (
-                <div className={`mb-6 p-4 rounded-xl flex items-start gap-3 ${message.type === 'success' ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'}`}>
-                    <span className={message.type === 'success' ? 'text-green-800' : 'text-red-800'}>{message.text}</span>
-                </div>
-            )}
-
             {isLoading ? (
-                <div className="bg-white rounded-xl border border-gray-200 p-12 text-center">
+                <div className="dash-card dash-card-hover rounded-xl border border-[var(--viralix-border)] p-12 text-center">
                     <Loader2 className="w-12 h-12 mx-auto mb-4 animate-spin" style={{ color: '#84A98C' }} />
                     <p className="text-gray-600">Loading accounts...</p>
                 </div>
             ) : (
                 <div className="space-y-6">
                     {/* Facebook */}
-                    <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
+                    <div className="dash-card dash-card-hover rounded-xl border border-[var(--viralix-border)] p-6 shadow-sm">
                         <div className="flex items-center justify-between">
                             <div className="flex items-center gap-4">
-                                <div className="w-14 h-14 rounded-xl flex items-center justify-center bg-white border border-gray-100 shadow-sm">
+                                <div className="w-14 h-14 rounded-xl flex items-center justify-center bg-[var(--viralix-surface)] border border-[var(--viralix-border)] shadow-sm">
                                     <Image src="/facebook.png" alt="Facebook" width={32} height={32} className="w-8 h-8 object-contain" />
                                 </div>
                                 <div>
@@ -191,10 +182,10 @@ export default function ConnectAccountsPage() {
                     </div>
 
                     {/* Instagram */}
-                    <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
+                    <div className="dash-card dash-card-hover rounded-xl border border-[var(--viralix-border)] p-6 shadow-sm">
                         <div className="flex items-center justify-between">
                             <div className="flex items-center gap-4">
-                                <div className="w-14 h-14 rounded-xl flex items-center justify-center bg-white border border-gray-100 shadow-sm">
+                                <div className="w-14 h-14 rounded-xl flex items-center justify-center bg-[var(--viralix-surface)] border border-[var(--viralix-border)] shadow-sm">
                                     <Image src="/instagram.png" alt="Instagram" width={32} height={32} className="w-8 h-8 object-contain" />
                                 </div>
                                 <div>
@@ -211,7 +202,7 @@ export default function ConnectAccountsPage() {
                                 {igAccounts.map(acc => (
                                     <div key={acc.platformAccountId || acc._id} className="flex items-center justify-between p-3 border rounded-lg">
                                         <div className="flex items-center gap-3">
-                                            <div className="w-10 h-10 rounded-full bg-white border border-gray-100 flex items-center justify-center">
+                                            <div className="w-10 h-10 rounded-full bg-[var(--viralix-surface)] border border-[var(--viralix-border)] flex items-center justify-center">
                                                 <Image src="/instagram.png" alt="IG" width={20} height={20} className="w-5 h-5 object-contain" />
                                             </div>
                                             <div>
@@ -227,10 +218,10 @@ export default function ConnectAccountsPage() {
                     </div>
 
                     {/* TikTok */}
-                    <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
+                    <div className="dash-card dash-card-hover rounded-xl border border-[var(--viralix-border)] p-6 shadow-sm">
                         <div className="flex items-center justify-between">
                             <div className="flex items-center gap-4">
-                                <div className="w-14 h-14 rounded-xl flex items-center justify-center bg-white border border-gray-100 shadow-sm">
+                                <div className="w-14 h-14 rounded-xl flex items-center justify-center bg-[var(--viralix-surface)] border border-[var(--viralix-border)] shadow-sm">
                                     <Image src="/tiktok.png" alt="TikTok" width={32} height={32} className="w-8 h-8 object-contain" />
                                 </div>
                                 <div>
@@ -266,10 +257,10 @@ export default function ConnectAccountsPage() {
                     </div>
 
                     {/* YouTube */}
-                    <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
+                    <div className="dash-card dash-card-hover rounded-xl border border-[var(--viralix-border)] p-6 shadow-sm">
                         <div className="flex items-center justify-between">
                             <div className="flex items-center gap-4">
-                                <div className="w-14 h-14 rounded-xl flex items-center justify-center bg-white border border-gray-100 shadow-sm">
+                                <div className="w-14 h-14 rounded-xl flex items-center justify-center bg-[var(--viralix-surface)] border border-[var(--viralix-border)] shadow-sm">
                                     <Image src="/youtube.png" alt="YouTube" width={32} height={32} className="w-8 h-8 object-contain" />
                                 </div>
                                 <div>

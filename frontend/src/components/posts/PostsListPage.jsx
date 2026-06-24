@@ -100,13 +100,13 @@ export default function PostsListPage() {
         return (
             <div className="flex flex-col items-center justify-center gap-3 py-24">
                 <Loader2 className="h-8 w-8 animate-spin text-[#84A98C]" />
-                <p className="text-sm text-[#52796F]">Loading posts…</p>
+                <p className="text-sm text-[var(--viralix-muted)]">Loading posts…</p>
             </div>
         );
     }
 
     return (
-        <div className="overflow-hidden rounded-2xl border border-[#B8C9C0] bg-white shadow-[0_8px_30px_rgba(47,62,70,0.08)]">
+        <div className="dash-card overflow-hidden rounded-2xl border border-[var(--viralix-border)]">
             {/* Hero header */}
             <div className="bg-gradient-to-r from-[#354F52] via-[#2F3E46] to-[#354F52] px-5 py-5 text-white sm:px-6">
                 <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
@@ -139,7 +139,7 @@ export default function PostsListPage() {
                         <button
                             type="button"
                             onClick={loadPosts}
-                            className="inline-flex items-center gap-1.5 rounded-lg bg-white/10 px-3 py-2 text-xs font-medium text-white backdrop-blur hover:bg-white/20"
+                            className="inline-flex items-center gap-1.5 rounded-lg bg-white/10 px-3 py-2 text-xs font-medium text-white backdrop-blur hover:bg-[var(--viralix-surface)]/20"
                         >
                             <RefreshCw className="h-3.5 w-3.5" />
                             Refresh
@@ -161,17 +161,17 @@ export default function PostsListPage() {
 
             <div className="grid lg:grid-cols-[1fr_240px]">
                 {/* Main table area */}
-                <div className="min-w-0 border-r border-[#E8EDEA]">
+                <div className="min-w-0 border-r border-[var(--viralix-border)]">
                     {/* Toolbar strip */}
-                    <div className="flex flex-col gap-3 border-b border-[#E8EDEA] bg-[#F4F8F6] px-4 py-3 sm:flex-row sm:items-center">
+                    <div className="flex flex-col gap-3 border-b border-[var(--viralix-border)] bg-[var(--viralix-inset)] px-4 py-3 sm:flex-row sm:items-center">
                         <div className="relative flex-1">
-                            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#52796F]/50" aria-hidden />
+                            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--viralix-muted)]/50" aria-hidden />
                             <input
                                 type="search"
                                 placeholder="Search by title or caption…"
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
-                                className="h-10 w-full rounded-lg border-0 bg-white pl-10 pr-3 text-sm text-[#354F52] shadow-sm ring-1 ring-[#D5DFD9] placeholder:text-[#94A3B8] focus:ring-2 focus:ring-[#84A98C]"
+                                className="h-10 w-full rounded-lg border-0 bg-white pl-10 pr-3 text-sm text-[var(--viralix-accent)] shadow-sm ring-1 ring-[var(--viralix-border)] placeholder:text-[#94A3B8] focus:ring-2 focus:ring-[#84A98C]"
                             />
                         </div>
                         <div className="flex flex-wrap gap-1">
@@ -184,7 +184,7 @@ export default function PostsListPage() {
                                         'rounded-full px-3 py-1.5 text-xs font-medium transition-all',
                                         statusFilter === id
                                             ? 'bg-[#354F52] text-white shadow-sm'
-                                            : 'bg-white text-[#52796F] ring-1 ring-[#D5DFD9] hover:ring-[#84A98C]'
+                                            : 'bg-white text-[var(--viralix-muted)] ring-1 ring-[var(--viralix-border)] hover:ring-[#84A98C]'
                                     )}
                                 >
                                     {label}
@@ -195,8 +195,8 @@ export default function PostsListPage() {
 
                     {filteredPosts.length === 0 ? (
                         <div className="px-6 py-20 text-center">
-                            <p className="text-sm font-medium text-[#354F52]">No posts found</p>
-                            <p className="mt-1 text-xs text-[#52796F]">Adjust filters or create a new post</p>
+                            <p className="text-sm font-medium text-[var(--viralix-accent)]">No posts found</p>
+                            <p className="mt-1 text-xs text-[var(--viralix-muted)]">Adjust filters or create a new post</p>
                             <Link
                                 href="/dashboard/upload"
                                 className="mt-4 inline-flex items-center gap-1.5 rounded-lg bg-[#84A98C] px-4 py-2 text-xs font-semibold text-white"
@@ -217,7 +217,7 @@ export default function PostsListPage() {
                             <div className="hidden overflow-x-auto sm:block">
                                 <table className="w-full min-w-[640px] border-collapse text-left">
                                     <thead>
-                                        <tr className="border-b border-[#E8EDEA] bg-white text-[0.6875rem] font-semibold uppercase tracking-wider text-[#52796F]">
+                                        <tr className="border-b border-[var(--viralix-border)] bg-white text-[0.6875rem] font-semibold uppercase tracking-wider text-[var(--viralix-muted)]">
                                             <th className="px-4 py-3 font-semibold">Post</th>
                                             <th className="hidden px-4 py-3 font-semibold sm:table-cell">Status</th>
                                             <th className="hidden px-4 py-3 font-semibold md:table-cell">Platforms</th>
@@ -238,8 +238,8 @@ export default function PostsListPage() {
                 </div>
 
                 {/* Sidebar rail — no cards, just sections */}
-                <aside className="hidden bg-[#FAFCFB] p-4 lg:block">
-                    <p className="text-[0.6875rem] font-semibold uppercase tracking-wider text-[#52796F]">
+                <aside className="hidden bg-[var(--viralix-bg)] p-4 lg:block">
+                    <p className="text-[0.6875rem] font-semibold uppercase tracking-wider text-[var(--viralix-muted)]">
                         Quick links
                     </p>
                     <nav className="mt-3 space-y-1">
@@ -253,26 +253,26 @@ export default function PostsListPage() {
                             <Link
                                 key={href}
                                 href={href}
-                                className="group flex items-center justify-between rounded-lg px-2 py-2 text-sm text-[#354F52] transition-colors hover:bg-white hover:shadow-sm"
+                                className="group flex items-center justify-between rounded-lg px-2 py-2 text-sm text-[var(--viralix-accent)] transition-colors hover:bg-[var(--viralix-surface)] hover:shadow-sm"
                             >
                                 <span className="flex items-center gap-2">
                                     <Icon className="h-4 w-4 text-[#84A98C]" aria-hidden />
                                     {label}
                                 </span>
-                                <ArrowUpRight className="h-3.5 w-3.5 text-[#CAD2C5] group-hover:text-[#52796F]" aria-hidden />
+                                <ArrowUpRight className="h-3.5 w-3.5 text-[var(--viralix-border)] group-hover:text-[var(--viralix-muted)]" aria-hidden />
                             </Link>
                         ))}
                     </nav>
 
-                    <div className="my-5 h-px bg-[#E8EDEA]" />
+                    <div className="my-5 h-px bg-[var(--viralix-border)]" />
 
-                    <p className="text-[0.6875rem] font-semibold uppercase tracking-wider text-[#52796F]">
+                    <p className="text-[0.6875rem] font-semibold uppercase tracking-wider text-[var(--viralix-muted)]">
                         Platforms
                     </p>
                     <ul className="mt-3 space-y-2">
                         {connectedPlatforms.map(({ id, label, icon: Icon, bg, color, connected }) => (
                             <li key={id} className="flex items-center justify-between py-1">
-                                <span className="flex items-center gap-2 text-sm text-[#354F52]">
+                                <span className="flex items-center gap-2 text-sm text-[var(--viralix-accent)]">
                                     <span
                                         className="flex h-6 w-6 items-center justify-center rounded-md"
                                         style={{ backgroundColor: bg }}
@@ -284,7 +284,7 @@ export default function PostsListPage() {
                                 <span
                                     className={cn(
                                         'text-[0.625rem] font-medium uppercase',
-                                        connected ? 'text-emerald-600' : 'text-[#CAD2C5]'
+                                        connected ? 'text-emerald-600' : 'text-[var(--viralix-border)]'
                                     )}
                                 >
                                     {connected ? 'Live' : 'Off'}
@@ -294,7 +294,7 @@ export default function PostsListPage() {
                     </ul>
                     <Link
                         href="/dashboard/connect-accounts"
-                        className="mt-4 flex items-center gap-1.5 text-xs font-medium text-[#52796F] hover:text-[#354F52]"
+                        className="mt-4 flex items-center gap-1.5 text-xs font-medium text-[var(--viralix-muted)] hover:text-[var(--viralix-accent)]"
                     >
                         <Link2 className="h-3.5 w-3.5" />
                         Manage connections

@@ -24,7 +24,7 @@ const METRICS = [
 function ChartTooltip({ active, payload, label, metricKey }) {
     if (!active || !payload?.length) return null;
     return (
-        <div className="rounded-lg border border-[var(--viralix-border)] bg-white px-3 py-2 shadow-md">
+        <div className="dash-card rounded-lg border border-[var(--viralix-border)] px-3 py-2 shadow-md">
             <p className="text-xs text-gray-500">{label}</p>
             <p className="text-sm font-semibold text-[var(--viralix-accent)]">
                 {formatNumber(payload[0]?.value ?? 0)} {metricKey}
@@ -75,7 +75,7 @@ export default function PerformanceChart() {
                             onClick={() => setPeriod(p)}
                             className={`rounded-md px-2.5 py-1 text-xs font-medium transition-colors ${
                                 period === p
-                                    ? 'bg-white text-[var(--viralix-accent)] shadow-sm'
+                                    ? 'bg-[var(--viralix-surface)] text-[var(--viralix-accent)] shadow-sm'
                                     : 'text-gray-500 hover:text-[var(--viralix-accent)]'
                             }`}
                         >
@@ -121,7 +121,7 @@ export default function PerformanceChart() {
                                     <stop offset="100%" stopColor={active.color} stopOpacity={0} />
                                 </linearGradient>
                             </defs>
-                            <CartesianGrid strokeDasharray="3 3" stroke="#E2E8E4" vertical={false} />
+                            <CartesianGrid strokeDasharray="3 3" stroke="var(--viralix-border)" vertical={false} />
                             <XAxis
                                 dataKey="date"
                                 tick={{ fontSize: 10, fill: '#94A3B8' }}

@@ -1,4 +1,5 @@
 'use client';
+import notify from '@/lib/notify';
 
 import { useState, useEffect, useRef, useCallback } from 'react';
 import Link from 'next/link';
@@ -13,7 +14,7 @@ import {
 
 const STATUS_STYLES = {
     open: 'bg-emerald-100 text-emerald-800',
-    closed: 'bg-[#F4F8F6] text-[#52796F]',
+    closed: 'bg-[var(--viralix-inset)] text-[var(--viralix-muted)]',
     archived: 'bg-amber-100 text-amber-800',
     snoozed: 'bg-blue-100 text-blue-700',
 };
@@ -123,7 +124,7 @@ export default function InboxPage() {
             setReplyText('');
             setTimeout(() => messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 100);
         } catch (err) {
-            alert(err.response?.data?.message || 'Reply failed');
+            notify.error(err.response?.data?.message || 'Reply failed');
         } finally {
             setSending(false);
         }
@@ -136,7 +137,7 @@ export default function InboxPage() {
             loadConversations();
             loadStats();
         } catch {
-            alert('Status update failed');
+            notify.error('Status update failed');
         }
     };
 
@@ -151,7 +152,7 @@ export default function InboxPage() {
     }));
 
     return (
-        <div className="overflow-hidden rounded-2xl border border-[#B8C9C0] bg-white shadow-[0_8px_30px_rgba(47,62,70,0.08)]">
+        <div className="dash-card overflow-hidden rounded-2xl border border-[var(--viralix-border)]">
             <div className="bg-gradient-to-r from-[#354F52] via-[#2F3E46] to-[#354F52] px-5 py-4 text-white sm:px-6">
                 <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
                     <div>
@@ -196,8 +197,8 @@ export default function InboxPage() {
 
             <div className="flex min-h-[560px] h-[calc(100vh-11rem)] flex-col lg:flex-row">
                 {/* Conversation list */}
-                <div className="flex w-full shrink-0 flex-col border-b border-[#E8EDEA] lg:w-80 lg:border-b-0 lg:border-r">
-                    <div className="space-y-2 border-b border-[#E8EDEA] bg-[#FAFCFB] p-3">
+                <div className="flex w-full shrink-0 flex-col border-b border-[var(--viralix-border)] lg:w-80 lg:border-b-0 lg:border-r">
+                    <div className="space-y-2 border-b border-[var(--viralix-border)] bg-[var(--viralix-bg)] p-3">
                         <form onSubmit={(e) => { e.preventDefault(); loadConversations(); }} className="relative">
                             <Search className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[#94A3B8]" />
                             <input
@@ -205,7 +206,7 @@ export default function InboxPage() {
                                 value={search}
                                 onChange={(e) => setSearch(e.target.value)}
                                 placeholder="Search conversations…"
-                                className="w-full rounded-lg border border-[#D5DFD9] bg-white py-2 pl-9 pr-3 text-sm text-[#354F52] placeholder:text-[#94A3B8] focus:border-[#84A98C] focus:outline-none"
+                                className="w-full rounded-lg border border-[var(--viralix-border)] bg-[var(--viralix-surface)] py-2 pl-9 pr-3 text-sm text-[var(--viralix-accent)] placeholder:text-[#94A3B8] focus:border-[#84A98C] focus:outline-none"
                             />
                         </form>
                         <div className="flex flex-wrap items-center gap-1">
@@ -222,7 +223,7 @@ export default function InboxPage() {
                                         'inline-flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-medium transition',
                                         filter.status === id
                                             ? 'bg-[#354F52] text-white'
-                                            : 'bg-white text-[#52796F] ring-1 ring-[#D5DFD9] hover:text-[#354F52]'
+                                            : 'bg-white text-[var(--viralix-muted)] ring-1 ring-[var(--viralix-border)] hover:text-[var(--viralix-accent)]'
                                     )}
                                 >
                                     <Icon className="h-3 w-3" />
@@ -232,7 +233,7 @@ export default function InboxPage() {
                             <select
                                 value={filter.platform}
                                 onChange={(e) => setFilter((prev) => ({ ...prev, platform: e.target.value }))}
-                                className="ml-auto rounded-lg border border-[#D5DFD9] bg-white px-2 py-1.5 text-xs text-[#52796F] focus:border-[#84A98C] focus:outline-none"
+                                className="ml-auto rounded-lg border border-[var(--viralix-border)] bg-[var(--viralix-surface)] px-2 py-1.5 text-xs text-[var(--viralix-muted)] focus:border-[#84A98C] focus:outline-none"
                             >
                                 <option value="">All platforms</option>
                                 {Object.keys(PLATFORM_CONFIG).map((p) => (
@@ -244,15 +245,15 @@ export default function InboxPage() {
 
                     <div className="flex-1 overflow-y-auto">
                         {loading ? (
-                            <div className="flex items-center justify-center gap-2 py-16 text-sm text-[#52796F]">
+                            <div className="flex items-center justify-center gap-2 py-16 text-sm text-[var(--viralix-muted)]">
                                 <Loader2 className="h-5 w-5 animate-spin text-[#84A98C]" />
                                 Loading…
                             </div>
                         ) : conversations.length === 0 ? (
                             <div className="py-16 text-center">
-                                <MessageSquare className="mx-auto h-10 w-10 text-[#B8C9C0]" />
-                                <p className="mt-3 text-sm font-medium text-[#354F52]">No conversations</p>
-                                <p className="mt-1 text-xs text-[#52796F]">Try changing filters or search</p>
+                                <MessageSquare className="mx-auto h-10 w-10 text-[var(--viralix-border)]" />
+                                <p className="mt-3 text-sm font-medium text-[var(--viralix-accent)]">No conversations</p>
+                                <p className="mt-1 text-xs text-[var(--viralix-muted)]">Try changing filters or search</p>
                             </div>
                         ) : (
                             conversations.map((conv) => {
@@ -265,8 +266,8 @@ export default function InboxPage() {
                                         type="button"
                                         onClick={() => selectConversation(conv)}
                                         className={cn(
-                                            'w-full border-b border-[#E8EDEA] px-4 py-3 text-left transition hover:bg-[#F4F8F6]',
-                                            isActive && 'border-l-2 border-l-[#84A98C] bg-[#F4F8F6]'
+                                            'w-full border-b border-[var(--viralix-border)] px-4 py-3 text-left transition hover:bg-[var(--viralix-bg)]',
+                                            isActive && 'border-l-2 border-l-[#84A98C] bg-[var(--viralix-inset)]'
                                         )}
                                     >
                                         <div className="flex items-start justify-between gap-2">
@@ -280,8 +281,8 @@ export default function InboxPage() {
                                                     </span>
                                                 )}
                                                 <div className="min-w-0">
-                                                    <p className="truncate text-sm font-semibold text-[#354F52]">{conv.participantName}</p>
-                                                    <p className="truncate text-xs text-[#52796F]">
+                                                    <p className="truncate text-sm font-semibold text-[var(--viralix-accent)]">{conv.participantName}</p>
+                                                    <p className="truncate text-xs text-[var(--viralix-muted)]">
                                                         {conv.lastMessage?.direction === 'outbound' ? 'You: ' : ''}
                                                         {conv.lastMessage?.text || 'No messages'}
                                                     </p>
@@ -315,23 +316,23 @@ export default function InboxPage() {
                 {/* Thread */}
                 <div className="flex min-h-0 flex-1 flex-col">
                     {!selected ? (
-                        <div className="flex flex-1 flex-col items-center justify-center text-[#52796F]">
-                            <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-[#F4F8F6]">
+                        <div className="flex flex-1 flex-col items-center justify-center text-[var(--viralix-muted)]">
+                            <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-[var(--viralix-inset)]">
                                 <MessageSquare className="h-8 w-8 text-[#84A98C]" />
                             </div>
-                            <p className="mt-4 text-base font-medium text-[#354F52]">Select a conversation</p>
+                            <p className="mt-4 text-base font-medium text-[var(--viralix-accent)]">Select a conversation</p>
                             <p className="mt-1 text-sm">Messages from all platforms appear here</p>
                         </div>
                     ) : (
                         <>
-                            <div className="flex items-center justify-between border-b border-[#E8EDEA] bg-[#FAFCFB] px-4 py-3 sm:px-5">
+                            <div className="flex items-center justify-between border-b border-[var(--viralix-border)] bg-[var(--viralix-bg)] px-4 py-3 sm:px-5">
                                 <div className="flex items-center gap-3">
                                     <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-[#52796F] to-[#354F52] text-sm font-bold text-white">
                                         {selected.participantName?.charAt(0)?.toUpperCase() || '?'}
                                     </div>
                                     <div>
-                                        <h3 className="text-sm font-semibold text-[#354F52]">{selected.participantName}</h3>
-                                        <p className="text-xs capitalize text-[#52796F]">
+                                        <h3 className="text-sm font-semibold text-[var(--viralix-accent)]">{selected.participantName}</h3>
+                                        <p className="text-xs capitalize text-[var(--viralix-muted)]">
                                             {PLATFORM_CONFIG[selected.platform]?.label || selected.platform}
                                             {selected.type && ` · ${selected.type}`}
                                         </p>
@@ -340,7 +341,7 @@ export default function InboxPage() {
                                 <select
                                     value={selected.status}
                                     onChange={(e) => handleStatusChange(selected._id, e.target.value)}
-                                    className="rounded-lg border border-[#D5DFD9] bg-white px-2 py-1.5 text-xs text-[#52796F] focus:border-[#84A98C] focus:outline-none"
+                                    className="rounded-lg border border-[var(--viralix-border)] bg-[var(--viralix-surface)] px-2 py-1.5 text-xs text-[var(--viralix-muted)] focus:border-[#84A98C] focus:outline-none"
                                 >
                                     <option value="open">Open</option>
                                     <option value="closed">Closed</option>
@@ -349,14 +350,14 @@ export default function InboxPage() {
                                 </select>
                             </div>
 
-                            <div className="flex-1 overflow-y-auto bg-[#F7FAF8] p-4 sm:p-5">
+                            <div className="flex-1 overflow-y-auto bg-[var(--viralix-bg)] p-4 sm:p-5">
                                 {msgLoading ? (
-                                    <div className="flex items-center justify-center gap-2 py-12 text-sm text-[#52796F]">
+                                    <div className="flex items-center justify-center gap-2 py-12 text-sm text-[var(--viralix-muted)]">
                                         <Loader2 className="h-5 w-5 animate-spin" />
                                         Loading messages…
                                     </div>
                                 ) : messages.length === 0 ? (
-                                    <p className="py-12 text-center text-sm text-[#52796F]">No messages yet</p>
+                                    <p className="py-12 text-center text-sm text-[var(--viralix-muted)]">No messages yet</p>
                                 ) : (
                                     <div className="space-y-3">
                                         {messages.map((msg, i) => (
@@ -366,11 +367,11 @@ export default function InboxPage() {
                                                         'max-w-[75%] rounded-2xl px-4 py-2.5 shadow-sm',
                                                         msg.direction === 'outbound'
                                                             ? 'rounded-br-md bg-[#354F52] text-white'
-                                                            : 'rounded-bl-md border border-[#E8EDEA] bg-white text-[#354F52]'
+                                                            : 'rounded-bl-md border border-[var(--viralix-border)] bg-[var(--viralix-surface)] text-[var(--viralix-accent)]'
                                                     )}
                                                 >
                                                     {msg.direction === 'inbound' && (
-                                                        <p className="mb-0.5 text-[0.625rem] font-semibold text-[#52796F]">{msg.senderName}</p>
+                                                        <p className="mb-0.5 text-[0.625rem] font-semibold text-[var(--viralix-muted)]">{msg.senderName}</p>
                                                     )}
                                                     <p className="whitespace-pre-wrap text-sm">{msg.text}</p>
                                                     <p className={cn('mt-1 text-[0.625rem]', msg.direction === 'outbound' ? 'text-white/50' : 'text-[#94A3B8]')}>
@@ -391,7 +392,7 @@ export default function InboxPage() {
                                 onInsert={(text) => setReplyText(text)}
                             />
 
-                            <form onSubmit={handleReply} className="border-t border-[#E8EDEA] bg-white p-3 sm:p-4">
+                            <form onSubmit={handleReply} className="border-t border-[var(--viralix-border)] bg-[var(--viralix-surface)] p-3 sm:p-4">
                                 <div className="flex gap-2">
                                     <input
                                         type="text"
@@ -399,12 +400,12 @@ export default function InboxPage() {
                                         onChange={(e) => setReplyText(e.target.value)}
                                         placeholder="Type your reply…"
                                         disabled={sending}
-                                        className="flex-1 rounded-xl border border-[#D5DFD9] px-4 py-2.5 text-sm text-[#354F52] placeholder:text-[#94A3B8] focus:border-[#84A98C] focus:outline-none disabled:opacity-50"
+                                        className="flex-1 rounded-xl border border-[var(--viralix-border)] px-4 py-2.5 text-sm text-[var(--viralix-accent)] placeholder:text-[#94A3B8] focus:border-[#84A98C] focus:outline-none disabled:opacity-50"
                                     />
                                     <button
                                         type="submit"
                                         disabled={sending || !replyText.trim()}
-                                        className="inline-flex items-center gap-1.5 rounded-xl bg-[#52796F] px-4 py-2.5 text-sm font-medium text-white hover:bg-[#354F52] disabled:opacity-50"
+                                        className="btn btn-confirm disabled:opacity-50"
                                     >
                                         {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
                                         Send

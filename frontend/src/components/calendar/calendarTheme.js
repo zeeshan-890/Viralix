@@ -1,16 +1,16 @@
-/** Shared Viralix calendar color tokens */
+/** Shared Viralix calendar color tokens (aligned with dashboard-shell theme) */
 export const cal = {
-    page: 'bg-[#F7FAF8]',
-    surface: 'bg-white border border-[#C8D4CE] shadow-sm',
-    surfaceRaised: 'bg-white border border-[#B8C9C0] shadow-md',
-    grid: 'bg-[#D5DFD9] border border-[#B8C9C0] rounded-lg p-2',
-    day: 'bg-white border border-[#C8D4CE] shadow-sm rounded-lg overflow-hidden',
-    dayHeader: 'bg-[#EEF3F0] border-b border-[#D5DFD9]',
-    dayHeaderWeekend: 'bg-[#F5F0E6] border-b border-[#D5DFD9]',
+    page: 'bg-[var(--viralix-bg)]',
+    surface: 'dash-card border border-[var(--viralix-border)]',
+    surfaceRaised: 'dash-card border border-[var(--viralix-border)]',
+    grid: 'bg-[var(--viralix-border)] border border-[var(--viralix-border)] rounded-lg p-2',
+    day: 'dash-card border border-[var(--viralix-border)] rounded-lg overflow-hidden',
+    dayHeader: 'bg-[var(--viralix-inset)] border-b border-[var(--viralix-border)]',
+    dayHeaderWeekend: 'bg-[#F5F0E6] border-b border-[var(--viralix-border)]',
     dayHeaderToday: 'bg-[#E8F0ED] border-b border-[#84A98C]',
-    dayBody: 'bg-[#FAFCFB]',
+    dayBody: 'bg-[var(--viralix-bg)]',
     analyticsHeader: 'bg-gradient-to-r from-[#354F52] to-[#2F3E46] text-white',
-    analyticsBody: 'bg-[#F0F4F2]',
+    analyticsBody: 'bg-[var(--viralix-bg)]',
     weekday: 'bg-[#52796F] text-white',
     weekdayWeekend: 'bg-[#627F75] text-white',
 };

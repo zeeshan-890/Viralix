@@ -35,7 +35,7 @@ export default function AiReplyPanel({ conversationId, onInsert, aiEnabled = tru
 
     if (!aiEnabled) {
         return (
-            <div className="border-t border-[#E8EDEA] bg-[#FAFCFB] px-4 py-2">
+            <div className="border-t border-[var(--viralix-border)] bg-[var(--viralix-bg)] px-4 py-2">
                 <Link href="/dashboard/inbox/auto-reply" className="flex items-center justify-center gap-1.5 text-xs text-[#52796F] hover:text-[#354F52]">
                     <Sparkles className="h-3.5 w-3.5" />
                     Enable AI replies in settings
@@ -45,7 +45,7 @@ export default function AiReplyPanel({ conversationId, onInsert, aiEnabled = tru
     }
 
     return (
-        <div className="border-t border-[#E8EDEA] bg-gradient-to-r from-[#84A98C]/5 to-transparent">
+        <div className="border-t border-[var(--viralix-border)] bg-gradient-to-r from-[#84A98C]/5 to-transparent">
             <button
                 type="button"
                 onClick={() => setExpanded((v) => !v)}
@@ -59,7 +59,7 @@ export default function AiReplyPanel({ conversationId, onInsert, aiEnabled = tru
                     <Link
                         href="/dashboard/inbox/auto-reply"
                         onClick={(e) => e.stopPropagation()}
-                        className="rounded-lg p-1 text-[#94A3B8] hover:bg-white hover:text-[#52796F]"
+                        className="rounded-lg p-1 text-[#94A3B8] hover:bg-[var(--viralix-surface)] hover:text-[#52796F]"
                         title="Auto-reply settings"
                     >
                         <Settings2 className="h-3.5 w-3.5" />
@@ -79,7 +79,7 @@ export default function AiReplyPanel({ conversationId, onInsert, aiEnabled = tru
                                     onClick={() => setTone(t.id)}
                                     className={cn(
                                         'rounded-lg px-2.5 py-1 text-[0.625rem] font-medium transition',
-                                        tone === t.id ? 'bg-[#354F52] text-white' : 'bg-white text-[#52796F] ring-1 ring-[#D5DFD9]'
+                                        tone === t.id ? 'bg-[#354F52] text-white' : 'bg-white text-[#52796F] ring-1 ring-[var(--viralix-border)]'
                                     )}
                                 >
                                     {t.label}
@@ -90,7 +90,7 @@ export default function AiReplyPanel({ conversationId, onInsert, aiEnabled = tru
                             type="button"
                             onClick={generate}
                             disabled={loading || !conversationId}
-                            className="ml-auto inline-flex items-center gap-1.5 rounded-lg bg-[#52796F] px-3 py-1.5 text-xs font-medium text-white hover:bg-[#354F52] disabled:opacity-50"
+                            className="ml-auto btn btn-confirm btn-sm disabled:opacity-50"
                         >
                             {loading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Wand2 className="h-3.5 w-3.5" />}
                             Generate
@@ -108,7 +108,7 @@ export default function AiReplyPanel({ conversationId, onInsert, aiEnabled = tru
                                     key={sug.id}
                                     type="button"
                                     onClick={() => onInsert(sug.text)}
-                                    className="group w-full rounded-xl border border-[#E8EDEA] bg-white p-3 text-left transition hover:border-[#84A98C] hover:shadow-sm"
+                                    className="group w-full rounded-xl border border-[var(--viralix-border)] bg-[var(--viralix-surface)] p-3 text-left transition hover:border-[#84A98C] hover:shadow-sm"
                                 >
                                     <p className="line-clamp-3 text-xs text-[#354F52] group-hover:text-[#2F3E46]">{sug.text}</p>
                                     <p className="mt-1.5 text-[0.5625rem] text-[#94A3B8]">

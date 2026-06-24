@@ -1,4 +1,5 @@
 'use client';
+import notify from '@/lib/notify';
 import { useState, useEffect } from 'react';
 import { watermarkAPI } from '@/lib/api';
 
@@ -35,7 +36,7 @@ export default function WatermarkSettings() {
             const res = await watermarkAPI.upload(fd);
             setSettings(prev => ({ ...prev, logoPublicId: res.data.logoPublicId, logoUrl: res.data.logoUrl, enabled: true }));
         } catch (err) {
-            alert(err.response?.data?.message || 'Upload failed');
+            notify.error(err.response?.data?.message || 'Upload failed');
         } finally {
             setUploading(false);
         }
@@ -51,7 +52,7 @@ export default function WatermarkSettings() {
                 enabled: settings.enabled
             });
         } catch (err) {
-            alert('Save failed');
+            notify.error('Save failed');
         } finally {
             setSaving(false);
         }
@@ -63,7 +64,7 @@ export default function WatermarkSettings() {
             await watermarkAPI.remove();
             setSettings({ logoPublicId: null, logoUrl: null, position: 'southeast', opacity: 60, scale: 15, enabled: false });
         } catch (err) {
-            alert('Remove failed');
+            notify.error('Remove failed');
         }
     };
 
@@ -82,7 +83,7 @@ export default function WatermarkSettings() {
     if (loading) return <div className="text-center py-8 text-gray-400">Loading watermark settings...</div>;
 
     return (
-        <div className="bg-white rounded-lg border border-gray-200 p-6">
+        <div className="dash-card rounded-lg border border-[var(--viralix-border)] p-6">
             <div className="mb-6">
                 <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
                     🎨 Visual Watermark
@@ -104,7 +105,7 @@ export default function WatermarkSettings() {
                         </div>
                     )}
                     <div className="flex-1">
-                        <label className={`inline-block px-4 py-2 text-sm rounded-lg cursor-pointer ${uploading ? 'bg-gray-300' : 'bg-blue-600 text-white hover:bg-blue-700'}`}>
+                        <label className={`inline-block px-4 py-2 text-sm rounded-lg cursor-pointer ${uploading ? 'bg-gray-300' : 'btn btn-confirm text-white '}`}>
                             {uploading ? 'Uploading...' : settings.logoUrl ? 'Replace Logo' : 'Upload Logo'}
                             <input type="file" accept="image/*" onChange={handleUpload} className="hidden" disabled={uploading} />
                         </label>
@@ -135,8 +136,8 @@ export default function WatermarkSettings() {
                                     key={pos.value}
                                     onClick={() => setSettings(prev => ({ ...prev, position: pos.value }))}
                                     className={`px-2 py-1.5 text-xs rounded border transition ${settings.position === pos.value
-                                            ? 'bg-blue-600 text-white border-blue-600'
-                                            : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'
+                                            ? 'btn btn-confirm text-white border-blue-600'
+                                            : 'bg-[var(--viralix-surface)] text-gray-600 border-[var(--viralix-border)] hover:bg-gray-50'
                                         }`}
                                 >
                                     {pos.label}
@@ -168,7 +169,7 @@ export default function WatermarkSettings() {
                     <button
                         onClick={handleSave}
                         disabled={saving}
-                        className="px-5 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 disabled:opacity-50"
+                        className="px-5 py-2 btn btn-confirm text-white text-sm rounded-lg  disabled:opacity-50"
                     >
                         {saving ? 'Saving...' : 'Save Settings'}
                     </button>

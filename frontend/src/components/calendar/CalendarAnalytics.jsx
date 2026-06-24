@@ -72,7 +72,7 @@ export default function CalendarAnalytics({ title, analytics, selectedDateKey, o
                         { label: 'Views', value: formatNumber(analytics.totalViews), icon: Eye },
                         { label: 'Engagement', value: formatNumber(analytics.totalEngagement), icon: Heart },
                     ].map(({ label, value, icon: Icon }) => (
-                        <div key={label} className="rounded-lg border border-[#C8D4CE] bg-white p-3 shadow-sm">
+                        <div key={label} className="rounded-lg dash-card border border-[var(--viralix-border)] p-3 shadow-sm">
                             <p className="text-[0.6875rem] font-medium uppercase tracking-wide text-[#52796F]">{label}</p>
                             <p className="mt-1 flex items-center gap-1 text-xl font-semibold tabular-nums text-[#354F52]">
                                 {Icon && <Icon className="h-4 w-4 text-[#84A98C]" aria-hidden />}
@@ -82,7 +82,7 @@ export default function CalendarAnalytics({ title, analytics, selectedDateKey, o
                     ))}
                 </div>
 
-                <div className="h-28 rounded-lg border border-[#C8D4CE] bg-white p-2 shadow-sm lg:col-span-8">
+                <div className="h-28 rounded-lg dash-card border border-[var(--viralix-border)] p-2 shadow-sm lg:col-span-8">
                     {chartData.length === 0 ? (
                         <div className="flex h-full items-center justify-center text-xs text-[#52796F]">
                             No posts in this period
@@ -95,7 +95,7 @@ export default function CalendarAnalytics({ title, analytics, selectedDateKey, o
                                     cursor={{ fill: 'rgba(132, 169, 140, 0.12)' }}
                                     content={({ active, payload }) =>
                                         active && payload?.[0] ? (
-                                            <div className="rounded-lg border border-[#C8D4CE] bg-white px-2.5 py-1.5 text-xs shadow-md">
+                                            <div className="rounded-lg dash-card border border-[var(--viralix-border)] px-2.5 py-1.5 text-xs shadow-md">
                                                 <span className="font-medium text-[#354F52]">
                                                     {payload[0].payload.date}: {payload[0].value} posts
                                                 </span>

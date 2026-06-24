@@ -68,7 +68,7 @@ export default function AnalyticsPage() {
     ];
 
     return (
-        <div className="overflow-hidden rounded-2xl border border-[#B8C9C0] bg-white shadow-[0_8px_30px_rgba(47,62,70,0.08)]">
+        <div className="dash-card overflow-hidden rounded-2xl border border-[var(--viralix-border)]">
             <div className="bg-gradient-to-r from-[#354F52] via-[#2F3E46] to-[#354F52] px-5 py-4 text-white sm:px-6">
                 <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
                     <div>
@@ -91,13 +91,13 @@ export default function AnalyticsPage() {
                             type="button"
                             onClick={handleRefresh}
                             disabled={refreshing}
-                            className="ml-1 inline-flex items-center gap-1.5 rounded-lg bg-white/10 px-3 py-2 text-xs font-medium text-white hover:bg-white/20 disabled:opacity-50"
+                            className="ml-1 inline-flex items-center gap-1.5 rounded-lg bg-white/10 px-3 py-2 text-xs font-medium text-white hover:bg-[var(--viralix-surface)]/20 disabled:opacity-50"
                         >
                             <RefreshCw className={cn('h-3.5 w-3.5', refreshing && 'animate-spin')} />
                             Refresh
                         </button>
-                        <Link href="/dashboard/preview" className="rounded-lg bg-white/10 px-3 py-2 text-xs font-medium text-white hover:bg-white/20">Posts</Link>
-                        <Link href="/dashboard/inbox" className="rounded-lg bg-white/10 px-3 py-2 text-xs font-medium text-white hover:bg-white/20">Inbox</Link>
+                        <Link href="/dashboard/preview" className="rounded-lg bg-white/10 px-3 py-2 text-xs font-medium text-white hover:bg-[var(--viralix-surface)]/20">Posts</Link>
+                        <Link href="/dashboard/inbox" className="rounded-lg bg-white/10 px-3 py-2 text-xs font-medium text-white hover:bg-[var(--viralix-surface)]/20">Inbox</Link>
                     </div>
                 </div>
             </div>

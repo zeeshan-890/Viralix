@@ -23,12 +23,12 @@ export default function AnalyticsTools() {
     const ActiveComponent = active.Component;
 
     return (
-        <div className="overflow-hidden rounded-xl border border-[#B8C9C0] bg-white shadow-sm">
-            <div className="border-b border-[#E8EDEA] bg-gradient-to-r from-[#354F52]/5 to-transparent px-4 py-3 sm:px-5">
+        <div className="dash-card overflow-hidden rounded-xl border border-[var(--viralix-border)]">
+            <div className="border-b border-[var(--viralix-border)] bg-gradient-to-r from-[#354F52]/5 to-transparent px-4 py-3 sm:px-5">
                 <p className="text-sm font-semibold text-[#354F52]">Growth tools</p>
                 <p className="text-xs text-[#52796F]">Research, monitoring, and link tracking</p>
             </div>
-            <div className="border-b border-[#E8EDEA] bg-[#FAFCFB] px-3 py-2 sm:px-4">
+            <div className="border-b border-[var(--viralix-border)] bg-[var(--viralix-bg)] px-3 py-2 sm:px-4">
                 <div className="flex gap-1 overflow-x-auto">
                     {TABS.map(({ id, label, icon: Icon }) => (
                         <button
@@ -37,7 +37,7 @@ export default function AnalyticsTools() {
                             onClick={() => setTab(id)}
                             className={cn(
                                 'inline-flex shrink-0 items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-medium transition-all',
-                                tab === id ? 'bg-white text-[#354F52] shadow-sm ring-1 ring-[#D5DFD9]' : 'text-[#52796F] hover:text-[#354F52]'
+                                tab === id ? 'bg-[var(--viralix-surface)] text-[#354F52] shadow-sm ring-1 ring-[var(--viralix-border)]' : 'text-[#52796F] hover:text-[#354F52]'
                             )}
                         >
                             <Icon className="h-3.5 w-3.5" />
@@ -46,7 +46,7 @@ export default function AnalyticsTools() {
                     ))}
                 </div>
             </div>
-            <div className="p-4 sm:p-5 [&_.bg-white.rounded-lg]:border-0 [&_.bg-white.rounded-lg]:p-0 [&_.bg-white.rounded-lg]:shadow-none">
+            <div className="p-4 sm:p-5 [&_.dash-card]:border-0 [&_.rounded-lg]:border-0 [&_.rounded-lg]:p-0 [&_.rounded-lg]:shadow-none">
                 <ActiveComponent />
             </div>
         </div>

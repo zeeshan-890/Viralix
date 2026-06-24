@@ -172,7 +172,7 @@ export default function CreateInstagramPost({ isOpen, onClose, account, onSucces
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col">
+            <div className="dash-card bg-[var(--viralix-surface)] rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col">
                 {/* Header */}
                 <div className="flex items-center justify-between p-5 border-b border-gray-200">
                     <div className="flex items-center gap-3">
@@ -568,7 +568,7 @@ export default function CreateInstagramPost({ isOpen, onClose, account, onSucces
                 <div className="flex items-center justify-between p-5 border-t border-gray-200 bg-gray-50">
                     <button
                         onClick={() => step > 1 ? setStep(step - 1) : onClose()}
-                        className="px-5 py-2.5 text-gray-600 hover:bg-gray-200 rounded-xl transition-colors"
+                        className="btn btn-cancel"
                     >
                         {step === 1 ? 'Cancel' : 'Back'}
                     </button>
@@ -577,7 +577,7 @@ export default function CreateInstagramPost({ isOpen, onClose, account, onSucces
                         <button
                             onClick={() => setStep(step + 1)}
                             disabled={step === 1 && !mediaUrl}
-                            className="px-6 py-2.5 bg-pink-500 text-white rounded-xl font-medium hover:bg-pink-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                            className="btn btn-confirm disabled:opacity-50"
                         >
                             Next
                         </button>
@@ -585,7 +585,7 @@ export default function CreateInstagramPost({ isOpen, onClose, account, onSucces
                         <button
                             onClick={handlePublish}
                             disabled={loading || !mediaUrl}
-                            className="px-6 py-2.5 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-xl font-medium hover:from-purple-600 hover:to-pink-600 disabled:opacity-50 flex items-center gap-2"
+                            className="btn btn-success disabled:opacity-50 flex items-center gap-2"
                         >
                             {loading ? (
                                 <>

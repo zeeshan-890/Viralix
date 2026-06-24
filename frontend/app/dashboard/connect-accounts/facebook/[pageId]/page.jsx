@@ -91,7 +91,7 @@ export default function FacebookPageDetail() {
                     <p className="text-gray-600">ID: {pageId}</p>
                 </div>
                 <div className="flex items-center gap-3">
-                    <button onClick={() => setComposeOpen(true)} className="px-3 py-2 rounded bg-blue-600 text-white hover:bg-blue-700">Create Post</button>
+                    <button onClick={() => setComposeOpen(true)} className="px-3 py-2 rounded btn btn-confirm text-white ">Create Post</button>
                     <Link href="/dashboard/connect-accounts/facebook" className="text-sm text-blue-600 hover:underline">Back</Link>
                 </div>
             </div>
@@ -101,7 +101,7 @@ export default function FacebookPageDetail() {
             ) : (
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                     <div className="lg:col-span-2 space-y-6">
-                        <div className="bg-white border rounded p-4">
+                        <div className="dash-card border border-[var(--viralix-border)] rounded p-4">
                             <div className="font-medium mb-3">Feed (latest)</div>
                             {feedError && (
                                 <div className="text-sm text-red-600 mb-2">{String(feedError)}</div>
@@ -134,15 +134,15 @@ export default function FacebookPageDetail() {
 
                     <div className="space-y-6">
                         <div className="grid grid-cols-3 gap-3">
-                            <div className="bg-white border rounded p-4">
+                            <div className="dash-card border border-[var(--viralix-border)] rounded p-4">
                                 <div className="text-xs text-gray-500">Total Posts</div>
                                 <div className="text-2xl font-semibold">{feed?.length || 0}</div>
                             </div>
-                            <div className="bg-white border rounded p-4">
+                            <div className="dash-card border border-[var(--viralix-border)] rounded p-4">
                                 <div className="text-xs text-gray-500">Last Post</div>
                                 <div className="text-sm">{feed?.[0]?.created_time ? new Date(feed[0].created_time).toLocaleDateString() : '-'}</div>
                             </div>
-                            <div className="bg-white border rounded p-4">
+                            <div className="dash-card border border-[var(--viralix-border)] rounded p-4">
                                 <div className="text-xs text-gray-500">Avg Engagement</div>
                                 <div className="text-sm">{(() => {
                                     if (!feed?.length) return '-';
@@ -157,7 +157,7 @@ export default function FacebookPageDetail() {
                             </div>
                         </div>
 
-                        <div className="bg-white border rounded p-4">
+                        <div className="dash-card border border-[var(--viralix-border)] rounded p-4">
                             <div className="font-medium mb-2">Insights</div>
                             {insightsError && (
                                 <div className="text-sm text-yellow-700 bg-yellow-50 border border-yellow-200 rounded p-2 mb-2">
@@ -199,7 +199,7 @@ export default function FacebookPageDetail() {
                             <textarea value={message} onChange={(e) => setMessage(e.target.value)} className="w-full border rounded p-2" rows={4} placeholder="Write something..." />
                             <input value={link} onChange={(e) => setLink(e.target.value)} className="w-full border rounded p-2" placeholder="Link (optional)" />
                             <div className="flex justify-end">
-                                <button disabled={posting} className="px-3 py-2 rounded bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50">Publish</button>
+                                <button disabled={posting} className="px-3 py-2 rounded btn btn-confirm text-white  disabled:opacity-50">Publish</button>
                             </div>
                         </form>
                     )}
@@ -210,7 +210,7 @@ export default function FacebookPageDetail() {
                             {photoFile && <div className="text-xs text-gray-600">Selected: {photoFile.name}</div>}
                             <input value={caption} onChange={(e) => setCaption(e.target.value)} className="w-full border rounded p-2" placeholder="Caption (optional)" />
                             <div className="flex justify-end">
-                                <button disabled={posting || !photoFile} className="px-3 py-2 rounded bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50">Publish Photo</button>
+                                <button disabled={posting || !photoFile} className="px-3 py-2 rounded btn btn-confirm text-white  disabled:opacity-50">Publish Photo</button>
                             </div>
                         </form>
                     )}
@@ -221,7 +221,7 @@ export default function FacebookPageDetail() {
                             {videoFile && <div className="text-xs text-gray-600">Selected: {videoFile.name}</div>}
                             <input value={videoDescription} onChange={(e) => setVideoDescription(e.target.value)} className="w-full border rounded p-2" placeholder="Description (optional)" />
                             <div className="flex justify-end">
-                                <button disabled={posting || !videoFile} className="px-3 py-2 rounded bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50">Publish Video</button>
+                                <button disabled={posting || !videoFile} className="px-3 py-2 rounded btn btn-confirm text-white  disabled:opacity-50">Publish Video</button>
                             </div>
                         </form>
                     )}

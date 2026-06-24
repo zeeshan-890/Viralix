@@ -28,7 +28,7 @@ export default function InstagramAccountsPage() {
                 <Link href="/dashboard/connect-accounts" className="text-sm text-blue-600">Back</Link>
             </div>
 
-            <div className="bg-white border rounded p-4">
+            <div className="dash-card border border-[var(--viralix-border)] rounded p-4">
                 <div className="font-medium mb-3">Accounts</div>
                 {loading ? (
                     <div className="text-sm text-gray-500">Loading…</div>

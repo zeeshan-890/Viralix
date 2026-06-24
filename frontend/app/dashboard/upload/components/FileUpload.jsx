@@ -133,7 +133,7 @@ export default function FileUpload({ onUploadComplete, onDeleteUploaded, embedde
                 'relative rounded-xl border-2 border-dashed transition-all',
                 dragActive
                     ? 'border-[#84A98C] bg-[#84A98C]/10'
-                    : 'border-[#C8D4CE] bg-[#FAFCFB] hover:border-[#84A98C]/60 hover:bg-white',
+                    : 'border-[var(--viralix-border)] bg-[var(--viralix-bg)] hover:border-[#84A98C]/60 hover:bg-[var(--viralix-surface)]',
                 embedded ? 'p-8' : 'p-10'
             )}
             onDragEnter={handleDrag}
@@ -160,21 +160,21 @@ export default function FileUpload({ onUploadComplete, onDeleteUploaded, embedde
                     )}
                 >
                     {uploading ? (
-                        <Loader2 className="h-7 w-7 animate-spin text-[#52796F]" />
+                        <Loader2 className="h-7 w-7 animate-spin text-[var(--viralix-muted)]" />
                     ) : (
-                        <Upload className="h-7 w-7 text-[#52796F]" />
+                        <Upload className="h-7 w-7 text-[var(--viralix-muted)]" />
                     )}
                 </div>
-                <p className="text-sm font-semibold text-[#354F52]">
+                <p className="text-sm font-semibold text-[var(--viralix-accent)]">
                     {uploading ? 'Processing file…' : 'Drop media here or click to browse'}
                 </p>
-                <p className="mt-1 text-xs text-[#52796F]">Images & videos · demo mode (local preview only)</p>
+                <p className="mt-1 text-xs text-[var(--viralix-muted)]">Images & videos · demo mode (local preview only)</p>
                 {!uploading && (
                     <div className="mt-4 flex flex-wrap justify-center gap-2">
-                        <span className="inline-flex items-center gap-1 rounded-full bg-white px-2.5 py-1 text-[0.625rem] text-[#52796F] ring-1 ring-[#D5DFD9]">
+                        <span className="inline-flex items-center gap-1 rounded-full bg-[var(--viralix-surface)] px-2.5 py-1 text-[0.625rem] text-[var(--viralix-muted)] ring-1 ring-[var(--viralix-border)]">
                             <ImageIcon className="h-3 w-3" /> JPG, PNG, WebP
                         </span>
-                        <span className="inline-flex items-center gap-1 rounded-full bg-white px-2.5 py-1 text-[0.625rem] text-[#52796F] ring-1 ring-[#D5DFD9]">
+                        <span className="inline-flex items-center gap-1 rounded-full bg-[var(--viralix-surface)] px-2.5 py-1 text-[0.625rem] text-[var(--viralix-muted)] ring-1 ring-[var(--viralix-border)]">
                             <Film className="h-3 w-3" /> MP4, MOV
                         </span>
                     </div>
@@ -183,11 +183,11 @@ export default function FileUpload({ onUploadComplete, onDeleteUploaded, embedde
 
             {uploading && (
                 <div className="mt-5">
-                    <div className="mb-1 flex justify-between text-xs text-[#52796F]">
+                    <div className="mb-1 flex justify-between text-xs text-[var(--viralix-muted)]">
                         <span>Uploading</span>
                         <span className="tabular-nums">{progress}%</span>
                     </div>
-                    <div className="h-1.5 overflow-hidden rounded-full bg-[#E8EDEA]">
+                    <div className="h-1.5 overflow-hidden rounded-full bg-[var(--viralix-border)]">
                         <div
                             className="h-full rounded-full bg-[#84A98C] transition-all duration-200"
                             style={{ width: `${progress}%` }}
@@ -203,12 +203,12 @@ export default function FileUpload({ onUploadComplete, onDeleteUploaded, embedde
             {queue.map((file) => (
                 <li
                     key={file.publicId}
-                    className="flex items-center gap-3 rounded-lg border border-[#E8EDEA] bg-white px-3 py-2"
+                    className="flex items-center gap-3 rounded-lg border border-[var(--viralix-border)] bg-[var(--viralix-surface)] px-3 py-2"
                 >
-                    <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-lg bg-[#F4F8F6]">
+                    <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-lg bg-[var(--viralix-inset)]">
                         {file.type === 'video' ? (
                             <div className="flex h-full w-full items-center justify-center">
-                                <Film className="h-4 w-4 text-[#52796F]" />
+                                <Film className="h-4 w-4 text-[var(--viralix-muted)]" />
                             </div>
                         ) : (
                             // eslint-disable-next-line @next/next/no-img-element
@@ -216,8 +216,8 @@ export default function FileUpload({ onUploadComplete, onDeleteUploaded, embedde
                         )}
                     </div>
                     <div className="min-w-0 flex-1">
-                        <p className="truncate text-xs font-medium text-[#354F52]">{file.filename}</p>
-                        <p className="text-[0.625rem] text-[#52796F]">{formatFileSize(file.size)}</p>
+                        <p className="truncate text-xs font-medium text-[var(--viralix-accent)]">{file.filename}</p>
+                        <p className="text-[0.625rem] text-[var(--viralix-muted)]">{formatFileSize(file.size)}</p>
                     </div>
                     <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-600" aria-hidden />
                     <button
@@ -237,7 +237,7 @@ export default function FileUpload({ onUploadComplete, onDeleteUploaded, embedde
         return (
             <div>
                 {demoMode && (
-                    <p className="mb-3 rounded-lg bg-[#354F52]/5 px-3 py-2 text-[0.6875rem] text-[#52796F]">
+                    <p className="mb-3 rounded-lg bg-[#354F52]/5 px-3 py-2 text-[0.6875rem] text-[var(--viralix-muted)]">
                         Demo mode — files stay in your browser session. Cloud upload coming soon.
                     </p>
                 )}
@@ -253,8 +253,8 @@ export default function FileUpload({ onUploadComplete, onDeleteUploaded, embedde
     }
 
     return (
-        <div className="rounded-2xl border border-[#B8C9C0] bg-white p-6 shadow-sm">
-            <h3 className="mb-4 text-lg font-semibold text-[#354F52]">Upload files</h3>
+        <div className="rounded-2xl dash-card border border-[var(--viralix-border)] p-6 shadow-sm">
+            <h3 className="mb-4 text-lg font-semibold text-[var(--viralix-accent)]">Upload files</h3>
             {error && (
                 <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
                     {error}

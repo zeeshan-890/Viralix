@@ -121,7 +121,7 @@ export default function UploadMediaCanvas({ files, activeIndex, onActiveChange, 
                         </div>
                     </div>
                 ) : !active ? (
-                    <label className="flex w-full max-w-md cursor-pointer flex-col items-center rounded-2xl border-2 border-dashed border-white/20 bg-white/5 px-8 py-12 transition-colors hover:border-[#84A98C]/50 hover:bg-white/10">
+                    <label className="flex w-full max-w-md cursor-pointer flex-col items-center rounded-2xl border-2 border-dashed border-white/20 bg-white/5 px-8 py-12 transition-colors hover:border-[#84A98C]/50 hover:bg-[var(--viralix-surface)]/10">
                         <input
                             type="file"
                             accept="image/*,video/*"

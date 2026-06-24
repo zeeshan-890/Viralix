@@ -101,7 +101,7 @@ export default function FacebookPage() {
             <div className="flex justify-end mb-6">
                 <button
                     onClick={() => setShowCreateModal(true)}
-                    className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors shadow-sm"
+                    className="flex items-center gap-2 px-4 py-2 btn btn-confirm text-white rounded-lg font-medium  transition-colors shadow-sm"
                 >
                     <Plus className="w-5 h-5" />
                     Create Post
@@ -110,7 +110,7 @@ export default function FacebookPage() {
 
             {/* Facebook Pages Section */}
             {pages.length > 0 && (
-                <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm mb-8">
+                <div className="dash-card dash-card-hover rounded-xl border border-[var(--viralix-border)] p-6 shadow-sm mb-8">
                     <h2 className="text-lg font-semibold mb-4" style={{ color: '#354F52' }}>Connected Pages</h2>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                         {pages.map((page) => (

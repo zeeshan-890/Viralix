@@ -75,7 +75,7 @@ export default function InstagramPostDetailPage() {
                     <ArrowLeft className="w-4 h-4" />
                     Back to Instagram
                 </Link>
-                <div className="bg-white rounded-xl border border-gray-200 p-12 text-center">
+                <div className="dash-card rounded-xl border border-[var(--viralix-border)] p-12 text-center">
                     <div className="animate-spin w-12 h-12 border-4 border-gray-200 rounded-full mx-auto mb-4" style={{ borderTopColor: '#E4405F' }}></div>
                     <p className="text-gray-500">Loading post insights...</p>
                 </div>
@@ -136,7 +136,7 @@ export default function InstagramPostDetailPage() {
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {/* Media Preview */}
-                <div className="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm">
+                <div className="dash-card rounded-xl border border-[var(--viralix-border)] overflow-hidden shadow-sm">
                     <div className="relative aspect-square bg-gray-900">
                         {isVideo && media?.mediaUrl ? (
                             <video
@@ -176,7 +176,7 @@ export default function InstagramPostDetailPage() {
                 {/* Insights Panel */}
                 <div className="space-y-6">
                     {/* Engagement Stats */}
-                    <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
+                    <div className="dash-card rounded-xl border border-[var(--viralix-border)] p-6 shadow-sm">
                         <h2 className="text-lg font-semibold mb-4" style={{ color: '#354F52' }}>Engagement</h2>
                         <div className="grid grid-cols-2 gap-4">
                             {/* Views - show for videos/reels */}
@@ -246,7 +246,7 @@ export default function InstagramPostDetailPage() {
                     </div>
 
                     {/* Auto-Reply Rules Section */}
-                    <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
+                    <div className="dash-card rounded-xl border border-[var(--viralix-border)] p-6 shadow-sm">
                         <div className="flex items-center gap-3 mb-4">
                             <div className="w-10 h-10 bg-purple-100 rounded-xl flex items-center justify-center">
                                 <Sparkles className="w-5 h-5 text-purple-600" />
@@ -347,7 +347,7 @@ export default function InstagramPostDetailPage() {
                     </div>
 
                     {/* Comments Section */}
-                    <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
+                    <div className="dash-card rounded-xl border border-[var(--viralix-border)] p-6 shadow-sm">
                         <h2 className="text-lg font-semibold mb-4" style={{ color: '#354F52' }}>
                             Comments ({comments?.length || 0})
                         </h2>

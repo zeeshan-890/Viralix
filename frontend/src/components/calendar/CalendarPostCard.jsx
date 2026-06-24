@@ -22,7 +22,7 @@ export default function CalendarPostCard({ post, onClick, isDragging, dragHandle
         <div
             onClick={onClick}
             className={cn(
-                'rounded-md border border-[#D5DFD9] border-l-[3px] bg-white transition-all',
+                'rounded-md border border-[var(--viralix-border)] border-l-[3px] bg-[var(--viralix-surface)] transition-all',
                 statusBorder[status] || statusBorder.draft,
                 compact ? 'p-1.5' : 'p-2',
                 isDragging && 'shadow-lg ring-2 ring-[#84A98C]/50',
@@ -35,7 +35,7 @@ export default function CalendarPostCard({ post, onClick, isDragging, dragHandle
                     <button
                         type="button"
                         {...dragHandleProps}
-                        className="mt-0.5 shrink-0 rounded p-0.5 text-[#CAD2C5] hover:bg-[#F0F4F2] hover:text-[#52796F]"
+                        className="mt-0.5 shrink-0 rounded p-0.5 text-[var(--viralix-border)] hover:bg-[var(--viralix-inset)] hover:text-[var(--viralix-muted)]"
                         aria-label="Drag to reschedule"
                         onClick={(e) => e.stopPropagation()}
                     >
@@ -64,13 +64,13 @@ export default function CalendarPostCard({ post, onClick, isDragging, dragHandle
                     </div>
                     <p
                         className={cn(
-                            'mt-1 font-medium leading-snug text-[#354F52]',
+                            'mt-1 font-medium leading-snug text-[var(--viralix-accent)]',
                             compact ? 'line-clamp-1 text-[0.6875rem]' : 'line-clamp-2 text-xs'
                         )}
                     >
                         {post.title || post.content?.substring(0, 50) || 'Untitled'}
                     </p>
-                    <div className="mt-0.5 flex items-center gap-1 text-[0.625rem] text-[#52796F]">
+                    <div className="mt-0.5 flex items-center gap-1 text-[0.625rem] text-[var(--viralix-muted)]">
                         <Clock className="h-2.5 w-2.5" aria-hidden />
                         {time}
                     </div>

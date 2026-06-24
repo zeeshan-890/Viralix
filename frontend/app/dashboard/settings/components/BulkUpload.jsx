@@ -1,4 +1,5 @@
 'use client';
+import notify from '@/lib/notify';
 import { useState, useRef } from 'react';
 import { bulkUploadAPI } from '@/lib/api';
 
@@ -23,7 +24,7 @@ export default function BulkUpload() {
             const res = await bulkUploadAPI.preview(fd);
             setPreview(res.data);
         } catch (err) {
-            alert(err.response?.data?.message || 'Parse failed');
+            notify.error(err.response?.data?.message || 'Parse failed');
             setPreview(null);
         } finally {
             setLoading(false);
@@ -40,7 +41,7 @@ export default function BulkUpload() {
             setResult(res.data);
             setPreview(null);
         } catch (err) {
-            alert(err.response?.data?.message || 'Bulk create failed');
+            notify.error(err.response?.data?.message || 'Bulk create failed');
         } finally {
             setCreating(false);
         }
@@ -54,7 +55,7 @@ export default function BulkUpload() {
     };
 
     return (
-        <div className="bg-white rounded-lg border border-gray-200 p-6">
+        <div className="dash-card rounded-lg border border-[var(--viralix-border)] p-6">
             <div className="mb-6">
                 <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
                     📋 Bulk CSV Upload
@@ -78,7 +79,7 @@ export default function BulkUpload() {
             {!preview && !result && (
                 <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
                     <span className="text-4xl block mb-3">📄</span>
-                    <label className="inline-block px-5 py-2.5 bg-blue-600 text-white text-sm rounded-lg cursor-pointer hover:bg-blue-700 transition">
+                    <label className="inline-block px-5 py-2.5 btn btn-confirm text-white text-sm rounded-lg cursor-pointer  transition">
                         {loading ? 'Parsing CSV...' : 'Select CSV File'}
                         <input
                             ref={inputRef}
@@ -184,7 +185,7 @@ export default function BulkUpload() {
                         </div>
                     )}
 
-                    <button onClick={handleReset} className="px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                    <button onClick={handleReset} className="px-4 py-2 text-sm btn btn-confirm text-white rounded-lg ">
                         Upload More
                     </button>
                 </div>

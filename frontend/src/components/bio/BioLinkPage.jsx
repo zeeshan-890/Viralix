@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { bioPagesAPI } from '@/lib/api';
 import { cn } from '@/lib/utils';
-import { toast } from 'react-hot-toast';
+import notify from '@/lib/notify';
 import BioPreview, { SOCIAL_ICONS } from './BioPreview';
 import {
     Link2, Loader2, Save, Plus, Trash2, Eye, EyeOff, ExternalLink, Copy, Palette, Settings, GripVertical,
@@ -29,7 +29,7 @@ const THEMES = [
     },
     {
         id: 'gradient-mist', label: 'Mist',
-        background: 'linear-gradient(to bottom, #E8EDEA, #F7FAF8)',
+        background: 'linear-gradient(to bottom, var(--viralix-border), var(--viralix-bg))',
         textColor: '#2F3E46', buttonColor: '#354F52', buttonTextColor: '#ffffff',
     },
 ];
@@ -43,7 +43,7 @@ const TABS = [
 const SOCIAL_PLATFORMS = ['instagram', 'tiktok', 'youtube', 'facebook', 'twitter', 'linkedin', 'website'];
 
 function PanelLabel({ children }) {
-    return <p className="text-[0.6875rem] font-semibold uppercase tracking-wider text-[#52796F]">{children}</p>;
+    return <p className="text-[0.6875rem] font-semibold uppercase tracking-wider text-[var(--viralix-muted)]">{children}</p>;
 }
 
 export default function BioLinkPage() {
@@ -88,9 +88,9 @@ export default function BioLinkPage() {
             setPage(p);
             setProfile(p.profile);
             setTheme({ ...THEMES[0], ...p.theme });
-            toast.success('Bio page created!');
+            notify.success('Bio page created!');
         } catch (err) {
-            toast.error(err.response?.data?.message || 'Failed to create page');
+            notify.error(err.response?.data?.message || 'Failed to create page');
         } finally {
             setLoading(false);
         }
@@ -101,9 +101,9 @@ export default function BioLinkPage() {
         setSaving(true);
         try {
             await bioPagesAPI.update(page._id, { profile, theme, buttons, socials });
-            toast.success('Changes saved');
+            notify.success('Changes saved');
         } catch {
-            toast.error('Save failed');
+            notify.error('Save failed');
         } finally {
             setSaving(false);
         }
@@ -112,7 +112,7 @@ export default function BioLinkPage() {
     const copyUrl = () => {
         const url = `${window.location.origin}/b/${page.slug}`;
         navigator.clipboard.writeText(url);
-        toast.success('Link copied');
+        notify.success('Link copied');
     };
 
     const addButton = () => {
@@ -146,14 +146,14 @@ export default function BioLinkPage() {
         return (
             <div className="flex flex-col items-center justify-center gap-3 py-24">
                 <Loader2 className="h-8 w-8 animate-spin text-[#84A98C]" />
-                <p className="text-sm text-[#52796F]">Loading bio page…</p>
+                <p className="text-sm text-[var(--viralix-muted)]">Loading bio page…</p>
             </div>
         );
     }
 
     if (!page) {
         return (
-            <div className="overflow-hidden rounded-2xl border border-[#B8C9C0] bg-white shadow-[0_8px_30px_rgba(47,62,70,0.08)]">
+            <div className="dash-card overflow-hidden rounded-2xl border border-[var(--viralix-border)]">
                 <div className="bg-gradient-to-r from-[#354F52] via-[#2F3E46] to-[#354F52] px-5 py-8 text-center text-white sm:px-6">
                     <Link2 className="mx-auto h-10 w-10 opacity-80" />
                     <h1 className="mt-3 text-xl font-semibold">Create your bio link</h1>
@@ -161,19 +161,19 @@ export default function BioLinkPage() {
                 </div>
                 <form onSubmit={handleCreatePage} className="mx-auto max-w-md p-6 sm:p-8">
                     <PanelLabel>Choose your URL</PanelLabel>
-                    <div className="mt-2 flex overflow-hidden rounded-xl border border-[#D5DFD9] focus-within:border-[#84A98C]">
-                        <span className="flex items-center bg-[#F4F8F6] px-3 text-sm text-[#52796F]">/b/</span>
+                    <div className="mt-2 flex overflow-hidden rounded-xl border border-[var(--viralix-border)] focus-within:border-[#84A98C]">
+                        <span className="flex items-center bg-[var(--viralix-inset)] px-3 text-sm text-[var(--viralix-muted)]">/b/</span>
                         <input
                             value={slugInput}
                             onChange={(e) => setSlugInput(e.target.value)}
                             placeholder="username"
                             required
-                            className="flex-1 px-3 py-2.5 text-sm text-[#354F52] outline-none"
+                            className="flex-1 px-3 py-2.5 text-sm text-[var(--viralix-accent)] outline-none"
                         />
                     </div>
                     <button
                         type="submit"
-                        className="mt-4 w-full rounded-xl bg-[#52796F] py-2.5 text-sm font-medium text-white hover:bg-[#354F52]"
+                        className="mt-4 w-full btn btn-confirm"
                     >
                         Claim URL
                     </button>
@@ -183,7 +183,7 @@ export default function BioLinkPage() {
     }
 
     return (
-        <div className="overflow-hidden rounded-2xl border border-[#B8C9C0] bg-white shadow-[0_8px_30px_rgba(47,62,70,0.08)]">
+        <div className="dash-card overflow-hidden rounded-2xl border border-[var(--viralix-border)]">
             <div className="bg-gradient-to-r from-[#354F52] via-[#2F3E46] to-[#354F52] px-5 py-4 text-white sm:px-6">
                 <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
                     <div>
@@ -193,10 +193,10 @@ export default function BioLinkPage() {
                         </h1>
                         <div className="mt-1 flex flex-wrap items-center gap-2">
                             <code className="rounded-lg bg-white/10 px-2 py-1 text-xs">/b/{page.slug}</code>
-                            <button type="button" onClick={copyUrl} className="inline-flex items-center gap-1 rounded-lg bg-white/10 px-2 py-1 text-xs hover:bg-white/20">
+                            <button type="button" onClick={copyUrl} className="inline-flex items-center gap-1 rounded-lg bg-white/10 px-2 py-1 text-xs hover:bg-[var(--viralix-surface)]/20">
                                 <Copy className="h-3 w-3" /> Copy
                             </button>
-                            <a href={`/b/${page.slug}`} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 rounded-lg bg-white/10 px-2 py-1 text-xs hover:bg-white/20">
+                            <a href={`/b/${page.slug}`} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 rounded-lg bg-white/10 px-2 py-1 text-xs hover:bg-[var(--viralix-surface)]/20">
                                 <ExternalLink className="h-3 w-3" /> Visit
                             </a>
                         </div>
@@ -230,8 +230,8 @@ export default function BioLinkPage() {
             <div className="flex flex-col gap-5 p-4 lg:flex-row lg:p-5">
                 {/* Editor */}
                 <div className="min-w-0 flex-1">
-                    <div className="overflow-hidden rounded-xl border border-[#B8C9C0] bg-white shadow-sm">
-                        <div className="flex gap-1 overflow-x-auto border-b border-[#E8EDEA] bg-[#FAFCFB] px-3 py-2">
+                    <div className="dash-card overflow-hidden rounded-xl border border-[var(--viralix-border)]">
+                        <div className="flex gap-1 overflow-x-auto border-b border-[var(--viralix-border)] bg-[var(--viralix-bg)] px-3 py-2">
                             {TABS.map(({ id, label, icon: Icon }) => (
                                 <button
                                     key={id}
@@ -239,7 +239,7 @@ export default function BioLinkPage() {
                                     onClick={() => setActiveTab(id)}
                                     className={cn(
                                         'inline-flex shrink-0 items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-medium transition',
-                                        activeTab === id ? 'bg-white text-[#354F52] shadow-sm ring-1 ring-[#D5DFD9]' : 'text-[#52796F] hover:text-[#354F52]'
+                                        activeTab === id ? 'bg-[var(--viralix-surface)] text-[var(--viralix-accent)] shadow-sm ring-1 ring-[var(--viralix-border)]' : 'text-[var(--viralix-muted)] hover:text-[var(--viralix-accent)]'
                                     )}
                                 >
                                     <Icon className="h-3.5 w-3.5" />
@@ -254,7 +254,7 @@ export default function BioLinkPage() {
                                     <section>
                                         <PanelLabel>Profile</PanelLabel>
                                         <div className="mt-3 flex gap-4">
-                                            <div className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-full border border-[#D5DFD9] bg-[#F4F8F6]">
+                                            <div className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-full border border-[var(--viralix-border)] bg-[var(--viralix-inset)]">
                                                 {profile.image ? (
                                                     <img src={profile.image} alt="" className="h-full w-full object-cover" />
                                                 ) : (
@@ -266,20 +266,20 @@ export default function BioLinkPage() {
                                                     value={profile.title}
                                                     onChange={(e) => setProfile({ ...profile, title: e.target.value })}
                                                     placeholder="Page title"
-                                                    className="w-full rounded-lg border border-[#D5DFD9] px-3 py-2 text-sm focus:border-[#84A98C] focus:outline-none"
+                                                    className="w-full rounded-lg border border-[var(--viralix-border)] px-3 py-2 text-sm focus:border-[#84A98C] focus:outline-none"
                                                 />
                                                 <textarea
                                                     value={profile.bio}
                                                     onChange={(e) => setProfile({ ...profile, bio: e.target.value })}
                                                     placeholder="Bio description"
                                                     rows={2}
-                                                    className="w-full resize-none rounded-lg border border-[#D5DFD9] px-3 py-2 text-sm focus:border-[#84A98C] focus:outline-none"
+                                                    className="w-full resize-none rounded-lg border border-[var(--viralix-border)] px-3 py-2 text-sm focus:border-[#84A98C] focus:outline-none"
                                                 />
                                                 <input
                                                     value={profile.image}
                                                     onChange={(e) => setProfile({ ...profile, image: e.target.value })}
                                                     placeholder="Profile image URL"
-                                                    className="w-full rounded-lg border border-[#D5DFD9] px-3 py-2 text-xs text-[#52796F] focus:border-[#84A98C] focus:outline-none"
+                                                    className="w-full rounded-lg border border-[var(--viralix-border)] px-3 py-2 text-xs text-[var(--viralix-muted)] focus:border-[#84A98C] focus:outline-none"
                                                 />
                                             </div>
                                         </div>
@@ -288,27 +288,27 @@ export default function BioLinkPage() {
                                     <section>
                                         <div className="flex items-center justify-between">
                                             <PanelLabel>Links</PanelLabel>
-                                            <button type="button" onClick={addButton} className="inline-flex items-center gap-1 rounded-lg bg-[#84A98C]/15 px-2 py-1 text-xs font-medium text-[#52796F] hover:bg-[#84A98C]/25">
+                                            <button type="button" onClick={addButton} className="inline-flex items-center gap-1 rounded-lg bg-[#84A98C]/15 px-2 py-1 text-xs font-medium text-[var(--viralix-muted)] hover:bg-[#84A98C]/25">
                                                 <Plus className="h-3 w-3" /> Add link
                                             </button>
                                         </div>
                                         <div className="mt-3 space-y-2">
                                             {buttons.map((btn, i) => (
-                                                <div key={btn._id || i} className="group rounded-xl border border-[#E8EDEA] bg-[#FAFCFB] p-3 transition hover:border-[#84A98C]/40">
+                                                <div key={btn._id || i} className="group rounded-xl border border-[var(--viralix-border)] bg-[var(--viralix-bg)] p-3 transition hover:border-[#84A98C]/40">
                                                     <div className="flex items-start gap-2">
-                                                        <GripVertical className="mt-2 h-4 w-4 shrink-0 text-[#B8C9C0] opacity-0 group-hover:opacity-100" />
+                                                        <GripVertical className="mt-2 h-4 w-4 shrink-0 text-[var(--viralix-border)] opacity-0 group-hover:opacity-100" />
                                                         <div className="min-w-0 flex-1 space-y-2">
                                                             <input
                                                                 value={btn.label}
                                                                 onChange={(e) => updateButton(i, 'label', e.target.value)}
                                                                 placeholder="Label"
-                                                                className="w-full border-none bg-transparent p-0 text-sm font-semibold text-[#354F52] focus:outline-none focus:ring-0"
+                                                                className="w-full border-none bg-transparent p-0 text-sm font-semibold text-[var(--viralix-accent)] focus:outline-none focus:ring-0"
                                                             />
                                                             <input
                                                                 value={btn.url}
                                                                 onChange={(e) => updateButton(i, 'url', e.target.value)}
                                                                 placeholder="https://"
-                                                                className="w-full border-none bg-transparent p-0 text-xs text-[#52796F] focus:outline-none focus:ring-0"
+                                                                className="w-full border-none bg-transparent p-0 text-xs text-[var(--viralix-muted)] focus:outline-none focus:ring-0"
                                                             />
                                                         </div>
                                                         <div className="flex shrink-0 items-center gap-1">
@@ -317,7 +317,7 @@ export default function BioLinkPage() {
                                                                 onClick={() => updateButton(i, 'isVisible', !btn.isVisible)}
                                                                 className={cn(
                                                                     'rounded-lg p-1.5 transition',
-                                                                    btn.isVisible !== false ? 'text-[#52796F] hover:bg-emerald-50' : 'text-[#94A3B8] hover:bg-[#F4F8F6]'
+                                                                    btn.isVisible !== false ? 'text-[var(--viralix-muted)] hover:bg-emerald-50' : 'text-[#94A3B8] hover:bg-[var(--viralix-bg)]'
                                                                 )}
                                                                 title={btn.isVisible !== false ? 'Visible' : 'Hidden'}
                                                             >
@@ -331,7 +331,7 @@ export default function BioLinkPage() {
                                                 </div>
                                             ))}
                                             {buttons.length === 0 && (
-                                                <p className="py-8 text-center text-sm text-[#52796F]">No links yet — add your first one</p>
+                                                <p className="py-8 text-center text-sm text-[var(--viralix-muted)]">No links yet — add your first one</p>
                                             )}
                                         </div>
                                     </section>
@@ -339,18 +339,18 @@ export default function BioLinkPage() {
                                     <section>
                                         <div className="flex items-center justify-between">
                                             <PanelLabel>Social icons</PanelLabel>
-                                            <button type="button" onClick={addSocial} className="inline-flex items-center gap-1 rounded-lg bg-[#84A98C]/15 px-2 py-1 text-xs font-medium text-[#52796F] hover:bg-[#84A98C]/25">
+                                            <button type="button" onClick={addSocial} className="inline-flex items-center gap-1 rounded-lg bg-[#84A98C]/15 px-2 py-1 text-xs font-medium text-[var(--viralix-muted)] hover:bg-[#84A98C]/25">
                                                 <Plus className="h-3 w-3" /> Add
                                             </button>
                                         </div>
                                         <div className="mt-3 space-y-2">
                                             {socials.map((s, i) => (
-                                                <div key={i} className="flex items-center gap-2 rounded-xl border border-[#E8EDEA] bg-[#FAFCFB] p-2">
+                                                <div key={i} className="flex items-center gap-2 rounded-xl border border-[var(--viralix-border)] bg-[var(--viralix-bg)] p-2">
                                                     <span className="w-6 text-center text-sm">{SOCIAL_ICONS[s.platform] || '🔗'}</span>
                                                     <select
                                                         value={s.platform}
                                                         onChange={(e) => updateSocial(i, 'platform', e.target.value)}
-                                                        className="rounded-lg border border-[#D5DFD9] bg-white px-2 py-1.5 text-xs capitalize focus:border-[#84A98C] focus:outline-none"
+                                                        className="rounded-lg border border-[var(--viralix-border)] bg-[var(--viralix-surface)] px-2 py-1.5 text-xs capitalize focus:border-[#84A98C] focus:outline-none"
                                                     >
                                                         {SOCIAL_PLATFORMS.map((p) => (
                                                             <option key={p} value={p}>{p}</option>
@@ -360,7 +360,7 @@ export default function BioLinkPage() {
                                                         value={s.url}
                                                         onChange={(e) => updateSocial(i, 'url', e.target.value)}
                                                         placeholder="https://"
-                                                        className="min-w-0 flex-1 rounded-lg border border-[#D5DFD9] bg-white px-2 py-1.5 text-xs focus:border-[#84A98C] focus:outline-none"
+                                                        className="min-w-0 flex-1 rounded-lg border border-[var(--viralix-border)] bg-[var(--viralix-surface)] px-2 py-1.5 text-xs focus:border-[#84A98C] focus:outline-none"
                                                     />
                                                     <button type="button" onClick={() => setSocials(socials.filter((_, j) => j !== i))} className="rounded-lg p-1.5 text-red-400 hover:bg-red-50">
                                                         <Trash2 className="h-3.5 w-3.5" />
@@ -384,7 +384,7 @@ export default function BioLinkPage() {
                                                     onClick={() => setTheme({ ...theme, ...t })}
                                                     className={cn(
                                                         'flex h-20 flex-col items-center justify-center gap-1.5 rounded-xl border-2 transition',
-                                                        theme.id === t.id ? 'border-[#84A98C] ring-2 ring-[#84A98C]/20' : 'border-[#E8EDEA] hover:border-[#B8C9C0]'
+                                                        theme.id === t.id ? 'border-[#84A98C] ring-2 ring-[#84A98C]/20' : 'border-[var(--viralix-border)] hover:border-[var(--viralix-border)]'
                                                     )}
                                                     style={{ background: t.background }}
                                                 >
@@ -396,7 +396,7 @@ export default function BioLinkPage() {
                                     </section>
                                     <section>
                                         <PanelLabel>Button style</PanelLabel>
-                                        <div className="mt-3 flex rounded-xl bg-[#F4F8F6] p-1">
+                                        <div className="mt-3 flex rounded-xl bg-[var(--viralix-inset)] p-1">
                                             {['rounded', 'pill', 'square', 'shadow'].map((s) => (
                                                 <button
                                                     key={s}
@@ -404,7 +404,7 @@ export default function BioLinkPage() {
                                                     onClick={() => setTheme({ ...theme, buttonStyle: s })}
                                                     className={cn(
                                                         'flex-1 rounded-lg py-2 text-xs font-medium capitalize transition',
-                                                        theme.buttonStyle === s ? 'bg-white text-[#354F52] shadow-sm' : 'text-[#52796F]'
+                                                        theme.buttonStyle === s ? 'bg-[var(--viralix-surface)] text-[var(--viralix-accent)] shadow-sm' : 'text-[var(--viralix-muted)]'
                                                     )}
                                                 >
                                                     {s}
@@ -417,25 +417,25 @@ export default function BioLinkPage() {
 
                             {activeTab === 'settings' && (
                                 <div className="space-y-4">
-                                    <div className="rounded-xl border border-[#E8EDEA] bg-[#FAFCFB] p-4">
+                                    <div className="rounded-xl border border-[var(--viralix-border)] bg-[var(--viralix-bg)] p-4">
                                         <PanelLabel>Public URL</PanelLabel>
                                         <div className="mt-2 flex gap-2">
-                                            <code className="flex-1 truncate rounded-lg border border-[#D5DFD9] bg-white px-3 py-2 text-sm text-[#52796F]">
+                                            <code className="flex-1 truncate rounded-lg border border-[var(--viralix-border)] bg-[var(--viralix-surface)] px-3 py-2 text-sm text-[var(--viralix-muted)]">
                                                 {typeof window !== 'undefined' ? `${window.location.origin}/b/${page.slug}` : `/b/${page.slug}`}
                                             </code>
-                                            <button type="button" onClick={copyUrl} className="shrink-0 rounded-lg bg-[#52796F] px-3 py-2 text-xs font-medium text-white hover:bg-[#354F52]">
+                                            <button type="button" onClick={copyUrl} className="shrink-0 btn btn-confirm btn-sm">
                                                 Copy
                                             </button>
                                         </div>
                                     </div>
                                     <div className="grid grid-cols-2 gap-3">
-                                        <div className="rounded-xl border border-[#E8EDEA] bg-[#FAFCFB] p-4 text-center">
-                                            <p className="text-2xl font-bold tabular-nums text-[#354F52]">{pageViews.toLocaleString()}</p>
-                                            <p className="text-xs text-[#52796F]">Page views</p>
+                                        <div className="rounded-xl border border-[var(--viralix-border)] bg-[var(--viralix-bg)] p-4 text-center">
+                                            <p className="text-2xl font-bold tabular-nums text-[var(--viralix-accent)]">{pageViews.toLocaleString()}</p>
+                                            <p className="text-xs text-[var(--viralix-muted)]">Page views</p>
                                         </div>
-                                        <div className="rounded-xl border border-[#E8EDEA] bg-[#FAFCFB] p-4 text-center">
-                                            <p className="text-2xl font-bold tabular-nums text-[#354F52]">{totalClicks.toLocaleString()}</p>
-                                            <p className="text-xs text-[#52796F]">Link clicks</p>
+                                        <div className="rounded-xl border border-[var(--viralix-border)] bg-[var(--viralix-bg)] p-4 text-center">
+                                            <p className="text-2xl font-bold tabular-nums text-[var(--viralix-accent)]">{totalClicks.toLocaleString()}</p>
+                                            <p className="text-xs text-[var(--viralix-muted)]">Link clicks</p>
                                         </div>
                                     </div>
                                 </div>

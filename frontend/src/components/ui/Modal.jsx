@@ -11,7 +11,7 @@ const Modal = ({ open, onOpenChange, children }) => {
         </div>);
 };
 const ModalContent = ({ className, children }) => {
-    return (<div className={cn("bg-white rounded-lg shadow-lg p-6", className)}>
+    return (<div className={cn("dash-card bg-[var(--viralix-surface)] rounded-lg shadow-lg p-6 border border-[var(--viralix-border)]", className)}>
             {children}
         </div>);
 };

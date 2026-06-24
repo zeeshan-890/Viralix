@@ -128,7 +128,7 @@ export default function CreateFacebookPost({ isOpen, onClose, pages = [], onSucc
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col">
+            <div className="dash-card bg-[var(--viralix-surface)] rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col">
                 {/* Header */}
                 <div className="flex items-center justify-between p-5 border-b border-gray-200">
                     <div className="flex items-center gap-3">
@@ -271,8 +271,8 @@ export default function CreateFacebookPost({ isOpen, onClose, pages = [], onSucc
                                     <div>
                                         <label className="block text-xs font-medium text-gray-500 mb-2 uppercase">Trigger Rule</label>
                                         <div className="grid grid-cols-2 gap-3">
-                                            <button onClick={() => setTriggerType('keyword')} className={`p-3 rounded-lg border text-sm ${triggerType === 'keyword' ? 'border-purple-500 bg-purple-50 text-purple-700' : 'border-gray-200 bg-white'}`}>Specific Keywords</button>
-                                            <button onClick={() => setTriggerType('any')} className={`p-3 rounded-lg border text-sm ${triggerType === 'any' ? 'border-purple-500 bg-purple-50 text-purple-700' : 'border-gray-200 bg-white'}`}>Any Comment</button>
+                                            <button onClick={() => setTriggerType('keyword')} className={`p-3 rounded-lg border text-sm ${triggerType === 'keyword' ? 'border-purple-500 bg-purple-50 text-purple-700' : 'border-[var(--viralix-border)] bg-[var(--viralix-surface)]'}`}>Specific Keywords</button>
+                                            <button onClick={() => setTriggerType('any')} className={`p-3 rounded-lg border text-sm ${triggerType === 'any' ? 'border-purple-500 bg-purple-50 text-purple-700' : 'border-[var(--viralix-border)] bg-[var(--viralix-surface)]'}`}>Any Comment</button>
                                         </div>
                                     </div>
 
@@ -347,7 +347,7 @@ export default function CreateFacebookPost({ isOpen, onClose, pages = [], onSucc
                                 </div>
                                 <div>
                                     <span className="font-medium">Caption:</span>
-                                    <p className="mt-1 line-clamp-3 italic bg-white p-2 rounded border border-gray-100">{caption || '(No caption)'}</p>
+                                    <p className="mt-1 line-clamp-3 italic bg-[var(--viralix-bg)] p-2 rounded border border-[var(--viralix-border)]">{caption || '(No caption)'}</p>
                                 </div>
                                 {link && (
                                     <div className="flex justify-between">
@@ -368,7 +368,7 @@ export default function CreateFacebookPost({ isOpen, onClose, pages = [], onSucc
                 <div className="flex items-center justify-between p-5 border-t border-gray-200 bg-gray-50">
                     <button
                         onClick={() => step > 1 ? setStep(step - 1) : onClose()}
-                        className="px-5 py-2.5 text-gray-600 hover:bg-gray-200 rounded-xl transition-colors"
+                        className="btn btn-cancel"
                     >
                         {step === 1 ? 'Cancel' : 'Back'}
                     </button>
@@ -376,7 +376,7 @@ export default function CreateFacebookPost({ isOpen, onClose, pages = [], onSucc
                     {step < 3 ? (
                         <button
                             onClick={() => setStep(step + 1)}
-                            className="px-6 py-2.5 bg-blue-600 text-white rounded-xl font-medium hover:bg-blue-700 transition-colors"
+                            className="btn btn-confirm"
                         >
                             Next
                         </button>
@@ -384,7 +384,7 @@ export default function CreateFacebookPost({ isOpen, onClose, pages = [], onSucc
                         <button
                             onClick={handlePublish}
                             disabled={loading}
-                            className="px-6 py-2.5 bg-gradient-to-r from-blue-600 to-blue-500 text-white rounded-xl font-medium hover:from-blue-700 hover:to-blue-600 disabled:opacity-50 flex items-center gap-2"
+                            className="btn btn-success disabled:opacity-50 flex items-center gap-2"
                         >
                             {loading ? (
                                 <>

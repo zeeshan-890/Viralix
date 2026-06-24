@@ -12,21 +12,21 @@ export default function PlatformMetrics({ analytics }) {
         const platformConfig = {
             facebook: {
                 icon: <Image src="/facebook.png" alt="FB" width={24} height={24} className="w-6 h-6 object-contain" />,
-                color: 'bg-white border border-gray-200'
+                color: 'bg-[var(--viralix-surface)] border border-[var(--viralix-border)]'
             },
             instagram: {
                 icon: <Image src="/instagram.png" alt="IG" width={24} height={24} className="w-6 h-6 object-contain" />,
-                color: 'bg-white border border-gray-200'
+                color: 'bg-[var(--viralix-surface)] border border-[var(--viralix-border)]'
             },
             twitter: { icon: '🐦', color: 'bg-blue-400 text-white' },
             linkedin: { icon: '💼', color: 'bg-blue-700 text-white' },
             tiktok: {
                 icon: <Image src="/tiktok.png" alt="TT" width={24} height={24} className="w-6 h-6 object-contain" />,
-                color: 'bg-white border border-gray-200'
+                color: 'bg-[var(--viralix-surface)] border border-[var(--viralix-border)]'
             },
             youtube: {
                 icon: <Image src="/youtube.png" alt="YT" width={24} height={24} className="w-6 h-6 object-contain" />,
-                color: 'bg-white border border-gray-200'
+                color: 'bg-[var(--viralix-surface)] border border-[var(--viralix-border)]'
             }
         };
 
@@ -55,7 +55,7 @@ export default function PlatformMetrics({ analytics }) {
     };
 
     return (<div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="bg-white rounded-lg border border-gray-200 p-6">
+        <div className="dash-card rounded-lg border border-[var(--viralix-border)] p-6">
             <h3 className="text-lg font-semibold text-gray-900 mb-4">Platform Performance</h3>
 
             {platforms.length === 0 ? (
@@ -115,7 +115,7 @@ export default function PlatformMetrics({ analytics }) {
             )}
         </div>
 
-        <div className="bg-white rounded-lg border border-gray-200 p-6">
+        <div className="dash-card rounded-lg border border-[var(--viralix-border)] p-6">
             <h3 className="text-lg font-semibold text-gray-900 mb-4">Post Status Overview</h3>
 
             {platforms.length === 0 ? (
@@ -153,7 +153,7 @@ export default function PlatformMetrics({ analytics }) {
                                     <span className="font-medium">{platform.name}</span>
                                 </div>
                                 <div className="flex space-x-2 text-xs">
-                                    <span className="px-2 py-1 bg-white rounded border">
+                                    <span className="px-2 py-1 bg-[var(--viralix-surface)] rounded border border-[var(--viralix-border)]">
                                         {platform.posts} total
                                     </span>
                                     <span className="px-2 py-1 bg-green-100 text-green-800 rounded">

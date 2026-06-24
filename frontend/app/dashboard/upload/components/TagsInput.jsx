@@ -7,11 +7,11 @@ const SUGGESTED = ['viral', 'trending', 'education', 'lifestyle', 'technology', 
 export default function TagsInput({ tags = [], onChange, embedded = false }) {
     const labelClass = 'mb-1.5 block text-xs font-medium text-[#52796F]';
     const inputClass =
-        'w-full rounded-lg border border-[#C8D4CE] bg-[#FAFCFB] px-3 py-2 text-sm text-[#354F52] focus:border-[#84A98C] focus:outline-none focus:ring-2 focus:ring-[#84A98C]/25';
+        'w-full rounded-lg border border-[var(--viralix-border)] bg-[var(--viralix-bg)] px-3 py-2 text-sm text-[#354F52] focus:border-[#84A98C] focus:outline-none focus:ring-2 focus:ring-[#84A98C]/25';
 
     const body = (
         <>
-            <div className="mb-2 flex min-h-[36px] flex-wrap gap-1.5 rounded-lg border border-[#C8D4CE] bg-[#FAFCFB] p-2">
+            <div className="mb-2 flex min-h-[36px] flex-wrap gap-1.5 rounded-lg border border-[var(--viralix-border)] bg-[var(--viralix-bg)] p-2">
                 {tags.map((tag) => (
                     <span
                         key={tag}
@@ -53,7 +53,7 @@ export default function TagsInput({ tags = [], onChange, embedded = false }) {
                             key={tag}
                             type="button"
                             onClick={() => onChange?.([...tags, tag])}
-                            className="rounded-full bg-[#F4F8F6] px-2 py-0.5 text-[0.6875rem] text-[#52796F] hover:bg-[#E8EDEA]"
+                            className="rounded-full bg-[var(--viralix-bg)] px-2 py-0.5 text-[0.6875rem] text-[var(--viralix-muted)] hover:bg-[var(--viralix-border)]"
                         >
                             #{tag}
                         </button>

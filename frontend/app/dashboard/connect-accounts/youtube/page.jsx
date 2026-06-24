@@ -66,7 +66,7 @@ export default function YouTubeManagePage() {
         <div className="max-w-4xl mx-auto">
             <div className="mb-8">
                 <div className="flex items-center gap-3 mb-3">
-                    <div className="w-12 h-12 rounded-xl flex items-center justify-center bg-white border border-gray-100 shadow-sm">
+                    <div className="w-12 h-12 rounded-xl flex items-center justify-center bg-[var(--viralix-surface)] border border-[var(--viralix-border)] shadow-sm">
                         <Image src="/youtube.png" alt="YouTube" width={24} height={24} className="w-6 h-6 object-contain" />
                     </div>
                     <div>
@@ -95,7 +95,7 @@ export default function YouTubeManagePage() {
             )}
 
             {isLoading ? (
-                <div className="bg-white rounded-xl border border-gray-200 p-12 text-center">
+                <div className="dash-card dash-card-hover rounded-xl border border-[var(--viralix-border)] p-12 text-center">
                     <Loader2 className="w-12 h-12 mx-auto mb-4 animate-spin" style={{ color: '#84A98C' }} />
                     <p className="text-gray-600">Loading YouTube channels...</p>
                 </div>
@@ -103,7 +103,7 @@ export default function YouTubeManagePage() {
                 <>
                     {/* Connected Accounts */}
                     {ytAccounts.length > 0 && (
-                        <div className="bg-white rounded-xl border border-gray-200 p-6 mb-6">
+                        <div className="dash-card dash-card-hover rounded-xl border border-[var(--viralix-border)] p-6 mb-6">
                             <h2 className="text-xl font-semibold mb-4" style={{ color: '#354F52' }}>
                                 Connected Channels
                             </h2>
@@ -114,7 +114,7 @@ export default function YouTubeManagePage() {
                                         className="flex items-center justify-between p-4 border-2 border-gray-200 rounded-xl hover:shadow-md transition-all"
                                     >
                                         <div className="flex items-center gap-4">
-                                            <div className="w-12 h-12 rounded-full flex items-center justify-center bg-white border border-gray-100 shadow-sm">
+                                            <div className="w-12 h-12 rounded-full flex items-center justify-center bg-[var(--viralix-surface)] border border-[var(--viralix-border)] shadow-sm">
                                                 <Image src="/youtube.png" alt="YouTube" width={24} height={24} className="w-6 h-6 object-contain" />
                                             </div>
                                             <div>
@@ -139,8 +139,8 @@ export default function YouTubeManagePage() {
                     )}
 
                     {/* Connect New Account */}
-                    <div className="bg-white rounded-xl border border-gray-200 p-8 text-center">
-                        <div className="w-16 h-16 mx-auto mb-4 rounded-full flex items-center justify-center bg-white border border-gray-100 shadow-sm">
+                    <div className="dash-card dash-card-hover rounded-xl border border-[var(--viralix-border)] p-8 text-center">
+                        <div className="w-16 h-16 mx-auto mb-4 rounded-full flex items-center justify-center bg-[var(--viralix-surface)] border border-[var(--viralix-border)] shadow-sm">
                             <Image src="/youtube.png" alt="YouTube" width={32} height={32} className="w-8 h-8 object-contain" />
                         </div>
                         <h2 className="text-xl font-semibold mb-2" style={{ color: '#354F52' }}>

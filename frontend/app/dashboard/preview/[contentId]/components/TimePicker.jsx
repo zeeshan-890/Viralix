@@ -142,7 +142,7 @@ export default function TimePicker({ post, onChange }) {
     };
 
     return (
-        <div className="bg-white rounded-lg border border-gray-200 p-6">
+        <div className="dash-card rounded-lg border border-[var(--viralix-border)] p-6">
             <h3 className="text-lg font-semibold mb-4">Schedule Settings</h3>
 
             {/* Schedule Type */}
@@ -303,7 +303,7 @@ export default function TimePicker({ post, onChange }) {
             {/* Action Buttons */}
             <div className="flex space-x-3 mt-4">
                 <button
-                    className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                    className="flex-1 px-4 py-2 btn btn-confirm text-white rounded-lg  transition-colors"
                     disabled={selectedPlatforms.length === 0}
                     type="button"
                 >

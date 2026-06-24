@@ -137,7 +137,7 @@ export default function AccountSettings() {
     };
 
     return (
-        <div id="account" className="bg-white rounded-lg border border-gray-200 p-6">
+        <div id="account" className="dash-card rounded-lg border border-[var(--viralix-border)] p-6">
             <h3 className="text-lg font-semibold text-gray-900 mb-4">Account Settings</h3>
 
             {message && (
@@ -162,7 +162,7 @@ export default function AccountSettings() {
                         )}
                     </div>
                     <div>
-                        <label className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors cursor-pointer">
+                        <label className="px-4 py-2 btn btn-confirm text-white rounded-lg  transition-colors cursor-pointer">
                             Change Photo
                             <input
                                 type="file"
@@ -233,7 +233,7 @@ export default function AccountSettings() {
                     <button
                         onClick={handleSaveProfile}
                         disabled={loading}
-                        className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
+                        className="px-6 py-2 btn btn-confirm text-white rounded-lg  transition-colors disabled:opacity-50"
                     >
                         {loading ? 'Saving...' : 'Save Profile'}
                     </button>
@@ -313,7 +313,7 @@ export default function AccountSettings() {
             {/* Delete Confirmation Modal */}
             {showDeleteModal && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-                    <div className="bg-white rounded-xl shadow-2xl w-full max-w-md p-6">
+                    <div className="dash-card bg-[var(--viralix-surface)] rounded-xl shadow-2xl w-full max-w-md p-6">
                         <div className="flex items-center gap-3 mb-4">
                             <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center">
                                 <AlertTriangle className="w-6 h-6 text-red-600" />

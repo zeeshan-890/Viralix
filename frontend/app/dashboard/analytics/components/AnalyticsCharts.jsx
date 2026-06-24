@@ -36,14 +36,14 @@ export default function AnalyticsCharts() {
         { value: 'reach', label: 'Reach', icon: '📊' },
     ];
     const maxValue = timeline.length > 0 ? Math.max(...timeline.map(d => d[activeChart] || 0)) : 0;
-    return (<div className="bg-white rounded-lg border border-gray-200 p-6">
+    return (<div className="dash-card rounded-lg border border-[var(--viralix-border)] p-6">
         <div className="flex items-center justify-between mb-6">
             <h3 className="text-lg font-semibold text-gray-900">Performance Overview</h3>
 
             {/* Time Range Selector */}
             <div className="flex space-x-1 bg-gray-100 rounded-lg p-1">
                 {timeRanges.map((range) => (<button key={range.value} onClick={() => setTimeRange(range.value)} className={`px-3 py-1 rounded-md text-sm font-medium transition-colors ${timeRange === range.value
-                    ? 'bg-white shadow-sm text-gray-900'
+                    ? 'bg-[var(--viralix-surface)] shadow-sm text-gray-900'
                     : 'text-gray-600 hover:text-gray-900'}`}>
                     {range.label}
                 </button>))}
@@ -75,7 +75,7 @@ export default function AnalyticsCharts() {
                     <div className="flex items-end justify-between h-64 border-b border-gray-200">
                         {timeline.map((point, index) => (
                             <div key={`${point.date}-${index}`} className="flex flex-col items-center flex-1">
-                                <div className="w-full max-w-8 bg-blue-500 rounded-t hover:bg-blue-600 transition-colors cursor-pointer" style={{
+                                <div className="w-full max-w-8 bg-blue-500 rounded-t hover:btn btn-confirm transition-colors cursor-pointer" style={{
                                     height: `${maxValue > 0 ? ((point[activeChart] || 0) / maxValue) * 200 : 0}px`,
                                     minHeight: '4px'
                                 }} title={`${point.date}: ${point[activeChart] || 0}`} />

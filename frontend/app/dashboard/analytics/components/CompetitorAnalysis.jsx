@@ -1,4 +1,5 @@
 'use client';
+import notify from '@/lib/notify';
 import { useState, useEffect } from 'react';
 import { competitorAPI } from '@/lib/api';
 
@@ -44,7 +45,7 @@ export default function CompetitorAnalysis() {
             setName(''); setHandle('');
             loadData();
         } catch (err) {
-            alert(err.response?.data?.message || 'Add failed');
+            notify.error(err.response?.data?.message || 'Add failed');
         } finally {
             setCreating(false);
         }
@@ -55,7 +56,7 @@ export default function CompetitorAnalysis() {
         try {
             await competitorAPI.remove(id);
             loadData();
-        } catch (err) { alert('Remove failed'); }
+        } catch (err) { notify.error('Remove failed'); }
     };
 
     const handleSnapshot = async (id) => {
@@ -67,14 +68,14 @@ export default function CompetitorAnalysis() {
             });
             setSnapshotForm({ id: null, followers: '', engagementRate: '', avgLikes: '' });
             loadData();
-        } catch (err) { alert('Snapshot failed'); }
+        } catch (err) { notify.error('Snapshot failed'); }
     };
 
     const growthColor = (val) => val > 0 ? 'text-green-600' : val < 0 ? 'text-red-600' : 'text-gray-400';
     const growthArrow = (val) => val > 0 ? '↑' : val < 0 ? '↓' : '→';
 
     return (
-        <div className="bg-white rounded-lg border border-gray-200 p-6">
+        <div className="dash-card rounded-lg border border-[var(--viralix-border)] p-6">
             <div className="flex items-center justify-between mb-6">
                 <div>
                     <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
@@ -128,7 +129,7 @@ export default function CompetitorAnalysis() {
                         <div>
                             <label className="block text-xs font-medium text-gray-600 mb-1">Platform</label>
                             <select value={platform} onChange={(e) => setPlatform(e.target.value)}
-                                className="border rounded-lg px-3 py-2 text-sm bg-white">
+                                className="border border-[var(--viralix-border)] rounded-lg px-3 py-2 text-sm bg-[var(--viralix-surface)]">
                                 <option value="instagram">Instagram</option>
                                 <option value="facebook">Facebook</option>
                                 <option value="twitter">Twitter</option>
@@ -137,7 +138,7 @@ export default function CompetitorAnalysis() {
                             </select>
                         </div>
                         <button type="submit" disabled={creating}
-                            className="px-4 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 disabled:opacity-50 whitespace-nowrap">
+                            className="px-4 py-2 btn btn-confirm text-white text-sm rounded-lg  disabled:opacity-50 whitespace-nowrap">
                             {creating ? '...' : '+ Track'}
                         </button>
                     </form>
@@ -201,7 +202,7 @@ export default function CompetitorAnalysis() {
                                                 onChange={(e) => setSnapshotForm(prev => ({ ...prev, avgLikes: e.target.value }))}
                                                 className="w-24 border rounded px-2 py-1 text-xs" />
                                             <button onClick={() => handleSnapshot(comp._id)}
-                                                className="px-3 py-1 bg-blue-600 text-white text-xs rounded hover:bg-blue-700">Save</button>
+                                                className="px-3 py-1 btn btn-confirm text-white text-xs rounded ">Save</button>
                                             <button onClick={() => setSnapshotForm({ id: null, followers: '', engagementRate: '', avgLikes: '' })}
                                                 className="px-2 py-1 text-xs text-gray-500">✕</button>
                                         </div>

@@ -181,8 +181,8 @@ export default function CaptionEditor({ content = '', onChange, topic = '', onHa
     };
 
     const fieldClass =
-        'w-full rounded-lg border border-[#C8D4CE] bg-[#FAFCFB] px-3 py-2 text-sm text-[#354F52] focus:border-[#84A98C] focus:outline-none focus:ring-2 focus:ring-[#84A98C]/25';
-    const labelClass = 'mb-1.5 block text-xs font-medium text-[#52796F]';
+        'w-full rounded-lg border border-[var(--viralix-border)] bg-[var(--viralix-bg)] px-3 py-2 text-sm text-[var(--viralix-accent)] focus:border-[#84A98C] focus:outline-none focus:ring-2 focus:ring-[#84A98C]/25';
+    const labelClass = 'mb-1.5 block text-xs font-medium text-[var(--viralix-muted)]';
 
     const aiTools = (
         <>
@@ -193,7 +193,7 @@ export default function CaptionEditor({ content = '', onChange, topic = '', onHa
                         type="button"
                         onClick={generateSuggestions}
                         disabled={suggesting}
-                        className="inline-flex items-center gap-1 text-xs font-medium text-[#52796F] hover:text-[#354F52] disabled:opacity-60"
+                        className="inline-flex items-center gap-1 text-xs font-medium text-[var(--viralix-muted)] hover:text-[var(--viralix-accent)] disabled:opacity-60"
                     >
                         <Sparkles className="h-3 w-3" aria-hidden />
                         {suggesting ? 'Generating…' : 'Generate'}
@@ -208,7 +208,7 @@ export default function CaptionEditor({ content = '', onChange, topic = '', onHa
                             key={i}
                             type="button"
                             onClick={() => applySuggestion(s)}
-                            className="w-full rounded-lg bg-[#F4F8F6] p-2.5 text-left text-xs text-[#354F52] transition-colors hover:bg-[#E8EDEA]"
+                            className="w-full rounded-lg bg-[var(--viralix-bg)] p-2.5 text-left text-xs text-[var(--viralix-accent)] transition-colors hover:bg-[var(--viralix-border)]"
                         >
                             {s}
                         </button>
@@ -223,7 +223,7 @@ export default function CaptionEditor({ content = '', onChange, topic = '', onHa
                         <button
                             type="button"
                             onClick={() => setAiTagSuggestions([])}
-                            className="text-xs text-[#94A3B8] hover:text-[#52796F]"
+                            className="text-xs text-[#94A3B8] hover:text-[var(--viralix-muted)]"
                         >
                             Clear
                         </button>
@@ -234,7 +234,7 @@ export default function CaptionEditor({ content = '', onChange, topic = '', onHa
                                 key={idx}
                                 type="button"
                                 onClick={() => addTag(t)}
-                                className="rounded-full bg-[#EEF3F0] px-2 py-0.5 text-xs text-[#354F52] hover:bg-[#D5DFD9]"
+                                className="rounded-full bg-[var(--viralix-bg)] px-2 py-0.5 text-xs text-[var(--viralix-accent)] hover:bg-[var(--viralix-border)]"
                                 title={`Add #${t}`}
                             >
                                 #{t}
@@ -250,7 +250,7 @@ export default function CaptionEditor({ content = '', onChange, topic = '', onHa
                         key={index}
                         type="button"
                         onClick={action.action}
-                        className="rounded-full bg-[#F4F8F6] px-2.5 py-1 text-xs text-[#52796F] transition-colors hover:bg-[#E8EDEA]"
+                        className="rounded-full bg-[var(--viralix-bg)] px-2.5 py-1 text-xs text-[var(--viralix-muted)] transition-colors hover:bg-[var(--viralix-border)]"
                     >
                         {action.label}
                     </button>
@@ -290,7 +290,7 @@ export default function CaptionEditor({ content = '', onChange, topic = '', onHa
                             <select
                                 value={platform}
                                 onChange={(e) => setPlatform(e.target.value)}
-                                className="rounded-md border border-[#D5DFD9] bg-white px-2 py-1 text-[0.6875rem] text-[#52796F] focus:border-[#84A98C] focus:outline-none"
+                                className="rounded-md border border-[var(--viralix-border)] bg-[var(--viralix-surface)] px-2 py-1 text-[0.6875rem] text-[var(--viralix-muted)] focus:border-[#84A98C] focus:outline-none"
                                 aria-label="Optimize for platform"
                             >
                                 <option value="facebook">Facebook</option>
@@ -302,7 +302,7 @@ export default function CaptionEditor({ content = '', onChange, topic = '', onHa
                             </select>
                         )}
                         <span
-                            className={`text-xs tabular-nums ${remainingChars < 0 ? 'text-red-600' : remainingChars < 50 ? 'text-amber-600' : 'text-[#52796F]'}`}
+                            className={`text-xs tabular-nums ${remainingChars < 0 ? 'text-red-600' : remainingChars < 50 ? 'text-amber-600' : 'text-[var(--viralix-muted)]'}`}
                         >
                             {remainingChars} left
                         </span>
@@ -311,7 +311,7 @@ export default function CaptionEditor({ content = '', onChange, topic = '', onHa
                         type="button"
                         onClick={runAiOptimize}
                         disabled={aiLoading}
-                        className="inline-flex items-center gap-1 text-xs font-medium text-[#52796F] hover:text-[#354F52] disabled:opacity-60"
+                        className="inline-flex items-center gap-1 text-xs font-medium text-[var(--viralix-muted)] hover:text-[var(--viralix-accent)] disabled:opacity-60"
                     >
                         <Sparkles className="h-3 w-3" aria-hidden />
                         {aiLoading ? 'Optimizing…' : 'Optimize'}
@@ -326,23 +326,23 @@ export default function CaptionEditor({ content = '', onChange, topic = '', onHa
                         type="button"
                         onClick={generateAiHashtags}
                         disabled={aiTagsLoading}
-                        className="inline-flex items-center gap-1 text-xs font-medium text-[#52796F] hover:text-[#354F52] disabled:opacity-60"
+                        className="inline-flex items-center gap-1 text-xs font-medium text-[var(--viralix-muted)] hover:text-[var(--viralix-accent)] disabled:opacity-60"
                     >
                         <Sparkles className="h-3 w-3" aria-hidden />
                         {aiTagsLoading ? 'Generating…' : 'AI tags'}
                     </button>
                 </div>
-                <div className="flex min-h-[36px] flex-wrap gap-1.5 rounded-lg border border-[#C8D4CE] bg-[#FAFCFB] p-2">
+                <div className="flex min-h-[36px] flex-wrap gap-1.5 rounded-lg border border-[var(--viralix-border)] bg-[var(--viralix-bg)] p-2">
                     {tags.map((t, idx) => (
                         <span
                             key={idx}
-                            className="inline-flex items-center rounded-full bg-[#84A98C]/15 px-2 py-0.5 text-xs text-[#354F52]"
+                            className="inline-flex items-center rounded-full bg-[#84A98C]/15 px-2 py-0.5 text-xs text-[var(--viralix-accent)]"
                         >
                             #{t}
                             <button
                                 type="button"
                                 onClick={() => removeTag(t)}
-                                className="ml-1 text-[#52796F] hover:text-[#354F52]"
+                                className="ml-1 text-[var(--viralix-muted)] hover:text-[var(--viralix-accent)]"
                             >
                                 ×
                             </button>
@@ -360,15 +360,15 @@ export default function CaptionEditor({ content = '', onChange, topic = '', onHa
             </div>
 
             {compact ? (
-                <details className="group rounded-lg border border-[#E8EDEA] bg-[#FAFCFB]">
-                    <summary className="flex cursor-pointer list-none items-center justify-between px-3 py-2.5 text-xs font-medium text-[#52796F] marker:content-none [&::-webkit-details-marker]:hidden">
+                <details className="group rounded-lg border border-[var(--viralix-border)] bg-[var(--viralix-bg)]">
+                    <summary className="flex cursor-pointer list-none items-center justify-between px-3 py-2.5 text-xs font-medium text-[var(--viralix-muted)] marker:content-none [&::-webkit-details-marker]:hidden">
                         <span className="inline-flex items-center gap-1.5">
                             <Sparkles className="h-3.5 w-3.5 text-[#84A98C]" aria-hidden />
                             AI writing tools
                         </span>
                         <span className="text-[#94A3B8] transition-transform group-open:rotate-180">▾</span>
                     </summary>
-                    <div className="border-t border-[#E8EDEA] px-3 py-3">{aiTools}</div>
+                    <div className="border-t border-[var(--viralix-border)] px-3 py-3">{aiTools}</div>
                 </details>
             ) : (
                 aiTools
@@ -379,7 +379,7 @@ export default function CaptionEditor({ content = '', onChange, topic = '', onHa
     if (embedded) return body;
 
     return (
-        <div className="rounded-lg border border-gray-200 bg-white p-6">
+        <div className="rounded-lg border border-[var(--viralix-border)] bg-[var(--viralix-surface)] p-6">
             <h3 className="mb-4 text-lg font-semibold">Caption Editor</h3>
             {body}
         </div>

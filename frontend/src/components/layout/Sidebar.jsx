@@ -90,7 +90,7 @@ export default function Sidebar({ open = false, onClose = () => {} }) {
                                                             'flex items-center gap-2.5 rounded-md px-2.5 py-2 text-xs font-medium transition-all',
                                                             active
                                                                 ? 'text-white shadow-sm'
-                                                                : 'text-white/65 hover:bg-white/8 hover:text-white'
+                                                                : 'text-white/65 hover:bg-[var(--viralix-surface)]/8 hover:text-white'
                                                         )}
                                                         style={active ? { backgroundColor: '#84A98C' } : undefined}
                                                     >

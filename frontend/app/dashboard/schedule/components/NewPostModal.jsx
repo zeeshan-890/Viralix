@@ -1,4 +1,5 @@
 'use client';
+import notify from '@/lib/notify';
 import { useState, useEffect } from 'react';
 import { X, Loader2, Image as ImageIcon, Sparkles, Clock, Trash2, Facebook, Instagram, Linkedin, Twitter, Youtube, Music2 } from 'lucide-react';
 import { postsAPI, aiAPI, uploadAPI } from '@/lib/api';
@@ -136,7 +137,7 @@ export default function NewPostModal({ isOpen, onClose, initialDate, initialData
             onSave?.();
         } catch (err) {
             console.error('Failed to save post:', err);
-            alert('Failed to save post. Please try again.');
+            notify.error('Failed to save post. Please try again.');
         } finally {
             setSaving(false);
         }
@@ -165,7 +166,7 @@ export default function NewPostModal({ isOpen, onClose, initialDate, initialData
 
     return (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden">
+            <div className="dash-card bg-[var(--viralix-surface)] rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden">
                 {/* Header */}
                 <div className="p-5 border-b flex justify-between items-center">
                     <h2 className="text-lg font-bold text-gray-900">
@@ -201,7 +202,7 @@ export default function NewPostModal({ isOpen, onClose, initialDate, initialData
                                         className={`flex items-center gap-2 px-3 py-2 rounded-lg border text-sm font-medium transition
                                             ${isSelected
                                                 ? `${config.bg} ${config.border} ${config.color} border-2`
-                                                : 'bg-white border-gray-200 text-gray-500 hover:bg-gray-50'
+                                                : 'bg-[var(--viralix-surface)] border-[var(--viralix-border)] text-gray-500 hover:bg-gray-50'
                                             }`}
                                     >
                                         <Icon size={16} />
@@ -329,21 +330,21 @@ export default function NewPostModal({ isOpen, onClose, initialDate, initialData
                     <button
                         onClick={() => handleSubmit(true)}
                         disabled={saving}
-                        className="px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition"
+                        className="btn btn-secondary btn-sm"
                     >
                         Save as Draft
                     </button>
                     <div className="flex gap-2">
                         <button
                             onClick={onClose}
-                            className="px-4 py-2 text-sm font-medium text-gray-500 hover:bg-gray-100 rounded-lg transition"
+                            className="btn btn-cancel btn-sm"
                         >
                             Cancel
                         </button>
                         <button
                             onClick={() => handleSubmit(false)}
                             disabled={saving || selectedPlatforms.length === 0 || (!title.trim() && !content.trim())}
-                            className="px-5 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 disabled:opacity-50 flex items-center gap-2 transition shadow-sm"
+                            className="btn btn-confirm btn-sm disabled:opacity-50 flex items-center gap-2"
                         >
                             {saving && <Loader2 size={14} className="animate-spin" />}
                             {isEditing ? 'Update Post' : 'Schedule Post'}

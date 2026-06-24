@@ -5,7 +5,7 @@ const Card = React.forwardRef(({ className, ...props }, ref) => (
     <div
         ref={ref}
         className={cn(
-            'rounded-lg border border-gray-200 bg-white text-gray-900 shadow-sm',
+            'dash-card rounded-lg border border-[var(--viralix-border)] text-[var(--viralix-accent)]',
             className
         )}
         {...props}
@@ -15,7 +15,7 @@ Card.displayName = 'Card';
 
 const CardHeader = ({ className, ...props }) => (
     <div
-        className={cn('flex flex-col space-y-1.5 p-4 border-b border-gray-100', className)}
+        className={cn('flex flex-col space-y-1.5 p-4 border-b border-[var(--viralix-border)]', className)}
         {...props}
     />
 );
@@ -44,7 +44,7 @@ CardContent.displayName = 'CardContent';
 
 const CardFooter = ({ className, ...props }) => (
     <div
-        className={cn('flex items-center p-4 border-t border-gray-100', className)}
+        className={cn('flex items-center p-4 border-t border-[var(--viralix-border)]', className)}
         {...props}
     />
 );

@@ -1,4 +1,5 @@
 'use client';
+import notify from '@/lib/notify';
 import { useState } from 'react';
 import { aiCalendarAPI } from '@/lib/api';
 import { Loader2, Calendar, Sparkles, CheckCircle, BarChart3, Settings2 } from 'lucide-react';
@@ -22,7 +23,7 @@ export default function CalendarAutofillWizard({ onClose, onComplete }) {
             setConfig(prev => ({ ...prev, topics: res.data.strategy.topics }));
             setStep(2);
         } catch (e) {
-            alert('Analysis failed. Please try again.');
+            notify.error('Analysis failed. Please try again.');
         } finally {
             setLoading(false);
         }
@@ -41,7 +42,7 @@ export default function CalendarAutofillWizard({ onClose, onComplete }) {
             setPlan(res.data.plan);
             setStep(3);
         } catch (e) {
-            alert('Generation failed. Please try again.');
+            notify.error('Generation failed. Please try again.');
         } finally {
             setLoading(false);
         }
@@ -62,7 +63,7 @@ export default function CalendarAutofillWizard({ onClose, onComplete }) {
                 onComplete && onComplete();
             }, 2000);
         } catch (e) {
-            alert('Failed to save posts.');
+            notify.error('Failed to save posts.');
         } finally {
             setLoading(false);
         }
@@ -76,7 +77,7 @@ export default function CalendarAutofillWizard({ onClose, onComplete }) {
 
     return (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden">
+            <div className="dash-card bg-[var(--viralix-surface)] rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden">
 
                 {/* Header */}
                 <div className="p-6 border-b flex justify-between items-center bg-gradient-to-r from-violet-50 to-indigo-50">
@@ -122,7 +123,7 @@ export default function CalendarAutofillWizard({ onClose, onComplete }) {
                                 <select
                                     value={config.platform}
                                     onChange={(e) => setConfig({ ...config, platform: e.target.value })}
-                                    className="border rounded-lg px-4 py-2 bg-white"
+                                    className="border border-[var(--viralix-border)] rounded-lg px-4 py-2 bg-[var(--viralix-surface)]"
                                 >
                                     <option value="instagram">Instagram</option>
                                     <option value="facebook">Facebook</option>
@@ -140,7 +141,7 @@ export default function CalendarAutofillWizard({ onClose, onComplete }) {
                     {step === 2 && analysis && (
                         <div className="space-y-8">
                             {/* Strategy Summary */}
-                            <div className="bg-white p-6 rounded-xl border shadow-sm">
+                            <div className="dash-card p-6 rounded-xl border border-[var(--viralix-border)]">
                                 <h3 className="font-bold text-gray-900 mb-4 flex items-center gap-2">
                                     <CheckCircle className="text-green-500 w-5 h-5" /> Analysis Complete
                                 </h3>
@@ -161,7 +162,7 @@ export default function CalendarAutofillWizard({ onClose, onComplete }) {
                             </div>
 
                             {/* Configuration Form */}
-                            <div className="bg-white p-6 rounded-xl border shadow-sm">
+                            <div className="dash-card p-6 rounded-xl border border-[var(--viralix-border)]">
                                 <h3 className="font-bold text-gray-900 mb-4">Plan Configuration</h3>
                                 <div className="space-y-6">
                                     <div>
@@ -214,7 +215,7 @@ export default function CalendarAutofillWizard({ onClose, onComplete }) {
 
                             <div className="space-y-4">
                                 {plan.map((item, i) => (
-                                    <div key={i} className="bg-white p-4 rounded-xl border hover:shadow-md transition group">
+                                    <div key={i} className="dash-card p-4 rounded-xl border border-[var(--viralix-border)] hover:shadow-md transition group">
                                         <div className="flex justify-between items-start mb-2">
                                             <span className="text-xs font-bold text-gray-400 uppercase">Day {item.day}</span>
                                             <button onClick={() => {
@@ -247,7 +248,7 @@ export default function CalendarAutofillWizard({ onClose, onComplete }) {
                                 ))}
                             </div>
 
-                            <div className="sticky bottom-0 bg-white/90 backdrop-blur p-4 border-t -mx-8 -mb-8 flex justify-between items-center mt-8">
+                            <div className="sticky bottom-0 bg-[var(--viralix-surface)]/90 backdrop-blur p-4 border-t -mx-8 -mb-8 flex justify-between items-center mt-8">
                                 <button onClick={() => setStep(2)} className="text-gray-500 font-medium hover:text-gray-900">← Back</button>
                                 <button onClick={confirmPlan} disabled={loading} className="bg-green-600 text-white px-8 py-3 rounded-xl font-bold hover:bg-green-700 shadow-lg shadow-green-200 flex items-center gap-2">
                                     {loading ? <Loader2 className="animate-spin" /> : 'Confirm & Schedule All'}

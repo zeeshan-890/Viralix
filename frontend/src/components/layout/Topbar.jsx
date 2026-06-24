@@ -22,7 +22,7 @@ function SectionTabLink({ link }) {
                 'shrink-0 rounded-md px-2.5 py-1 text-xs font-medium transition-colors',
                 active
                     ? 'text-white'
-                    : 'text-[#52796F] hover:bg-white hover:text-[#2F3E46]'
+                    : 'text-[#52796F] hover:bg-[var(--viralix-surface)] hover:text-[#2F3E46]'
             )}
             style={active ? { backgroundColor: '#84A98C' } : undefined}
         >
@@ -56,15 +56,14 @@ export default function Topbar({ onToggleSidebar = () => {} }) {
 
     return (
         <header
-            className="sticky top-0 z-30 shrink-0 border-b bg-white"
-            style={{ borderColor: '#E2E8E4' }}
+            className="sticky top-0 z-30 shrink-0 border-b border-[var(--viralix-border)] bg-[var(--viralix-surface)] shadow-sm"
         >
             <div className="flex h-12 items-center justify-between gap-3 px-4 sm:px-5">
                 <div className="flex min-w-0 items-center gap-2.5">
                     <button
                         type="button"
                         onClick={onToggleSidebar}
-                        className="rounded-md p-1.5 text-[#354F52] hover:bg-[#F7FAF8] md:hidden"
+                        className="rounded-md p-1.5 text-[var(--viralix-accent)] hover:bg-[var(--viralix-bg)] md:hidden"
                         aria-label="Open menu"
                     >
                         <Menu className="h-4 w-4" />
@@ -80,14 +79,14 @@ export default function Topbar({ onToggleSidebar = () => {} }) {
                 <div className="flex items-center gap-1.5">
                     <button
                         type="button"
-                        className="hidden rounded-md p-1.5 text-[#52796F] hover:bg-[#F7FAF8] sm:inline-flex"
+                        className="hidden rounded-md p-1.5 text-[var(--viralix-muted)] hover:bg-[var(--viralix-bg)] sm:inline-flex"
                         aria-label="Search"
                     >
                         <Search className="h-3.5 w-3.5" />
                     </button>
                     <button
                         type="button"
-                        className="relative rounded-md p-1.5 text-[#52796F] hover:bg-[#F7FAF8]"
+                        className="relative rounded-md p-1.5 text-[var(--viralix-muted)] hover:bg-[var(--viralix-bg)]"
                         aria-label="Notifications"
                     >
                         <Bell className="h-3.5 w-3.5" />
@@ -101,7 +100,7 @@ export default function Topbar({ onToggleSidebar = () => {} }) {
                         <button
                             type="button"
                             onClick={() => setShowUserMenu(!showUserMenu)}
-                            className="flex items-center gap-1.5 rounded-full border border-transparent py-0.5 pl-0.5 pr-1.5 hover:border-[#E2E8E4] hover:bg-[#F7FAF8]"
+                            className="flex items-center gap-1.5 rounded-full border border-transparent py-0.5 pl-0.5 pr-1.5 hover:border-[var(--viralix-border)] hover:bg-[var(--viralix-bg)]"
                         >
                             <div
                                 className="flex h-7 w-7 items-center justify-center overflow-hidden rounded-full text-[11px] font-semibold text-white"
@@ -124,12 +123,10 @@ export default function Topbar({ onToggleSidebar = () => {} }) {
 
                         {showUserMenu && (
                             <div
-                                className="absolute right-0 mt-1.5 w-52 overflow-hidden rounded-lg border bg-white py-1 shadow-lg"
-                                style={{ borderColor: '#E2E8E4' }}
+                                className="dash-card absolute right-0 mt-1.5 w-52 overflow-hidden rounded-lg border border-[var(--viralix-border)] py-1 shadow-lg"
                             >
                                 <div
-                                    className="border-b px-3 py-2"
-                                    style={{ borderColor: '#E2E8E4', backgroundColor: '#F7FAF8' }}
+                                    className="border-b border-[var(--viralix-border)] bg-[var(--viralix-bg)] px-3 py-2"
                                 >
                                     <p className="truncate text-xs font-semibold text-[#2F3E46]">
                                         {user?.name || 'User'}
@@ -144,7 +141,7 @@ export default function Topbar({ onToggleSidebar = () => {} }) {
                                         setShowUserMenu(false);
                                         router.push('/dashboard/settings');
                                     }}
-                                    className="flex w-full items-center gap-2 px-3 py-2 text-left text-xs text-[#354F52] hover:bg-[#F7FAF8]"
+                                    className="flex w-full items-center gap-2 px-3 py-2 text-left text-xs text-[var(--viralix-accent)] hover:bg-[var(--viralix-bg)]"
                                 >
                                     <Settings className="h-3.5 w-3.5" />
                                     Settings
@@ -165,8 +162,7 @@ export default function Topbar({ onToggleSidebar = () => {} }) {
 
             {topLinks.length > 0 && (
                 <div
-                    className="tabs-scroll flex h-9 items-center gap-1 overflow-x-auto border-t px-4 sm:px-5"
-                    style={{ borderColor: '#E2E8E4', backgroundColor: '#FAFCFB' }}
+                    className="tabs-scroll flex h-9 items-center gap-1 overflow-x-auto border-t border-[var(--viralix-border)] bg-[var(--viralix-bg)] px-4 sm:px-5"
                 >
                     {topLinks.map((link) => (
                         <SectionTabLink key={`${link.href}-${link.name}`} link={link} />

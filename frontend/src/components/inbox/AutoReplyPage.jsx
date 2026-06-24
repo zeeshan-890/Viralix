@@ -6,7 +6,7 @@ import { autoReplyAPI } from '@/lib/api';
 import { cn } from '@/lib/utils';
 import { PLATFORM_CONFIG } from '@/components/dashboard/constants';
 import RuleEditor from './RuleEditor';
-import { toast } from 'react-hot-toast';
+import notify from '@/lib/notify';
 import {
     Bot, Sparkles, Loader2, Plus, Pencil, Trash2, Zap, Clock, MessageSquare,
     ChevronLeft, ToggleLeft, ToggleRight,
@@ -27,7 +27,7 @@ function PanelLabel({ children }) {
 
 function Toggle({ enabled, onChange, label }) {
     return (
-        <button type="button" onClick={() => onChange(!enabled)} className="flex w-full items-center justify-between rounded-xl border border-[#E8EDEA] bg-[#FAFCFB] px-4 py-3 text-left transition hover:border-[#B8C9C0]">
+        <button type="button" onClick={() => onChange(!enabled)} className="flex w-full items-center justify-between rounded-xl border border-[var(--viralix-border)] bg-[var(--viralix-bg)] px-4 py-3 text-left transition hover:border-[var(--viralix-border)]">
             <span className="text-sm font-medium text-[#354F52]">{label}</span>
             {enabled ? <ToggleRight className="h-6 w-6 text-[#52796F]" /> : <ToggleLeft className="h-6 w-6 text-[#94A3B8]" />}
         </button>
@@ -53,7 +53,7 @@ export default function AutoReplyPage() {
             setSettings(settingsRes.data);
             setRules(rulesRes.data.rules || []);
         } catch {
-            toast.error('Failed to load auto-reply settings');
+            notify.error('Failed to load auto-reply settings');
         } finally {
             setLoading(false);
         }
@@ -66,9 +66,9 @@ export default function AutoReplyPage() {
         try {
             const res = await autoReplyAPI.updateSettings(patch);
             setSettings(res.data);
-            toast.success('Settings saved');
+            notify.success('Settings saved');
         } catch {
-            toast.error('Save failed');
+            notify.error('Save failed');
         } finally {
             setSaving(false);
         }
@@ -86,16 +86,16 @@ export default function AutoReplyPage() {
         try {
             if (editingRule?._id) {
                 await autoReplyAPI.updateRule(editingRule._id, form);
-                toast.success('Rule updated');
+                notify.success('Rule updated');
             } else {
                 await autoReplyAPI.createRule(form);
-                toast.success('Rule created');
+                notify.success('Rule created');
             }
             setShowEditor(false);
             setEditingRule(null);
             await load();
         } catch {
-            toast.error('Failed to save rule');
+            notify.error('Failed to save rule');
         } finally {
             setSaving(false);
         }
@@ -106,7 +106,7 @@ export default function AutoReplyPage() {
             const res = await autoReplyAPI.toggleRule(id);
             setRules((prev) => prev.map((r) => (r._id === id ? res.data.rule : r)));
         } catch {
-            toast.error('Toggle failed');
+            notify.error('Toggle failed');
         }
     };
 
@@ -115,9 +115,9 @@ export default function AutoReplyPage() {
         try {
             await autoReplyAPI.deleteRule(id);
             setRules((prev) => prev.filter((r) => r._id !== id));
-            toast.success('Rule deleted');
+            notify.success('Rule deleted');
         } catch {
-            toast.error('Delete failed');
+            notify.error('Delete failed');
         }
     };
 
@@ -134,7 +134,7 @@ export default function AutoReplyPage() {
     }
 
     return (
-        <div className="overflow-hidden rounded-2xl border border-[#B8C9C0] bg-white shadow-[0_8px_30px_rgba(47,62,70,0.08)]">
+        <div className="dash-card overflow-hidden rounded-2xl border border-[var(--viralix-border)]">
             <div className="bg-gradient-to-r from-[#354F52] via-[#2F3E46] to-[#354F52] px-5 py-4 text-white sm:px-6">
                 <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
                     <div>
@@ -167,7 +167,7 @@ export default function AutoReplyPage() {
                 </div>
             </div>
 
-            <div className="flex gap-1 border-b border-[#E8EDEA] bg-[#FAFCFB] px-4 py-2">
+            <div className="flex gap-1 border-b border-[var(--viralix-border)] bg-[var(--viralix-bg)] px-4 py-2">
                 {[
                     { id: 'ai', label: 'AI assistant', icon: Sparkles },
                     { id: 'rules', label: 'Auto-reply rules', icon: Zap },
@@ -178,7 +178,7 @@ export default function AutoReplyPage() {
                         onClick={() => { setTab(id); setShowEditor(false); }}
                         className={cn(
                             'inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-medium transition',
-                            tab === id ? 'bg-white text-[#354F52] shadow-sm ring-1 ring-[#D5DFD9]' : 'text-[#52796F] hover:text-[#354F52]'
+                            tab === id ? 'bg-[var(--viralix-surface)] text-[#354F52] shadow-sm ring-1 ring-[var(--viralix-border)]' : 'text-[#52796F] hover:text-[#354F52]'
                         )}
                     >
                         <Icon className="h-3.5 w-3.5" />
@@ -201,7 +201,7 @@ export default function AutoReplyPage() {
                             onChange={(v) => { handleSettingsChange('autoReplyEnabled', v); saveSettings({ autoReplyEnabled: v }); }}
                         />
 
-                        <section className="rounded-xl border border-[#E8EDEA] bg-[#FAFCFB] p-4">
+                        <section className="rounded-xl border border-[var(--viralix-border)] bg-[var(--viralix-bg)] p-4">
                             <PanelLabel>AI behavior</PanelLabel>
                             <div className="mt-3 flex gap-2">
                                 {[
@@ -215,7 +215,7 @@ export default function AutoReplyPage() {
                                         disabled={!settings.aiEnabled}
                                         className={cn(
                                             'flex-1 rounded-xl border p-3 text-left transition disabled:opacity-40',
-                                            settings.aiMode === id ? 'border-[#84A98C] bg-[#84A98C]/10' : 'border-[#E8EDEA] bg-white'
+                                            settings.aiMode === id ? 'border-[#84A98C] bg-[#84A98C]/10' : 'border-[var(--viralix-border)] bg-white'
                                         )}
                                     >
                                         <p className="text-xs font-semibold text-[#354F52]">{label}</p>
@@ -225,7 +225,7 @@ export default function AutoReplyPage() {
                             </div>
                         </section>
 
-                        <section className="rounded-xl border border-[#E8EDEA] bg-[#FAFCFB] p-4">
+                        <section className="rounded-xl border border-[var(--viralix-border)] bg-[var(--viralix-bg)] p-4">
                             <PanelLabel>Default tone</PanelLabel>
                             <div className="mt-3 flex flex-wrap gap-1.5">
                                 {TONES.map((t) => (
@@ -236,7 +236,7 @@ export default function AutoReplyPage() {
                                         disabled={!settings.aiEnabled}
                                         className={cn(
                                             'rounded-lg px-3 py-1.5 text-xs font-medium capitalize transition disabled:opacity-40',
-                                            settings.defaultTone === t ? 'bg-[#354F52] text-white' : 'bg-white text-[#52796F] ring-1 ring-[#D5DFD9]'
+                                            settings.defaultTone === t ? 'bg-[#354F52] text-white' : 'bg-white text-[#52796F] ring-1 ring-[var(--viralix-border)]'
                                         )}
                                     >
                                         {t}
@@ -246,7 +246,7 @@ export default function AutoReplyPage() {
                         </section>
 
                         {settings.aiMode === 'auto_send' && (
-                            <section className="rounded-xl border border-[#E8EDEA] bg-[#FAFCFB] p-4">
+                            <section className="rounded-xl border border-[var(--viralix-border)] bg-[var(--viralix-bg)] p-4">
                                 <div className="flex items-center justify-between">
                                     <PanelLabel>Confidence threshold</PanelLabel>
                                     <span className="text-sm font-bold tabular-nums text-[#354F52]">{settings.confidenceThreshold}%</span>
@@ -266,7 +266,7 @@ export default function AutoReplyPage() {
                             </section>
                         )}
 
-                        <section className="rounded-xl border border-[#E8EDEA] bg-[#FAFCFB] p-4 space-y-3">
+                        <section className="rounded-xl border border-[var(--viralix-border)] bg-[var(--viralix-bg)] p-4 space-y-3">
                             <Toggle
                                 label="Business hours only"
                                 enabled={settings.businessHoursOnly}
@@ -283,7 +283,7 @@ export default function AutoReplyPage() {
                                             handleSettingsChange('businessHours', bh);
                                             saveSettings({ businessHours: bh });
                                         }}
-                                        className="rounded-lg border border-[#D5DFD9] px-2 py-1 text-sm"
+                                        className="rounded-lg border border-[var(--viralix-border)] px-2 py-1 text-sm"
                                     />
                                     <span className="text-xs text-[#52796F]">to</span>
                                     <input
@@ -294,20 +294,20 @@ export default function AutoReplyPage() {
                                             handleSettingsChange('businessHours', bh);
                                             saveSettings({ businessHours: bh });
                                         }}
-                                        className="rounded-lg border border-[#D5DFD9] px-2 py-1 text-sm"
+                                        className="rounded-lg border border-[var(--viralix-border)] px-2 py-1 text-sm"
                                     />
                                 </div>
                             )}
                         </section>
 
-                        <section className="rounded-xl border border-[#E8EDEA] bg-[#FAFCFB] p-4">
+                        <section className="rounded-xl border border-[var(--viralix-border)] bg-[var(--viralix-bg)] p-4">
                             <PanelLabel>Sign-off (appended to AI replies)</PanelLabel>
                             <input
                                 value={settings.signOff || ''}
                                 onChange={(e) => handleSettingsChange('signOff', e.target.value)}
                                 onBlur={saveSettingsDebounced}
                                 placeholder="— The Viralix Team"
-                                className="mt-2 w-full rounded-lg border border-[#D5DFD9] bg-white px-3 py-2 text-sm focus:border-[#84A98C] focus:outline-none"
+                                className="mt-2 w-full rounded-lg border border-[var(--viralix-border)] bg-[var(--viralix-surface)] px-3 py-2 text-sm focus:border-[#84A98C] focus:outline-none"
                             />
                         </section>
                     </div>
@@ -315,27 +315,27 @@ export default function AutoReplyPage() {
 
                 {tab === 'rules' && (
                     <div className="grid gap-5 lg:grid-cols-[1fr_380px]">
-                        <div className="overflow-hidden rounded-xl border border-[#B8C9C0] bg-white shadow-sm">
-                            <div className="flex items-center justify-between border-b border-[#E8EDEA] bg-[#FAFCFB] px-4 py-3">
+                        <div className="dash-card overflow-hidden rounded-xl border border-[var(--viralix-border)]">
+                            <div className="flex items-center justify-between border-b border-[var(--viralix-border)] bg-[var(--viralix-bg)] px-4 py-3">
                                 <PanelLabel>Rules ({rules.length})</PanelLabel>
                                 <button
                                     type="button"
                                     onClick={() => { setEditingRule(null); setShowEditor(true); }}
-                                    className="inline-flex items-center gap-1 rounded-lg bg-[#52796F] px-3 py-1.5 text-xs font-medium text-white hover:bg-[#354F52]"
+                                    className="inline-flex items-center gap-1 btn btn-confirm btn-sm"
                                 >
                                     <Plus className="h-3.5 w-3.5" /> New rule
                                 </button>
                             </div>
                             {rules.length === 0 ? (
                                 <div className="py-16 text-center">
-                                    <MessageSquare className="mx-auto h-10 w-10 text-[#B8C9C0]" />
+                                    <MessageSquare className="mx-auto h-10 w-10 text-[var(--viralix-border)]" />
                                     <p className="mt-3 text-sm text-[#52796F]">No rules yet</p>
                                 </div>
                             ) : (
                                 <div className="overflow-x-auto">
                                     <table className="w-full min-w-[640px] text-left text-sm">
                                         <thead>
-                                            <tr className="border-b border-[#E8EDEA] text-[0.6875rem] font-semibold uppercase tracking-wider text-[#52796F]">
+                                            <tr className="border-b border-[var(--viralix-border)] text-[0.6875rem] font-semibold uppercase tracking-wider text-[#52796F]">
                                                 <th className="px-4 py-2.5">Rule</th>
                                                 <th className="px-4 py-2.5">Type</th>
                                                 <th className="hidden px-4 py-2.5 sm:table-cell">Platforms</th>
@@ -346,7 +346,7 @@ export default function AutoReplyPage() {
                                         </thead>
                                         <tbody>
                                             {rules.map((rule) => (
-                                                <tr key={rule._id} className="border-b border-[#E8EDEA] last:border-b-0 hover:bg-[#F4F8F6]">
+                                                <tr key={rule._id} className="border-b border-[var(--viralix-border)] last:border-b-0 hover:bg-[var(--viralix-bg)]">
                                                     <td className="px-4 py-3">
                                                         <p className="font-medium text-[#354F52]">{rule.name}</p>
                                                         <p className="text-[0.625rem] text-[#94A3B8]">
@@ -377,7 +377,7 @@ export default function AutoReplyPage() {
                                                     </td>
                                                     <td className="px-4 py-3">
                                                         <div className="flex gap-1">
-                                                            <button type="button" onClick={() => { setEditingRule(rule); setShowEditor(true); }} className="rounded-lg p-1.5 text-[#52796F] hover:bg-[#F4F8F6]">
+                                                            <button type="button" onClick={() => { setEditingRule(rule); setShowEditor(true); }} className="rounded-lg p-1.5 text-[#52796F] hover:bg-[var(--viralix-bg)]">
                                                                 <Pencil className="h-3.5 w-3.5" />
                                                             </button>
                                                             <button type="button" onClick={() => handleDeleteRule(rule._id)} className="rounded-lg p-1.5 text-red-400 hover:bg-red-50">
@@ -393,7 +393,7 @@ export default function AutoReplyPage() {
                             )}
                         </div>
 
-                        <div className={cn('rounded-xl border border-[#B8C9C0] bg-white p-4 shadow-sm', !showEditor && 'hidden lg:block')}>
+                        <div className={cn('rounded-xl dash-card border border-[var(--viralix-border)] p-4 shadow-sm', !showEditor && 'hidden lg:block')}>
                             {showEditor ? (
                                 <RuleEditor
                                     rule={editingRule}
@@ -403,13 +403,13 @@ export default function AutoReplyPage() {
                                 />
                             ) : (
                                 <div className="flex flex-col items-center justify-center py-12 text-center text-[#52796F]">
-                                    <Zap className="h-10 w-10 text-[#B8C9C0]" />
+                                    <Zap className="h-10 w-10 text-[var(--viralix-border)]" />
                                     <p className="mt-3 text-sm font-medium text-[#354F52]">Select or create a rule</p>
                                     <p className="mt-1 text-xs">Keyword triggers, comment-to-DM, and AI-powered replies</p>
                                     <button
                                         type="button"
                                         onClick={() => { setEditingRule(null); setShowEditor(true); }}
-                                        className="mt-4 inline-flex items-center gap-1 rounded-lg bg-[#52796F] px-4 py-2 text-xs font-medium text-white"
+                                        className="mt-4 inline-flex items-center gap-1 btn btn-confirm btn-sm"
                                     >
                                         <Plus className="h-3.5 w-3.5" /> New rule
                                     </button>

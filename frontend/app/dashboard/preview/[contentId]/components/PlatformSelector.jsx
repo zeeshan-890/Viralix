@@ -62,7 +62,7 @@ export default function PlatformSelector({ value = [], onChange, embedded = fals
                         className={`flex items-center justify-between rounded-lg border px-3 py-2.5 text-left transition-colors ${
                             selected
                                 ? 'border-[#84A98C] bg-[#84A98C]/10 text-[#354F52]'
-                                : 'border-[#D5DFD9] bg-white hover:border-[#84A98C]/50 hover:bg-[#FAFCFB]'
+                                : 'border-[var(--viralix-border)] bg-[var(--viralix-surface)] hover:border-[#84A98C]/50 hover:bg-[var(--viralix-bg)]'
                         }`}
                     >
                         <div className="flex items-center gap-2">
@@ -79,7 +79,7 @@ export default function PlatformSelector({ value = [], onChange, embedded = fals
     if (embedded) return body;
 
     return (
-        <div className="rounded-lg border border-gray-200 bg-white p-6">
+        <div className="rounded-lg border border-[var(--viralix-border)] bg-[var(--viralix-surface)] p-6">
             <h3 className="mb-4 text-lg font-semibold">Platforms</h3>
             {body}
         </div>

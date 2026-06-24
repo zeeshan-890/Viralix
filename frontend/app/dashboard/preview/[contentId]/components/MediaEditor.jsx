@@ -45,7 +45,7 @@ export default function MediaEditor({ post, onChange }) {
     };
 
     return (
-        <div className="bg-white rounded-lg border border-gray-200 p-6">
+        <div className="dash-card rounded-lg border border-[var(--viralix-border)] p-6">
             <h3 className="text-lg font-semibold mb-4">Media</h3>
 
             {current ? (

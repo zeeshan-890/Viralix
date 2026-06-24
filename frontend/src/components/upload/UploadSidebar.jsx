@@ -58,13 +58,13 @@ export default function UploadSidebar({
 }) {
     const [tab, setTab] = useState('write');
     const fieldClass =
-        'w-full rounded-lg border border-[#C8D4CE] bg-[#FAFCFB] px-3 py-2.5 text-sm text-[#354F52] placeholder:text-[#94A3B8] focus:border-[#84A98C] focus:outline-none focus:ring-2 focus:ring-[#84A98C]/25';
+        'w-full rounded-lg border border-[var(--viralix-border)] bg-[var(--viralix-bg)] px-3 py-2.5 text-sm text-[var(--viralix-accent)] placeholder:text-[#94A3B8] focus:border-[#84A98C] focus:outline-none focus:ring-2 focus:ring-[#84A98C]/25';
 
     return (
-        <aside className="flex flex-col bg-white lg:max-h-[calc(100vh-7rem)] lg:overflow-hidden">
+        <aside className="flex flex-col dash-card bg-[var(--viralix-surface)] lg:max-h-[calc(100vh-7rem)] lg:overflow-hidden">
             {/* Tab bar */}
-            <div className="shrink-0 border-b border-[#E8EDEA] bg-[#FAFCFB] px-3 pt-3 sm:px-4">
-                <div className="flex gap-1 rounded-lg bg-[#E8EDEA]/60 p-1">
+            <div className="shrink-0 border-b border-[var(--viralix-border)] bg-[var(--viralix-bg)] px-3 pt-3 sm:px-4">
+                <div className="flex gap-1 rounded-lg bg-[var(--viralix-border)]/60 p-1">
                     {TABS.map(({ id, label, icon: Icon }) => (
                         <button
                             key={id}
@@ -72,7 +72,7 @@ export default function UploadSidebar({
                             onClick={() => setTab(id)}
                             className={cn(
                                 'flex flex-1 items-center justify-center gap-1.5 rounded-md py-2 text-xs font-medium transition-all',
-                                tab === id ? 'bg-white text-[#354F52] shadow-sm' : 'text-[#52796F] hover:text-[#354F52]'
+                                tab === id ? 'bg-[var(--viralix-surface)] text-[var(--viralix-accent)] shadow-sm' : 'text-[var(--viralix-muted)] hover:text-[var(--viralix-accent)]'
                             )}
                         >
                             <Icon className="h-3.5 w-3.5" />
@@ -86,7 +86,7 @@ export default function UploadSidebar({
                 {tab === 'write' && (
                     <div className="space-y-4">
                         <div>
-                            <label className="mb-1.5 block text-xs font-semibold text-[#354F52]">Title</label>
+                            <label className="mb-1.5 block text-xs font-semibold text-[var(--viralix-accent)]">Title</label>
                             <input
                                 type="text"
                                 value={contentForm.title}
@@ -97,7 +97,7 @@ export default function UploadSidebar({
                         </div>
                         <div>
                             <div className="mb-1.5 flex items-center justify-between">
-                                <label className="text-xs font-semibold text-[#354F52]">Caption</label>
+                                <label className="text-xs font-semibold text-[var(--viralix-accent)]">Caption</label>
                                 <span className="text-[0.625rem] tabular-nums text-[#94A3B8]">{contentForm.description.length} chars</span>
                             </div>
                             <textarea
@@ -110,7 +110,7 @@ export default function UploadSidebar({
                         </div>
                         <TagsInput embedded tags={contentForm.tags} onChange={(tags) => onFormChange('tags', tags)} />
                         <div>
-                            <label className="mb-1.5 block text-xs font-semibold text-[#354F52]">Category</label>
+                            <label className="mb-1.5 block text-xs font-semibold text-[var(--viralix-accent)]">Category</label>
                             <select value={contentForm.category} onChange={(e) => onFormChange('category', e.target.value)} className={fieldClass}>
                                 {CATEGORIES.map(({ value, label }) => (
                                     <option key={value || 'none'} value={value}>{label}</option>
@@ -122,7 +122,7 @@ export default function UploadSidebar({
 
                 {tab === 'targets' && (
                     <div className="space-y-3">
-                        <p className="text-xs text-[#52796F]">
+                        <p className="text-xs text-[var(--viralix-muted)]">
                             Select where this post should go. {selectedPlatforms.length} of {connectedTargets.length} selected.
                         </p>
                         {connectedTargets.length === 0 ? (
@@ -145,7 +145,7 @@ export default function UploadSidebar({
                                                 'flex items-center gap-2.5 rounded-xl border px-3 py-3 text-left transition-all',
                                                 selected
                                                     ? 'border-[#84A98C] bg-[#84A98C]/8 shadow-sm'
-                                                    : 'border-[#E8EDEA] hover:border-[#C8D4CE] hover:bg-[#FAFCFB]'
+                                                    : 'border-[var(--viralix-border)] hover:border-[var(--viralix-border)] hover:bg-[var(--viralix-bg)]'
                                             )}
                                         >
                                             {cfg && Icon && (
@@ -153,7 +153,7 @@ export default function UploadSidebar({
                                                     <Icon className="h-4 w-4" style={{ color: cfg.color }} aria-hidden />
                                                 </span>
                                             )}
-                                            <span className="min-w-0 flex-1 truncate text-sm font-medium text-[#354F52]">{t.label}</span>
+                                            <span className="min-w-0 flex-1 truncate text-sm font-medium text-[var(--viralix-accent)]">{t.label}</span>
                                             {selected && <CheckCircle2 className="h-4 w-4 shrink-0 text-[#84A98C]" />}
                                         </button>
                                     );
@@ -161,7 +161,7 @@ export default function UploadSidebar({
                             </div>
                         )}
                         {uploadedFiles.length === 0 && selectedPlatforms.length > 0 && (
-                            <p className="rounded-lg bg-[#F4F8F6] px-3 py-2 text-xs text-[#52796F]">
+                            <p className="rounded-lg bg-[var(--viralix-inset)] px-3 py-2 text-xs text-[var(--viralix-muted)]">
                                 Tip: Instagram requires media. Facebook supports text-only posts.
                             </p>
                         )}
@@ -183,37 +183,37 @@ export default function UploadSidebar({
                                         'flex w-full items-center gap-3 rounded-xl border px-4 py-3 text-left transition-all',
                                         scheduleType === id
                                             ? 'border-[#354F52] bg-[#354F52]/5'
-                                            : 'border-[#E8EDEA] hover:border-[#C8D4CE]'
+                                            : 'border-[var(--viralix-border)] hover:border-[var(--viralix-border)]'
                                     )}
                                 >
-                                    <span className={cn('flex h-9 w-9 items-center justify-center rounded-lg', scheduleType === id ? 'bg-[#354F52] text-white' : 'bg-[#F4F8F6] text-[#52796F]')}>
+                                    <span className={cn('flex h-9 w-9 items-center justify-center rounded-lg', scheduleType === id ? 'bg-[#354F52] text-white' : 'bg-[var(--viralix-inset)] text-[var(--viralix-muted)]')}>
                                         <Icon className="h-4 w-4" />
                                     </span>
                                     <span>
-                                        <span className="block text-sm font-medium text-[#354F52]">{label}</span>
-                                        <span className="text-xs text-[#52796F]">{desc}</span>
+                                        <span className="block text-sm font-medium text-[var(--viralix-accent)]">{label}</span>
+                                        <span className="text-xs text-[var(--viralix-muted)]">{desc}</span>
                                     </span>
                                 </button>
                             ))}
-                            <div className="flex items-center gap-3 rounded-xl border border-dashed border-[#D5DFD9] px-4 py-3 opacity-60">
-                                <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#F4F8F6] text-[#52796F]">
+                            <div className="flex items-center gap-3 rounded-xl border border-dashed border-[var(--viralix-border)] px-4 py-3 opacity-60">
+                                <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-[var(--viralix-inset)] text-[var(--viralix-muted)]">
                                     <Sparkles className="h-4 w-4" />
                                 </span>
                                 <span>
-                                    <span className="block text-sm font-medium text-[#354F52]">AI optimal time</span>
-                                    <span className="text-xs text-[#52796F]">Coming soon</span>
+                                    <span className="block text-sm font-medium text-[var(--viralix-accent)]">AI optimal time</span>
+                                    <span className="text-xs text-[var(--viralix-muted)]">Coming soon</span>
                                 </span>
                             </div>
                         </div>
 
                         {scheduleType === 'later' && (
-                            <div className="grid grid-cols-2 gap-3 rounded-xl border border-[#E8EDEA] bg-[#FAFCFB] p-3">
+                            <div className="grid grid-cols-2 gap-3 rounded-xl border border-[var(--viralix-border)] bg-[var(--viralix-bg)] p-3">
                                 <div>
-                                    <label className="mb-1 block text-[0.625rem] font-medium uppercase tracking-wide text-[#52796F]">Date</label>
+                                    <label className="mb-1 block text-[0.625rem] font-medium uppercase tracking-wide text-[var(--viralix-muted)]">Date</label>
                                     <input type="date" value={date} min={new Date().toISOString().split('T')[0]} onChange={(e) => onDateChange(e.target.value)} className={fieldClass} />
                                 </div>
                                 <div>
-                                    <label className="mb-1 block text-[0.625rem] font-medium uppercase tracking-wide text-[#52796F]">Time</label>
+                                    <label className="mb-1 block text-[0.625rem] font-medium uppercase tracking-wide text-[var(--viralix-muted)]">Time</label>
                                     <input type="time" value={time} onChange={(e) => onTimeChange(e.target.value)} className={fieldClass} />
                                 </div>
                             </div>
@@ -239,13 +239,13 @@ export default function UploadSidebar({
             </div>
 
             {/* Sticky actions */}
-            <div className="shrink-0 border-t border-[#E8EDEA] bg-[#FAFCFB] p-4 sm:p-5">
+            <div className="shrink-0 border-t border-[var(--viralix-border)] bg-[var(--viralix-bg)] p-4 sm:p-5">
                 <div className="grid grid-cols-[1fr_auto] gap-2">
                     <button
                         type="button"
                         onClick={onSaveDraft}
                         disabled={actionLoading || !contentForm.title || !contentForm.description || selectedPlatforms.length === 0}
-                        className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-[#C8D4CE] bg-white px-4 py-2.5 text-sm font-medium text-[#354F52] hover:bg-white disabled:opacity-50"
+                        className="inline-flex items-center justify-center gap-1.5 rounded-lg dash-card border border-[var(--viralix-border)] px-4 py-2.5 text-sm font-medium text-[var(--viralix-accent)] hover:bg-[var(--viralix-surface)] disabled:opacity-50"
                     >
                         {actionLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
                         Save draft
@@ -255,7 +255,7 @@ export default function UploadSidebar({
                             type="button"
                             onClick={onPublish}
                             disabled={actionLoading || !canSubmit}
-                            className="inline-flex items-center justify-center gap-1.5 rounded-lg bg-emerald-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-emerald-700 disabled:opacity-50"
+                            className="btn btn-success disabled:opacity-50"
                         >
                             {actionLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
                             Publish

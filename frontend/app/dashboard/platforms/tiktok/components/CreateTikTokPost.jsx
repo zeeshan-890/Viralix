@@ -3,7 +3,7 @@ import { useState, useRef, useEffect, useMemo } from 'react';
 import Image from 'next/image';
 import { X, Video, AlertCircle, Info, Tag, Building2, Handshake, CheckCircle2, Copy, Scissors, MessageSquare, Loader2, ArrowLeft, Eye, EyeOff, Users, Upload } from 'lucide-react';
 import { tiktokAPI, uploadAPI, postsAPI } from '@/lib/api';
-import { toast } from 'react-hot-toast';
+import notify from '@/lib/notify';
 
 export default function CreateTikTokPost({ isOpen, onClose, accounts = [], onSuccess }) {
     // ---------------------------------------------------------
@@ -273,7 +273,7 @@ export default function CreateTikTokPost({ isOpen, onClose, accounts = [], onSuc
             // 2. Publish Now
             await postsAPI.publishNow(postId);
             
-            toast.success(
+            notify.success(
                 "Published to TikTok successfully. After you finish publishing, it may take a few minutes for your content to process and become visible on your profile.", 
                 { duration: 6000, icon: '🚀' }
             );
@@ -298,7 +298,7 @@ export default function CreateTikTokPost({ isOpen, onClose, accounts = [], onSuc
     if (!videoPreview) {
         return (
             <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-                <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col relative">
+                <div className="dash-card bg-[var(--viralix-surface)] rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col relative">
                     <button onClick={handleClose} className="absolute top-4 right-4 p-2 bg-gray-100 hover:bg-gray-200 rounded-full transition-colors z-10">
                         <X className="w-5 h-5 text-gray-500" />
                     </button>
@@ -375,7 +375,7 @@ export default function CreateTikTokPost({ isOpen, onClose, accounts = [], onSuc
     // View: Split Layout
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 md:p-8">
-            <div className={`bg-white rounded-2xl shadow-2xl w-full ${modalMaxWidth} h-[calc(100vh-4rem)] flex flex-col relative transition-all duration-300 overflow-hidden`}>
+            <div className={`dash-card bg-[var(--viralix-surface)] rounded-2xl shadow-2xl w-full ${modalMaxWidth} h-[calc(100vh-4rem)] flex flex-col relative transition-all duration-300 overflow-hidden`}>
                 
                 {/* Global Error Banner */}
                 {error && (

@@ -53,7 +53,7 @@ export default function PostTableRow({ post }) {
             : formatRelativeDate(post.updatedAt || post.createdAt);
 
     return (
-        <tr className="group border-b border-[#E8EDEA] transition-colors last:border-b-0 hover:bg-[#F4F8F6]">
+        <tr className="group border-b border-[var(--viralix-border)] transition-colors last:border-b-0 hover:bg-[var(--viralix-bg)]">
             <td className="px-4 py-3">
                 <Link href={`/dashboard/preview/${post._id}`} className="flex items-center gap-3">
                     <PostThumbnail post={post} />
@@ -127,7 +127,7 @@ export default function PostTableRow({ post }) {
             <td className="px-4 py-3 text-right">
                 <Link
                     href={`/dashboard/preview/${post._id}`}
-                    className="inline-flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-medium text-[#52796F] opacity-0 transition-all group-hover:opacity-100 hover:bg-white hover:text-[#354F52] hover:shadow-sm"
+                    className="inline-flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-medium text-[#52796F] opacity-0 transition-all group-hover:opacity-100 hover:bg-[var(--viralix-surface)] hover:text-[#354F52] hover:shadow-sm"
                 >
                     Open
                     <MoreHorizontal className="h-3.5 w-3.5" aria-hidden />
@@ -143,7 +143,7 @@ export function PostMobileCard({ post }) {
     return (
         <Link
             href={`/dashboard/preview/${post._id}`}
-            className="flex gap-3 border-b border-[#E8EDEA] px-4 py-4 transition-colors hover:bg-[#F4F8F6] sm:hidden"
+            className="flex gap-3 border-b border-[var(--viralix-border)] px-4 py-4 transition-colors hover:bg-[var(--viralix-bg)] sm:hidden"
         >
             <PostThumbnail post={post} size="lg" />
             <div className="min-w-0 flex-1">

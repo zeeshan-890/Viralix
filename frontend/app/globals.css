@@ -64,6 +64,7 @@ body {
     --viralix-bg: #DCE6E0;
     --viralix-surface: #FEFEFE;
     --viralix-border: #CDD9D2;
+    --viralix-inset: #E8EFEB;
     background-color: var(--viralix-bg);
 }
 
@@ -82,6 +83,162 @@ body {
     box-shadow:
         0 2px 4px rgba(47, 62, 70, 0.08),
         0 8px 24px rgba(47, 62, 70, 0.1);
+}
+
+/* Dashboard-wide: unify legacy gray borders with theme tokens */
+.dashboard-shell .border-gray-100,
+.dashboard-shell .border-gray-200 {
+    border-color: var(--viralix-border);
+}
+
+/* Auto-elevate panel-style white cards across all dashboard pages */
+.dashboard-shell .bg-white.rounded-xl.border,
+.dashboard-shell .bg-white.rounded-lg.border,
+.dashboard-shell .bg-white.rounded-2xl.border {
+    background-color: var(--viralix-surface);
+    box-shadow:
+        0 1px 2px rgba(47, 62, 70, 0.06),
+        0 4px 16px rgba(47, 62, 70, 0.08);
+}
+
+.dashboard-shell > div > header.bg-white {
+    background-color: var(--viralix-surface);
+    border-color: var(--viralix-border) !important;
+    box-shadow: 0 1px 3px rgba(47, 62, 70, 0.05);
+}
+
+/* ─── Semantic buttons ─── */
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.375rem;
+    border-radius: 0.5rem;
+    padding: 0.5rem 1rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    line-height: 1.25rem;
+    white-space: nowrap;
+    transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+    cursor: pointer;
+}
+
+.btn-sm {
+    padding: 0.375rem 0.75rem;
+    font-size: 0.8125rem;
+    border-radius: 0.4375rem;
+}
+
+.btn-lg {
+    padding: 0.625rem 1.25rem;
+    font-size: 0.9375rem;
+}
+
+.btn-icon {
+    padding: 0.5rem;
+    width: 2.5rem;
+    height: 2.5rem;
+}
+
+.btn-primary,
+.btn-confirm {
+    background-color: var(--viralix-accent);
+    color: #fff;
+    border: 1px solid transparent;
+    box-shadow: 0 1px 3px rgba(47, 62, 70, 0.18);
+}
+
+.btn-primary:hover:not(:disabled),
+.btn-confirm:hover:not(:disabled) {
+    background-color: var(--viralix-primary-dark);
+    box-shadow: 0 2px 6px rgba(47, 62, 70, 0.22);
+}
+
+.btn-success {
+    background-color: var(--viralix-primary);
+    color: #fff;
+    border: 1px solid transparent;
+    box-shadow: 0 1px 3px rgba(82, 121, 111, 0.25);
+}
+
+.btn-success:hover:not(:disabled) {
+    background-color: #6d9175;
+}
+
+.btn-danger,
+.btn-destructive {
+    background-color: #dc2626;
+    color: #fff;
+    border: 1px solid transparent;
+    box-shadow: 0 1px 3px rgba(220, 38, 38, 0.2);
+}
+
+.btn-danger:hover:not(:disabled),
+.btn-destructive:hover:not(:disabled) {
+    background-color: #b91c1c;
+}
+
+.btn-cancel {
+    background-color: var(--viralix-surface, #fff);
+    color: #dc2626;
+    border: 1px solid #fca5a5;
+}
+
+.btn-cancel:hover:not(:disabled) {
+    background-color: #fef2f2;
+    border-color: #f87171;
+}
+
+.btn-warning {
+    background-color: #d97706;
+    color: #fff;
+    border: 1px solid transparent;
+}
+
+.btn-warning:hover:not(:disabled) {
+    background-color: #b45309;
+}
+
+.btn-secondary {
+    background-color: var(--viralix-surface, #fff);
+    color: var(--viralix-accent);
+    border: 1px solid var(--viralix-border);
+}
+
+.btn-secondary:hover:not(:disabled) {
+    background-color: var(--viralix-inset, #E8EFEB);
+}
+
+.btn-ghost {
+    background-color: transparent;
+    color: var(--viralix-accent);
+    border: 1px solid transparent;
+}
+
+.btn-ghost:hover:not(:disabled) {
+    background-color: var(--viralix-inset, #E8EFEB);
+}
+
+/* Toast container */
+.app-toaster > div {
+    animation: toast-in 0.28s ease-out;
+}
+
+@keyframes toast-in {
+    from {
+        opacity: 0;
+        transform: translateX(12px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .app-toaster > div {
+        animation: none;
+    }
 }
 
 .sidebar-scroll::-webkit-scrollbar,

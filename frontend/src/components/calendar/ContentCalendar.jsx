@@ -121,12 +121,12 @@ export default function ContentCalendar({
         <div className="flex flex-col gap-4">
             <div className={cn(cal.surface, 'flex flex-col gap-3 rounded-xl p-4 sm:flex-row sm:items-center sm:justify-between')}>
                 <div>
-                    <h1 className="text-lg font-semibold text-[#354F52]">Content Calendar</h1>
-                    <p className="text-xs text-[#52796F]">{getViewTitle(currentDate, viewMode)}</p>
+                    <h1 className="text-lg font-semibold text-[var(--viralix-accent)]">Content Calendar</h1>
+                    <p className="text-xs text-[var(--viralix-muted)]">{getViewTitle(currentDate, viewMode)}</p>
                 </div>
 
                 <div className="flex flex-wrap items-center gap-2">
-                    <div className="flex rounded-lg border border-[#C8D4CE] bg-[#EEF3F0] p-0.5">
+                    <div className="flex rounded-lg border border-[var(--viralix-border)] bg-[var(--viralix-inset)] p-0.5">
                         {VIEW_MODES.map(({ id, label }) => (
                             <button
                                 key={id}
@@ -135,7 +135,7 @@ export default function ContentCalendar({
                                 className={`rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${
                                     viewMode === id
                                         ? 'bg-[#354F52] text-white shadow-sm'
-                                        : 'text-[#52796F] hover:bg-white hover:text-[#354F52]'
+                                        : 'text-[var(--viralix-muted)] hover:bg-[var(--viralix-surface)] hover:text-[var(--viralix-accent)]'
                                 }`}
                             >
                                 {label}
@@ -143,11 +143,11 @@ export default function ContentCalendar({
                         ))}
                     </div>
 
-                    <div className="flex items-center rounded-lg border border-[#C8D4CE] bg-[#EEF3F0]">
+                    <div className="flex items-center rounded-lg border border-[var(--viralix-border)] bg-[var(--viralix-inset)]">
                         <button
                             type="button"
                             onClick={() => handleNavigate(-1)}
-                            className="rounded-l-lg p-2 text-[#52796F] hover:bg-white"
+                            className="rounded-l-lg p-2 text-[var(--viralix-muted)] hover:bg-[var(--viralix-surface)]"
                             aria-label="Previous"
                         >
                             <ChevronLeft className="h-4 w-4" />
@@ -158,14 +158,14 @@ export default function ContentCalendar({
                                 setCurrentDate(new Date());
                                 setSelectedDateKey(null);
                             }}
-                            className="border-x border-[#C8D4CE] px-3 py-1.5 text-xs font-medium text-[#354F52] hover:bg-white"
+                            className="border-x border-[var(--viralix-border)] px-3 py-1.5 text-xs font-medium text-[var(--viralix-accent)] hover:bg-[var(--viralix-surface)]"
                         >
                             Today
                         </button>
                         <button
                             type="button"
                             onClick={() => handleNavigate(1)}
-                            className="rounded-r-lg p-2 text-[#52796F] hover:bg-white"
+                            className="rounded-r-lg p-2 text-[var(--viralix-muted)] hover:bg-[var(--viralix-surface)]"
                             aria-label="Next"
                         >
                             <ChevronRight className="h-4 w-4" />
@@ -209,7 +209,7 @@ export default function ContentCalendar({
             )}
 
             {loading ? (
-                <div className={cn(cal.surface, 'flex items-center justify-center gap-2 rounded-xl py-16 text-sm text-[#52796F]')}>
+                <div className={cn(cal.surface, 'flex items-center justify-center gap-2 rounded-xl py-16 text-sm text-[var(--viralix-muted)]')}>
                     <Loader2 className="h-5 w-5 animate-spin text-[#84A98C]" />
                     Loading calendar…
                 </div>

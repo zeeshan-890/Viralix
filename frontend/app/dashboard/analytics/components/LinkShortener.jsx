@@ -1,4 +1,5 @@
 'use client';
+import notify from '@/lib/notify';
 import { useState, useEffect } from 'react';
 import { linksAPI } from '@/lib/api';
 
@@ -40,7 +41,7 @@ export default function LinkShortener() {
             setTitle('');
             setShowForm(false);
         } catch (err) {
-            alert(err.response?.data?.message || 'Failed to create link');
+            notify.error(err.response?.data?.message || 'Failed to create link');
         } finally {
             setCreating(false);
         }
@@ -77,7 +78,7 @@ export default function LinkShortener() {
     const totalClicks = links.reduce((sum, l) => sum + (l.clicks || 0), 0);
 
     return (
-        <div className="bg-white rounded-lg border border-gray-200 p-6">
+        <div className="dash-card rounded-lg border border-[var(--viralix-border)] p-6">
             <div className="flex items-center justify-between mb-6">
                 <div>
                     <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
@@ -89,7 +90,7 @@ export default function LinkShortener() {
                 </div>
                 <button
                     onClick={() => setShowForm(!showForm)}
-                    className="px-4 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition flex items-center gap-1"
+                    className="px-4 py-2 btn btn-confirm text-white text-sm rounded-lg  transition flex items-center gap-1"
                 >
                     <span>+</span> New Link
                 </button>
@@ -124,14 +125,14 @@ export default function LinkShortener() {
                             <button
                                 type="submit"
                                 disabled={creating}
-                                className="px-4 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 disabled:opacity-50"
+                                className="px-4 py-2 btn btn-confirm text-white text-sm rounded-lg  disabled:opacity-50"
                             >
                                 {creating ? 'Creating...' : 'Create Short Link'}
                             </button>
                             <button
                                 type="button"
                                 onClick={() => { setShowForm(false); setUrl(''); setTitle(''); }}
-                                className="px-4 py-2 border text-sm rounded-lg hover:bg-gray-100"
+                                className="btn btn-cancel btn-sm"
                             >
                                 Cancel
                             </button>
