@@ -4,6 +4,7 @@ import Image from 'next/image';
 import { X, Video, AlertCircle, Info, Tag, Building2, Handshake, CheckCircle2, Copy, Scissors, MessageSquare, Loader2, ArrowLeft, Eye, EyeOff, Users, Upload } from 'lucide-react';
 import { tiktokAPI, uploadAPI, postsAPI } from '@/lib/api';
 import notify from '@/lib/notify';
+import { validateTikTokPost, isTikTokPostValid } from '@/lib/tiktokPostValidation';
 
 export default function CreateTikTokPost({ isOpen, onClose, accounts = [], onSuccess }) {
     // ---------------------------------------------------------
@@ -203,38 +204,26 @@ export default function CreateTikTokPost({ isOpen, onClose, accounts = [], onSuc
         setSettings(newSettings);
     };
 
-    const getValidationErrors = () => {
-        const errors = [];
-        
-        if (!creatorInfo?.canPost) {
-            errors.push('You have reached your daily posting limit.');
-        }
+    const validationErrors = useMemo(
+        () =>
+            validateTikTokPost({
+                caption,
+                videoUrl,
+                uploading,
+                selectedAccountId,
+                creatorInfo,
+                settings,
+            }),
+        [caption, videoUrl, uploading, selectedAccountId, creatorInfo, settings]
+    );
 
-        if (!videoUrl) {
-            errors.push('Please wait for the video to finish uploading.');
-        }
+    const canPublish = validationErrors.length === 0 && !loadingCreator;
 
-        if (!settings.privacyLevel) {
-            errors.push('Please select who can view this video.');
-        }
-
-        if (settings.commercialDisclosure && !settings.brandOrganic && !settings.brandedContent) {
-            errors.push('You must select at least one commercial option ("Your brand" or "Branded content").');
-        }
-        
-        if (settings.brandedContent && settings.privacyLevel === 'SELF_ONLY') {
-            errors.push('Branded content cannot be set to private.');
-        }
-
-        return errors;
-    };
+    const getValidationErrors = () => validationErrors;
 
     const handlePublish = async () => {
-        if (!selectedAccountId) return setError('Please select an account.');
-        
-        const errors = getValidationErrors();
-        if (errors.length > 0) {
-            setError(errors.join(' '));
+        if (!isTikTokPostValid({ caption, videoUrl, uploading, selectedAccountId, creatorInfo, settings })) {
+            setError(validationErrors.join(' '));
             return;
         }
 
@@ -242,10 +231,12 @@ export default function CreateTikTokPost({ isOpen, onClose, accounts = [], onSuc
         setError('');
 
         try {
-            // 1. Create Post Record via Unified postsAPI
+            const captionText = caption.trim();
+            const postTitle = captionText.length > 50 ? `${captionText.substring(0, 50)}...` : captionText;
+
             const postPayload = {
-                title: caption ? (caption.length > 50 ? caption.substring(0, 50) + '...' : caption) : 'TikTok Video',
-                content: caption || '',
+                title: postTitle,
+                content: captionText,
                 platforms: [{ name: 'tiktok', accountId: selectedAccountId }],
                 media: [{
                     type: 'video',
@@ -263,6 +254,7 @@ export default function CreateTikTokPost({ isOpen, onClose, accounts = [], onSuc
                     brandOrganic: settings.commercialDisclosure ? settings.brandOrganic : false,
                     brandedContent: settings.commercialDisclosure ? settings.brandedContent : false,
                     isPrivateAccount: !!creatorInfo?.isPrivateAccount,
+                    caption: captionText,
                 }
             };
 
@@ -283,7 +275,11 @@ export default function CreateTikTokPost({ isOpen, onClose, accounts = [], onSuc
             handleClose();
         } catch (err) {
             console.error('Publish error:', err);
-            setError(err.response?.data?.message || err.message || 'Failed to publish');
+            const validation = err.response?.data?.errors;
+            const message = validation?.length
+                ? validation.map((e) => e.msg).join(' ')
+                : (err.response?.data?.message || err.message || 'Failed to publish');
+            setError(message);
         } finally {
             setLoading(false);
         }
@@ -510,8 +506,10 @@ export default function CreateTikTokPost({ isOpen, onClose, accounts = [], onSuc
 
                             {/* Caption */}
                             <div className="mb-8">
-                                <label className="block text-sm font-bold text-gray-900 mb-2">Caption</label>
-                                <div className="relative border border-gray-200 rounded-xl overflow-hidden focus-within:ring-2 focus-within:ring-[#FE2C55]/20 focus-within:border-[#FE2C55] bg-gray-50">
+                                <label className="block text-sm font-bold text-gray-900 mb-2">
+                                    Caption <span className="text-[#FE2C55]">*</span>
+                                </label>
+                                <div className={`relative border rounded-xl overflow-hidden focus-within:ring-2 focus-within:ring-[#FE2C55]/20 bg-gray-50 ${!caption.trim() && videoUrl ? 'border-amber-300' : 'border-gray-200 focus-within:border-[#FE2C55]'}`}>
                                     <textarea
                                         value={caption}
                                         onChange={(e) => setCaption(e.target.value)}
@@ -524,11 +522,16 @@ export default function CreateTikTokPost({ isOpen, onClose, accounts = [], onSuc
                                         {caption.length}/2200
                                     </div>
                                 </div>
+                                {!caption.trim() && videoUrl && (
+                                    <p className="mt-2 text-xs text-amber-700">Caption is required before you can upload.</p>
+                                )}
                             </div>
 
                             {/* Privacy */}
                             <div className="mb-8">
-                                <label className="block text-sm font-bold text-gray-900 mb-2">Who can view this video</label>
+                                <label className="block text-sm font-bold text-gray-900 mb-2">
+                                    Who can view this video <span className="text-[#FE2C55]">*</span>
+                                </label>
                                 <div className="relative">
                                     <select
                                         value={settings.privacyLevel}
@@ -556,6 +559,9 @@ export default function CreateTikTokPost({ isOpen, onClose, accounts = [], onSuc
                                         </svg>
                                     </div>
                                 </div>
+                                {!settings.privacyLevel && (
+                                    <p className="mt-2 text-xs text-amber-700">Privacy level is required before you can upload.</p>
+                                )}
                             </div>
 
                             {/* Privacy Management Behavior (Guideline 3b) */}
@@ -656,10 +662,19 @@ export default function CreateTikTokPost({ isOpen, onClose, accounts = [], onSuc
                                         <Info className="w-4 h-4 flex-shrink-0 mt-0.5" />
                                         <span>After you finish publishing, TikTok may take a few minutes to process your content before it appears on your profile.</span>
                                     </div>
+                                    {!canPublish && validationErrors.length > 0 && (
+                                        <div className="mb-4 text-sm text-amber-800 bg-amber-50 border border-amber-200 px-4 py-3 rounded-xl">
+                                            <ul className="list-disc list-inside space-y-1">
+                                                {validationErrors.map((msg) => (
+                                                    <li key={msg}>{msg}</li>
+                                                ))}
+                                            </ul>
+                                        </div>
+                                    )}
                                     <button
                                         onClick={handlePublish}
-                                        disabled={loading || uploading || !creatorInfo?.canPost}
-                                        className="w-full py-4 bg-[#00f2fe] hover:bg-[#00d0de] text-white rounded-xl font-bold shadow-lg shadow-cyan-500/20 transition-all disabled:opacity-50 flex justify-center"
+                                        disabled={loading || !canPublish}
+                                        className="w-full py-4 bg-[#00f2fe] hover:bg-[#00d0de] text-white rounded-xl font-bold shadow-lg shadow-cyan-500/20 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex justify-center"
                                     >
                                         {loading ? <Loader2 className="w-6 h-6 animate-spin" /> : 'Upload'}
                                     </button>
@@ -755,9 +770,18 @@ export default function CreateTikTokPost({ isOpen, onClose, accounts = [], onSuc
                                     <Info className="w-4 h-4 flex-shrink-0 mt-0.5" />
                                     <span>After you finish publishing, TikTok may take a few minutes to process your content before it appears on your profile.</span>
                                 </div>
+                                {!canPublish && validationErrors.length > 0 && (
+                                    <div className="mb-4 text-sm text-amber-800 bg-amber-50 border border-amber-200 px-4 py-3 rounded-xl">
+                                        <ul className="list-disc list-inside space-y-1">
+                                            {validationErrors.map((msg) => (
+                                                <li key={msg}>{msg}</li>
+                                            ))}
+                                        </ul>
+                                    </div>
+                                )}
                                 <button
                                     onClick={handlePublish}
-                                    disabled={loading || uploading || !creatorInfo?.canPost || (!settings.brandOrganic && !settings.brandedContent)}
+                                    disabled={loading || !canPublish}
                                     className="w-full py-4 bg-[#00f2fe] hover:bg-[#00d0de] text-white rounded-xl font-bold shadow-lg shadow-cyan-500/20 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex justify-center"
                                 >
                                     {loading ? <Loader2 className="w-6 h-6 animate-spin" /> : 'Upload'}

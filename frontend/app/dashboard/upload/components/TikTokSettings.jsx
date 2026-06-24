@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { tiktokAPI } from '@/lib/api';
 import { AlertCircle, CheckCircle2, User, Shield, MessageSquare, Copy, Scissors, Info, Tag, Building2, Handshake } from 'lucide-react';
 import PlatformIcon from '@/components/ui/PlatformIcon';
+import { validateTikTokSettings, isTikTokSettingsValid } from '@/lib/tiktokPostValidation';
 
 const PRIVACY_LABELS = {
     PUBLIC_TO_EVERYONE: 'Public',
@@ -514,36 +515,6 @@ export default function TikTokSettings({ accountId, settings, onSettingsChange, 
  * Hook to get TikTok settings validation
  */
 export function useTikTokSettingsValidation(settings) {
-    const isValid = () => {
-        // Privacy must be selected
-        if (!settings.privacyLevel) return false;
-
-        // If commercial disclosure is on, at least one option must be selected
-        if (settings.commercialDisclosure && !settings.brandOrganic && !settings.brandedContent) {
-            return false;
-        }
-
-        // Branded content can't be private
-        if (settings.brandedContent && settings.privacyLevel === 'SELF_ONLY') {
-            return false;
-        }
-
-        return true;
-    };
-
-    const getErrors = () => {
-        const errors = [];
-        if (!settings.privacyLevel) {
-            errors.push('Please select a privacy level for TikTok');
-        }
-        if (settings.commercialDisclosure && !settings.brandOrganic && !settings.brandedContent) {
-            errors.push('Please select at least one commercial content option');
-        }
-        if (settings.brandedContent && settings.privacyLevel === 'SELF_ONLY') {
-            errors.push('Branded content cannot be set to private');
-        }
-        return errors;
-    };
-
-    return { isValid: isValid(), errors: getErrors() };
+    const errors = validateTikTokSettings(settings);
+    return { isValid: isTikTokSettingsValid(settings), errors };
 }

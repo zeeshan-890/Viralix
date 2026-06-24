@@ -95,8 +95,12 @@ class TikTokPublisher extends BasePublisher {
                 }
             }
 
+            const tiktokCaption = tiktokSettings.caption !== undefined && tiktokSettings.caption !== null
+                ? tiktokSettings.caption
+                : (content || title || '');
+
             const result = await uploadVideoFromUrl(auth.accessToken, video.url, resolveDirectPostOptions({
-                caption: content || title || '',
+                caption: tiktokCaption,
                 privacy_level: tiktokSettings.privacyLevel,
                 disable_comment: tiktokSettings.disableComment || false,
                 disable_duet: tiktokSettings.disableDuet || false,

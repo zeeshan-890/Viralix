@@ -43,7 +43,8 @@ const PublishJobSchema = new mongoose.Schema({
             disableStitch: Boolean,
             brandOrganic: Boolean,
             brandedContent: Boolean,
-            isPrivateAccount: Boolean
+            isPrivateAccount: Boolean,
+            caption: String
         }
     },
     status: {

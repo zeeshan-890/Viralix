@@ -85,6 +85,12 @@ router.post(
         try {
             const { title, content, platforms, media = [], hashtags = [], mentions = [], scheduledDate, isScheduled, tiktokSettings } = req.body;
 
+            const resolvedTitle = String(title || '').trim();
+            const resolvedContent = String(content ?? '').trim();
+            if (!resolvedTitle || !resolvedContent) {
+                return res.status(400).json({ message: 'Title and content are required' });
+            }
+
             // Debug logging
             console.log('[posts] Creating post with platforms:', JSON.stringify(platforms));
 
@@ -100,8 +106,8 @@ router.post(
             }
             const post = new Post({
                 user: req.user.id,
-                title,
-                content,
+                title: resolvedTitle,
+                content: resolvedContent,
                 platforms: platforms.map(p => ({ name: p.name, accountId: p.accountId, status: isScheduled ? 'scheduled' : 'draft' })),
                 media,
                 hashtags,

@@ -79,6 +79,7 @@ const PostSchema = new mongoose.Schema({
         disableStitch: Boolean,
         brandOrganic: Boolean,
         brandedContent: Boolean,
+        caption: String,
         isPrivateAccount: Boolean
     },
     approvalStatus: {
