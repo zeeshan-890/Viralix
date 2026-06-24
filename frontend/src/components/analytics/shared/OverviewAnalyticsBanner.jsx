@@ -8,15 +8,22 @@ import CompactMetricTile from './CompactMetricTile';
 import { Eye, Heart, MessageCircle, Share2, TrendingUp, Users, BarChart3, RefreshCw } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-const OVERVIEW_PLATFORMS = ['instagram', 'tiktok', 'youtube', 'facebook'];
+const PLATFORM_ORDER = ['instagram', 'tiktok', 'youtube', 'facebook'];
+
+const GRID_COLS = {
+    1: 'grid-cols-1',
+    2: 'grid-cols-2',
+    3: 'grid-cols-3',
+    4: 'grid-cols-4',
+};
 
 function MiniPlatformStat({ label, value }) {
     return (
-        <div className="rounded-md bg-[var(--viralix-inset)]/80 border border-[var(--viralix-border)]/70 px-1.5 py-1 text-center">
-            <p className="text-[0.5625rem] font-semibold uppercase tracking-wide text-[var(--viralix-muted)] leading-none truncate">
+        <div className="rounded-md bg-black/20 border border-white/10 px-1.5 py-1 text-center">
+            <p className="text-[0.5625rem] font-semibold uppercase tracking-wide text-white/50 leading-none truncate">
                 {label}
             </p>
-            <p className="mt-0.5 text-xs font-bold tabular-nums text-[var(--viralix-accent)] leading-none">
+            <p className="mt-0.5 text-xs font-bold tabular-nums text-white leading-none">
                 {value}
             </p>
         </div>
@@ -36,50 +43,26 @@ function PlatformColumn({ platformId, accounts, breakdown }) {
     return (
         <div className="flex h-full flex-col p-2.5 sm:p-3">
             <div className="flex items-center gap-2 mb-2">
-                <div
-                    className={cn(
-                        'flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-[var(--viralix-border)] shadow-sm',
-                        config?.lightBg || 'bg-white'
-                    )}
-                >
+                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-white/15 bg-white/10 shadow-sm">
                     <PlatformIcon platform={platformId} size={18} />
                 </div>
                 <div className="min-w-0 flex-1">
-                    <p className="text-xs font-semibold text-[var(--viralix-accent)] truncate">{config?.label}</p>
-                    {connected.length > 0 ? (
-                        <p className="text-[0.625rem] text-emerald-600 font-medium truncate">
-                            {connected.length === 1
-                                ? (primaryAccount?.accountName || `@${primaryAccount?.username || 'Connected'}`)
-                                : `${connected.length} accounts`}
-                        </p>
-                    ) : (
-                        <p className="text-[0.625rem] text-[var(--viralix-muted)]">Not connected</p>
-                    )}
+                    <p className="text-xs font-semibold text-white truncate">{config?.label}</p>
+                    <p className="text-[0.625rem] text-emerald-400/90 font-medium truncate">
+                        {connected.length === 1
+                            ? (primaryAccount?.accountName || `@${primaryAccount?.username || 'Connected'}`)
+                            : `${connected.length} accounts`}
+                    </p>
                 </div>
-                <span
-                    className={cn(
-                        'h-1.5 w-1.5 shrink-0 rounded-full',
-                        connected.length > 0 ? 'bg-emerald-500' : 'bg-[var(--viralix-border)]'
-                    )}
-                    aria-hidden
-                />
+                <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-400" aria-hidden />
             </div>
 
-            {connected.length > 0 ? (
-                <div className="grid grid-cols-2 gap-1 flex-1">
-                    <MiniPlatformStat label="Followers" value={formatNumber(followers)} />
-                    <MiniPlatformStat label="Views" value={formatNumber(eng.views || 0)} />
-                    <MiniPlatformStat label="Posts" value={formatNumber(stats.published || stats.posts || 0)} />
-                    <MiniPlatformStat label="Eng. %" value={`${engRate}%`} />
-                </div>
-            ) : (
-                <Link
-                    href="/dashboard/connect-accounts"
-                    className="mt-auto rounded-md border border-dashed border-[var(--viralix-border)] px-2 py-2 text-center text-[0.625rem] font-medium text-[var(--viralix-muted)] hover:border-[var(--viralix-primary)] hover:text-[var(--viralix-primary-dark)] transition-colors"
-                >
-                    Connect
-                </Link>
-            )}
+            <div className="grid grid-cols-2 gap-1 flex-1">
+                <MiniPlatformStat label="Followers" value={formatNumber(followers)} />
+                <MiniPlatformStat label="Views" value={formatNumber(eng.views || 0)} />
+                <MiniPlatformStat label="Posts" value={formatNumber(stats.published || stats.posts || 0)} />
+                <MiniPlatformStat label="Eng. %" value={`${engRate}%`} />
+            </div>
         </div>
     );
 }
@@ -93,6 +76,11 @@ export default function OverviewAnalyticsBanner({
 }) {
     const o = overview;
 
+    const activeAccounts = accounts.filter((a) => a.isActive !== false);
+    const connectedPlatformIds = PLATFORM_ORDER.filter((platformId) =>
+        activeAccounts.some((a) => a.platform === platformId)
+    );
+
     const aggregateStats = [
         { label: 'Views', value: formatNumber(o.totalViews || 0), icon: Eye },
         { label: 'Eng. rate', value: `${o.engagementRate || 0}%`, icon: TrendingUp },
@@ -104,34 +92,51 @@ export default function OverviewAnalyticsBanner({
         { label: 'Scheduled', value: formatNumber(o.scheduledPosts || 0), icon: BarChart3 },
     ];
 
-    const connectedCount = accounts.filter((a) => a.isActive !== false).length;
+    const platformGridCols = GRID_COLS[connectedPlatformIds.length] || GRID_COLS[4];
 
     return (
-        <div className="analytics-panel overflow-hidden">
-            {/* 4 platform columns */}
-            <div className="grid grid-cols-2 lg:grid-cols-4 divide-y lg:divide-y-0 lg:divide-x divide-[var(--viralix-border)]">
-                {OVERVIEW_PLATFORMS.map((platformId) => (
-                    <PlatformColumn
-                        key={platformId}
-                        platformId={platformId}
-                        accounts={accounts}
-                        breakdown={platformBreakdown}
-                    />
-                ))}
-            </div>
+        <div className="analytics-platform-banner overflow-hidden">
+            {connectedPlatformIds.length > 0 ? (
+                <div
+                    className={cn(
+                        'grid divide-y sm:divide-y-0 sm:divide-x divide-white/10',
+                        platformGridCols
+                    )}
+                >
+                    {connectedPlatformIds.map((platformId) => (
+                        <PlatformColumn
+                            key={platformId}
+                            platformId={platformId}
+                            accounts={accounts}
+                            breakdown={platformBreakdown}
+                        />
+                    ))}
+                </div>
+            ) : (
+                <div className="px-4 py-8 text-center">
+                    <p className="text-sm text-white/70">No platforms connected yet</p>
+                    <p className="mt-1 text-xs text-white/45">Connect accounts to see per-platform metrics here</p>
+                    <Link
+                        href="/dashboard/connect-accounts"
+                        className="mt-3 inline-flex rounded-lg bg-[#84A98C] px-3 py-1.5 text-xs font-medium text-white hover:opacity-90 transition-opacity"
+                    >
+                        Connect accounts
+                    </Link>
+                </div>
+            )}
 
             {/* Aggregate stat row */}
-            <div className="border-t border-[var(--viralix-border)] bg-[var(--viralix-inset)]/25 px-2.5 py-2 sm:px-3">
+            <div className="border-t border-white/10 bg-black/15 px-2.5 py-2 sm:px-3">
                 <div className="mb-1.5 flex items-center justify-between gap-2">
-                    <p className="text-[0.625rem] font-semibold uppercase tracking-wider text-[var(--viralix-muted)]">
-                        All platforms · {connectedCount} connected
+                    <p className="text-[0.625rem] font-semibold uppercase tracking-wider text-white/45">
+                        All platforms · {activeAccounts.length} connected
                     </p>
                     {onRefresh && (
                         <button
                             type="button"
                             onClick={onRefresh}
                             disabled={refreshing}
-                            className="inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-[0.625rem] font-medium text-[var(--viralix-muted)] hover:bg-[var(--viralix-surface)] hover:text-[var(--viralix-accent)] disabled:opacity-50 transition-colors"
+                            className="inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-[0.625rem] font-medium text-white/55 hover:bg-white/10 hover:text-white disabled:opacity-50 transition-colors"
                         >
                             <RefreshCw className={cn('h-3 w-3', refreshing && 'animate-spin')} />
                             Refresh
@@ -143,6 +148,7 @@ export default function OverviewAnalyticsBanner({
                         <CompactMetricTile
                             key={stat.label}
                             {...stat}
+                            variant="dark"
                             className="!p-2 [&_p:nth-child(2)]:!text-sm [&_p:nth-child(2)]:sm:!text-base"
                         />
                     ))}
