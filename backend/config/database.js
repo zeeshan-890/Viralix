@@ -1,27 +1,45 @@
 const mongoose = require('mongoose');
 
+let isConnected = false;
+
 const connectDB = async () => {
-    try {
-        if (!process.env.MONGODB_URI) {
-            console.log('⚠️  MongoDB URI not provided. Running in mock mode for development.');
-            console.log('📄 To use real database, set MONGODB_URI in your .env file');
-            return;
-        }
-
-        const conn = await mongoose.connect(process.env.MONGODB_URI, {
-            useNewUrlParser: true,
-            useUnifiedTopology: true,
-        });
-
-        console.log(`📅 MongoDB Connected: ${conn.connection.host}`);
-    } catch (error) {
-        console.error('❌ Database connection error:', error.message);
-        console.log('⚠️  Continuing in mock mode. Some features may be limited.');
-        // Don't exit process in development, allow the app to run without DB
+    if (!process.env.MONGODB_URI) {
+        console.error('❌ MONGODB_URI is not set. API will run but database features will fail.');
         if (process.env.NODE_ENV === 'production') {
-            process.exit(1);
+            console.error('   Set MONGODB_URI in Heroku: heroku config:set MONGODB_URI="mongodb+srv://..." -a YOUR_APP');
+        }
+        return;
+    }
+
+    const maxAttempts = 5;
+    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+        try {
+            const conn = await mongoose.connect(process.env.MONGODB_URI, {
+                serverSelectionTimeoutMS: 10000,
+            });
+            isConnected = true;
+            console.log(`📅 MongoDB Connected: ${conn.connection.host}`);
+            return;
+        } catch (error) {
+            console.error(`❌ Database connection attempt ${attempt}/${maxAttempts} failed:`, error.message);
+            if (attempt < maxAttempts) {
+                const delay = attempt * 2000;
+                console.log(`   Retrying in ${delay / 1000}s...`);
+                await new Promise((r) => setTimeout(r, delay));
+            }
         }
     }
+
+    console.error('❌ Could not connect to MongoDB after multiple attempts.');
+    console.error('   Check MONGODB_URI, Atlas IP allowlist (0.0.0.0/0), and cluster status.');
+    // Do not exit — keep the HTTP server alive so Heroku health checks and logs work.
 };
 
+function getDbStatus() {
+    if (!process.env.MONGODB_URI) return 'not_configured';
+    if (isConnected && mongoose.connection.readyState === 1) return 'connected';
+    return 'disconnected';
+}
+
 module.exports = connectDB;
+module.exports.getDbStatus = getDbStatus;

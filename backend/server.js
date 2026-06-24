@@ -271,10 +271,15 @@ try {
 // app.use('/api/upload', require('./routes/upload'));
 
 // Health check endpoint
+const { getDbStatus } = require('./config/database');
 app.get('/api/health', (req, res) => {
-    res.status(200).json({
-        status: 'OK',
-        message: 'AutoReach AI Backend is running',
+    const dbStatus = getDbStatus();
+    const isProd = process.env.NODE_ENV === 'production';
+    const ok = dbStatus === 'connected' || (!isProd && dbStatus === 'not_configured');
+    res.status(ok ? 200 : 503).json({
+        status: ok ? 'OK' : 'DEGRADED',
+        db: dbStatus,
+        message: ok ? 'AutoReach AI Backend is running' : 'Backend up but database unavailable',
         timestamp: new Date().toISOString()
     });
 });
@@ -384,13 +389,15 @@ server.listen(PORT, () => {
     console.log(`🌐 Client URL: ${process.env.CLIENT_URL || 'http://localhost:3000'}`);
 });
 
-try {
-    // Start background workers
-    require('./services/queue/publish.worker');
-    console.log('👷 Background workers started');
-} catch (error) {
-    console.error('⚠️ Failed to start background workers:', error.message);
-    console.error('⚠️ Worker startup error stack:', error.stack);
+if (process.env.REDIS_URL) {
+    try {
+        require('./services/queue/publish.worker');
+        console.log('👷 Background workers started');
+    } catch (error) {
+        console.error('⚠️ Failed to start background workers:', error.message);
+    }
+} else {
+    console.warn('⚠️ REDIS_URL not set — publish queue worker skipped (add Heroku Redis for scheduled publishing)');
 }
 
 // Start lightweight scheduler using node-cron to publish due posts

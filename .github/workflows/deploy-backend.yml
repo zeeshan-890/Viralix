@@ -7,6 +7,7 @@ on:
     paths:
       - 'backend/**'
       - 'package.json'
+      - 'Procfile'
 
 jobs:
   build:

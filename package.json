@@ -6,7 +6,7 @@
     "node": ">=16.0.0"
   },
   "scripts": {
-    "heroku-prebuild": "cd backend && npm install",
-    "start": "cd backend && npm start"
+    "heroku-postbuild": "cd backend && npm install --omit=dev",
+    "start": "cd backend && node server.js"
   }
 }
