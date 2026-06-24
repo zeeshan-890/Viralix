@@ -128,9 +128,10 @@ router.put('/:id', auth, async (req, res) => {
         if (!post) return res.status(404).json({ message: 'Post not found' });
         if (post.user.toString() !== req.user.id) return res.status(401).json({ message: 'Not authorized' });
 
-        const { title, content, platforms, media, hashtags, mentions, scheduledDate, isScheduled } = req.body;
+        const { title, content, platforms, media, hashtags, mentions, scheduledDate, isScheduled, tiktokSettings } = req.body;
         if (title !== undefined) post.title = title;
         if (content !== undefined) post.content = content;
+        if (tiktokSettings !== undefined) post.tiktokSettings = tiktokSettings;
         if (platforms !== undefined) {
             // Normalize incoming platforms array to include required fields and statuses
             const normalized = (Array.isArray(platforms) ? platforms : []).map(p => ({

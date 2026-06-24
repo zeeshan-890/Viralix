@@ -72,6 +72,14 @@ const PostSchema = new mongoose.Schema({
         type: Boolean,
         default: true
     },
+    tiktokSettings: {
+        privacyLevel: String,
+        disableComment: Boolean,
+        disableDuet: Boolean,
+        disableStitch: Boolean,
+        brandOrganic: Boolean,
+        brandedContent: Boolean
+    },
     approvalStatus: {
         type: String,
         enum: ['none', 'pending', 'approved', 'rejected'],

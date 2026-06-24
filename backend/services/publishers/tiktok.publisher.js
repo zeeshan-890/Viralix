@@ -72,7 +72,7 @@ class TikTokPublisher extends BasePublisher {
     async publish(account, postData) {
         // Resolve auth (will auto-refresh if needed)
         const auth = await this.resolveAuth(account);
-        const { media, title, tiktokSettings } = postData;
+        const { media, title, content, tiktokSettings } = postData;
 
         const video = media.find(m => m.type === 'video');
         if (!video) {
@@ -87,7 +87,7 @@ class TikTokPublisher extends BasePublisher {
             // Use direct publish with all settings
             const { uploadVideoFromUrl } = require('../tiktok');
             const result = await uploadVideoFromUrl(auth.accessToken, video.url, {
-                caption: title || '',
+                caption: content || title || '',
                 privacy_level: tiktokSettings.privacyLevel,
                 disable_comment: tiktokSettings.disableComment || false,
                 disable_duet: tiktokSettings.disableDuet || false,

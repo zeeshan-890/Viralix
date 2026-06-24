@@ -35,7 +35,15 @@ const PublishJobSchema = new mongoose.Schema({
             url: String,
             type: { type: String, enum: ['image', 'video', 'gif'] },
             publicId: String
-        }]
+        }],
+        tiktokSettings: {
+            privacyLevel: String,
+            disableComment: Boolean,
+            disableDuet: Boolean,
+            disableStitch: Boolean,
+            brandOrganic: Boolean,
+            brandedContent: Boolean
+        }
     },
     status: {
         type: String,

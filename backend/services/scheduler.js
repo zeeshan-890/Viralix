@@ -53,7 +53,8 @@ async function scheduleDuePosts(now = new Date()) {
                 content: {
                     title: post.title,
                     body: post.content,
-                    media: post.media
+                    media: post.media,
+                    tiktokSettings: post.tiktokSettings
                 },
                 status: 'queued'
             });
@@ -68,7 +69,8 @@ async function scheduleDuePosts(now = new Date()) {
                 content: {
                     title: post.title,
                     body: post.content,
-                    media: post.media
+                    media: post.media,
+                    tiktokSettings: post.tiktokSettings
                 }
             });
 

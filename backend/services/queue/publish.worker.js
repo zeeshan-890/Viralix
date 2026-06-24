@@ -102,7 +102,8 @@ publishQueue.process(async (job) => {
             }, {
                 content: content.body,
                 media: content.media,
-                title: content.title
+                title: content.title,
+                tiktokSettings: content.tiktokSettings
             });
 
             // Update success (Atomic)
