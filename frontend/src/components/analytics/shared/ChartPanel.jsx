@@ -5,10 +5,10 @@ import { cn } from '@/lib/utils';
 
 export function ChartPanel({ title, subtitle, children, className = '' }) {
     return (
-        <div className={cn('analytics-panel p-4 sm:p-5', className)}>
-            <div className="mb-4 border-b border-[var(--viralix-border)] pb-3">
-                <h3 className="text-sm font-semibold text-[var(--viralix-accent)]">{title}</h3>
-                {subtitle && <p className="text-xs text-[var(--viralix-muted)] mt-0.5">{subtitle}</p>}
+        <div className={cn('analytics-panel pa-panel p-4 sm:p-5', className)}>
+            <div className="mb-4 border-b pa-border pb-3">
+                <h3 className="text-sm font-semibold pa-title">{title}</h3>
+                {subtitle && <p className="text-xs pa-muted mt-0.5">{subtitle}</p>}
             </div>
             {children}
         </div>
@@ -17,8 +17,8 @@ export function ChartPanel({ title, subtitle, children, className = '' }) {
 
 export function ChartEmpty({ message = 'No data for this chart' }) {
     return (
-        <div className="analytics-inset flex h-56 items-center justify-center">
-            <p className="text-sm text-[var(--viralix-muted)]">{message}</p>
+        <div className="analytics-inset pa-inset flex h-56 items-center justify-center">
+            <p className="text-sm pa-muted">{message}</p>
         </div>
     );
 }

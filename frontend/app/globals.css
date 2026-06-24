@@ -189,6 +189,301 @@ body {
     border-color: rgba(255, 255, 255, 0.16);
 }
 
+/* ── Platform deep analytics (TikTok / Instagram branded pages) ── */
+.platform-analytics-page {
+    border-radius: 0.75rem;
+    padding: 1rem;
+}
+
+@media (min-width: 640px) {
+    .platform-analytics-page {
+        padding: 1.25rem;
+    }
+}
+
+/* Instagram — pink / purple gradient page, light panels */
+.platform-analytics-instagram {
+    background: linear-gradient(160deg, #fdf2f8 0%, #fce7f3 28%, #fae8ff 55%, #fff7ed 100%);
+    border: 1px solid rgba(228, 64, 95, 0.12);
+    box-shadow: 0 8px 32px rgba(131, 58, 180, 0.08);
+}
+
+.platform-analytics-banner-instagram {
+    background: linear-gradient(135deg, #833AB4 0%, #E4405F 48%, #F77737 100%);
+    border: 1px solid rgba(255, 255, 255, 0.22);
+    border-radius: 0.75rem;
+    box-shadow: 0 8px 28px rgba(131, 58, 180, 0.35);
+    color: #fff;
+}
+
+.platform-analytics-instagram .analytics-metric-tile-dark {
+    background: rgba(255, 255, 255, 0.14);
+    border-color: rgba(255, 255, 255, 0.28);
+}
+
+.platform-analytics-instagram .analytics-metric-tile-dark:hover {
+    background: rgba(255, 255, 255, 0.22);
+}
+
+.platform-analytics-instagram .pa-panel,
+.platform-analytics-instagram .analytics-panel {
+    background: rgba(255, 255, 255, 0.92);
+    border: 1px solid rgba(228, 64, 95, 0.14);
+    border-radius: 0.75rem;
+    box-shadow: 0 2px 12px rgba(131, 58, 180, 0.08);
+    color: #3d1f35;
+}
+
+.platform-analytics-instagram .pa-inset,
+.platform-analytics-instagram .analytics-inset {
+    background: linear-gradient(180deg, #fdf2f8 0%, #fce7f3 100%);
+    border: 1px solid rgba(228, 64, 95, 0.12);
+    border-radius: 0.5rem;
+}
+
+.platform-analytics-instagram .analytics-table-head,
+.platform-analytics-instagram .pa-table-head {
+    background: linear-gradient(180deg, #fce7f3 0%, #fae8ff 100%);
+    border-color: rgba(228, 64, 95, 0.12);
+}
+
+.platform-analytics-tiktok .pa-panel,
+.platform-analytics-tiktok .analytics-panel {
+    background: #161616;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 0.75rem;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
+    color: #fff;
+}
+
+.platform-analytics-tiktok .pa-inset,
+.platform-analytics-tiktok .analytics-inset {
+    background: #1e1e1e;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 0.5rem;
+}
+
+.platform-analytics-tiktok .analytics-table-head,
+.platform-analytics-tiktok .pa-table-head {
+    background: #1a1a1a;
+    border-color: rgba(255, 255, 255, 0.08);
+    color: rgba(255, 255, 255, 0.55);
+}
+
+.platform-analytics-instagram .pa-title,
+.platform-analytics-instagram .analytics-panel h2,
+.platform-analytics-instagram .analytics-panel h3 {
+    color: #833AB4;
+}
+
+.platform-analytics-tiktok .pa-title,
+.platform-analytics-tiktok .analytics-panel h2,
+.platform-analytics-tiktok .analytics-panel h3 {
+    color: #fff;
+}
+
+.platform-analytics-instagram .pa-muted,
+.platform-analytics-instagram .analytics-panel .text-xs {
+    color: #9d4b6a;
+}
+
+.platform-analytics-tiktok .pa-muted {
+    color: rgba(255, 255, 255, 0.5);
+}
+
+.platform-analytics-instagram .pa-panel {
+    background: rgba(255, 255, 255, 0.92);
+    border: 1px solid rgba(228, 64, 95, 0.14);
+    border-radius: 0.75rem;
+    box-shadow: 0 2px 12px rgba(131, 58, 180, 0.08);
+    color: #3d1f35;
+}
+
+.platform-analytics-instagram .pa-title {
+    color: #833AB4;
+}
+
+.platform-analytics-instagram .pa-muted {
+    color: #9d4b6a;
+}
+
+.platform-analytics-instagram .pa-text {
+    color: #3d1f35;
+}
+
+.platform-analytics-instagram .pa-accent {
+    color: #E4405F;
+}
+
+.platform-analytics-instagram .pa-inset {
+    background: linear-gradient(180deg, #fdf2f8 0%, #fce7f3 100%);
+    border: 1px solid rgba(228, 64, 95, 0.12);
+    border-radius: 0.5rem;
+}
+
+.platform-analytics-instagram .pa-table-head {
+    background: linear-gradient(180deg, #fce7f3 0%, #fae8ff 100%);
+    border-color: rgba(228, 64, 95, 0.12);
+}
+
+.platform-analytics-instagram .pa-border {
+    border-color: rgba(228, 64, 95, 0.12);
+}
+
+.platform-analytics-instagram .pa-btn {
+    background: #fff;
+    border: 1px solid rgba(228, 64, 95, 0.2);
+    color: #833AB4;
+}
+
+.platform-analytics-instagram .pa-btn:hover {
+    background: #fdf2f8;
+    border-color: rgba(228, 64, 95, 0.35);
+}
+
+.platform-analytics-instagram .pa-btn-primary {
+    background: linear-gradient(135deg, #833AB4, #E4405F);
+    border: none;
+    color: #fff;
+}
+
+.platform-analytics-instagram .pa-period-active {
+    background: linear-gradient(135deg, #833AB4, #E4405F);
+    color: #fff;
+    box-shadow: 0 2px 8px rgba(131, 58, 180, 0.3);
+}
+
+.platform-analytics-instagram .pa-period-track {
+    background: rgba(255, 255, 255, 0.7);
+    border: 1px solid rgba(228, 64, 95, 0.15);
+}
+
+.platform-analytics-instagram .pa-select {
+    background: #fff;
+    border: 1px solid rgba(228, 64, 95, 0.2);
+    color: #3d1f35;
+}
+
+/* TikTok — black page, dark panels, cyan / pink accents */
+.platform-analytics-tiktok {
+    background: linear-gradient(180deg, #0a0a0a 0%, #111111 50%, #0d0d0d 100%);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.45);
+}
+
+.platform-analytics-banner-tiktok {
+    background: linear-gradient(135deg, #000000 0%, #141414 45%, #0a0a0a 100%);
+    border: 1px solid rgba(0, 242, 234, 0.15);
+    border-radius: 0.75rem;
+    box-shadow:
+        0 0 0 1px rgba(255, 0, 80, 0.08),
+        0 12px 36px rgba(0, 0, 0, 0.55);
+    color: #fff;
+}
+
+.platform-analytics-tiktok .analytics-metric-tile-dark {
+    background: rgba(0, 242, 234, 0.06);
+    border-color: rgba(255, 255, 255, 0.1);
+}
+
+.platform-analytics-tiktok .analytics-metric-tile-dark:hover {
+    background: rgba(0, 242, 234, 0.1);
+    border-color: rgba(0, 242, 234, 0.25);
+}
+
+.platform-analytics-tiktok .pa-panel {
+    background: #161616;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 0.75rem;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
+    color: #fff;
+}
+
+.platform-analytics-tiktok .pa-title {
+    color: #fff;
+}
+
+.platform-analytics-tiktok .pa-muted {
+    color: rgba(255, 255, 255, 0.5);
+}
+
+.platform-analytics-tiktok .pa-text {
+    color: #fff;
+}
+
+.platform-analytics-tiktok .pa-accent {
+    color: #00F2EA;
+}
+
+.platform-analytics-tiktok .pa-inset {
+    background: #1e1e1e;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 0.5rem;
+}
+
+.platform-analytics-tiktok .pa-table-head {
+    background: #1a1a1a;
+    border-color: rgba(255, 255, 255, 0.08);
+    color: rgba(255, 255, 255, 0.55);
+}
+
+.platform-analytics-tiktok .pa-border {
+    border-color: rgba(255, 255, 255, 0.08);
+}
+
+.platform-analytics-tiktok .pa-btn {
+    background: #1e1e1e;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    color: #fff;
+}
+
+.platform-analytics-tiktok .pa-btn:hover {
+    background: #252525;
+    border-color: rgba(0, 242, 234, 0.35);
+    color: #00F2EA;
+}
+
+.platform-analytics-tiktok .pa-btn-primary {
+    background: #00F2EA;
+    border: none;
+    color: #000;
+    font-weight: 600;
+}
+
+.platform-analytics-tiktok .pa-period-active {
+    background: #00F2EA;
+    color: #000;
+    font-weight: 600;
+    box-shadow: 0 0 12px rgba(0, 242, 234, 0.35);
+}
+
+.platform-analytics-tiktok .pa-period-track {
+    background: #1a1a1a;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.platform-analytics-tiktok .pa-select {
+    background: #1e1e1e;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    color: #fff;
+}
+
+.platform-analytics-instagram .pa-row-hover:hover {
+    background: rgba(253, 242, 248, 0.8);
+}
+
+.platform-analytics-instagram .analytics-table-header {
+    background: rgba(253, 242, 248, 0.65);
+}
+
+.platform-analytics-tiktok .analytics-table-header {
+    background: rgba(255, 255, 255, 0.04);
+}
+
+.platform-analytics-tiktok .pa-row-hover:hover {
+    background: rgba(0, 242, 234, 0.05);
+}
+
 /* Dashboard-wide: unify legacy gray borders with theme tokens */
 .dashboard-shell .border-gray-100,
 .dashboard-shell .border-gray-200 {

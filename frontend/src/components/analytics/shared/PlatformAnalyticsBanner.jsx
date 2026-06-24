@@ -8,6 +8,7 @@ import {
     Eye, Heart, MessageCircle, Share2, Bookmark, TrendingUp, BarChart3, Users, Film,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { getPlatformAnalyticsTheme } from './platformAnalyticsTheme';
 
 export default function PlatformAnalyticsBanner({
     platform,
@@ -19,6 +20,8 @@ export default function PlatformAnalyticsBanner({
     const config = getPlatform(platform);
     const s = summary;
     const acc = account;
+
+    const theme = getPlatformAnalyticsTheme(platform);
 
     const allMetrics = [
         { label: 'Total views', value: formatNumber(s.totalViews), icon: Eye },
@@ -37,7 +40,7 @@ export default function PlatformAnalyticsBanner({
     ];
 
     return (
-        <div className="analytics-platform-banner overflow-hidden">
+        <div className={cn(theme.bannerShell, 'overflow-hidden')}>
             <div className="flex flex-col lg:flex-row lg:min-h-[220px]">
                 {/* Left — avatar on top, account details below */}
                 <div className="lg:w-[34%] xl:w-[32%] lg:max-w-[300px] shrink-0 border-b lg:border-b-0 lg:border-r border-white/10 bg-black/15 p-4 sm:p-5">
@@ -54,7 +57,10 @@ export default function PlatformAnalyticsBanner({
                                     <PlatformIcon platform={platform} size={36} />
                                 </div>
                             )}
-                            <div className="absolute -bottom-1 -right-1 h-6 w-6 rounded-md bg-[#2F3E46] border border-white/20 shadow-sm flex items-center justify-center">
+                            <div className={cn(
+                                'absolute -bottom-1 -right-1 h-6 w-6 rounded-md border shadow-sm flex items-center justify-center',
+                                platform === 'instagram' ? 'bg-[#833AB4] border-white/30' : 'bg-black border-[#00F2EA]/30'
+                            )}>
                                 <PlatformIcon platform={platform} size={14} />
                             </div>
                         </div>

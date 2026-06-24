@@ -5,6 +5,7 @@ import {
 } from 'recharts';
 import { formatNumber } from '@/lib/utils';
 import { ChartPanel, ChartEmpty, ChartTooltipBox } from './ChartPanel';
+import { usePlatformAnalyticsTheme } from './PlatformAnalyticsThemeContext';
 
 export default function TopPostsBarChart({
     posts = [],
@@ -12,6 +13,7 @@ export default function TopPostsBarChart({
     subtitle = 'Views vs engagement',
     maxItems = 8,
 }) {
+    const theme = usePlatformAnalyticsTheme();
     const data = posts.slice(0, maxItems).map((p, i) => ({
         name: `#${i + 1}`,
         label: (p.title || 'Post').slice(0, 18) + ((p.title?.length || 0) > 18 ? '…' : ''),
@@ -26,16 +28,16 @@ export default function TopPostsBarChart({
         <div className="h-72 w-full">
             <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={data} margin={{ top: 8, right: 8, left: 0, bottom: 0 }} barGap={4}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" vertical={false} />
-                    <XAxis dataKey="name" tick={{ fontSize: 11 }} />
-                    <YAxis tick={{ fontSize: 11 }} tickFormatter={(v) => formatNumber(v)} width={44} />
+                    <CartesianGrid strokeDasharray="3 3" stroke={theme.gridStroke} vertical={false} />
+                    <XAxis dataKey="name" tick={{ fontSize: 11, fill: theme.axisTick }} />
+                    <YAxis tick={{ fontSize: 11, fill: theme.axisTick }} tickFormatter={(v) => formatNumber(v)} width={44} />
                     <Tooltip
                         content={({ active, payload }) => {
                             if (!active || !payload?.length) return null;
                             const row = payload[0]?.payload;
                             return (
-                                <div className="rounded-lg border bg-white px-3 py-2 shadow-md text-sm">
-                                    <p className="font-medium text-[#354F52] mb-1">{row?.label}</p>
+                                <div className="analytics-panel pa-panel px-3 py-2 text-sm shadow-lg">
+                                    <p className="font-medium pa-title mb-1">{row?.label}</p>
                                     {payload.map((p) => (
                                         <p key={p.dataKey} style={{ color: p.color }}>{p.name}: {formatNumber(p.value)}</p>
                                     ))}
@@ -43,9 +45,9 @@ export default function TopPostsBarChart({
                             );
                         }}
                     />
-                    <Legend />
-                    <Bar dataKey="views" name="Views" fill="#84A98C" radius={[4, 4, 0, 0]} />
-                    <Bar dataKey="engagement" name="Engagement" fill="#E4405F" radius={[4, 4, 0, 0]} />
+                    <Legend wrapperStyle={{ color: theme.legendColor }} />
+                    <Bar dataKey="views" name="Views" fill={theme.chartPrimary} radius={[4, 4, 0, 0]} />
+                    <Bar dataKey="engagement" name="Engagement" fill={theme.chartSecondary} radius={[4, 4, 0, 0]} />
                 </BarChart>
             </ResponsiveContainer>
         </div>
@@ -63,6 +65,7 @@ export function AccountComparisonBarChart({
     title = 'Performance by account',
     subtitle = 'Views and engagement per connected account',
 }) {
+    const theme = usePlatformAnalyticsTheme();
     const data = accounts.map((a) => ({
         name: String(a.accountName || a.username || 'Account').slice(0, 12),
         views: a.contentStats?.views || 0,
@@ -76,13 +79,13 @@ export function AccountComparisonBarChart({
         <div className="h-64 w-full">
             <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={data} layout="vertical" margin={{ top: 4, right: 16, left: 8, bottom: 4 }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" horizontal={false} />
-                    <XAxis type="number" tick={{ fontSize: 11 }} tickFormatter={(v) => formatNumber(v)} />
-                    <YAxis type="category" dataKey="name" tick={{ fontSize: 11 }} width={72} />
+                    <CartesianGrid strokeDasharray="3 3" stroke={theme.gridStroke} horizontal={false} />
+                    <XAxis type="number" tick={{ fontSize: 11, fill: theme.axisTick }} tickFormatter={(v) => formatNumber(v)} />
+                    <YAxis type="category" dataKey="name" tick={{ fontSize: 11, fill: theme.axisTick }} width={72} />
                     <Tooltip content={<ChartTooltipBox />} />
-                    <Legend />
-                    <Bar dataKey="views" name="Views" fill="#84A98C" radius={[0, 4, 4, 0]} />
-                    <Bar dataKey="engagement" name="Engagement" fill="#52796F" radius={[0, 4, 4, 0]} />
+                    <Legend wrapperStyle={{ color: theme.legendColor }} />
+                    <Bar dataKey="views" name="Views" fill={theme.chartPrimary} radius={[0, 4, 4, 0]} />
+                    <Bar dataKey="engagement" name="Engagement" fill={theme.chartSecondary} radius={[0, 4, 4, 0]} />
                 </BarChart>
             </ResponsiveContainer>
         </div>

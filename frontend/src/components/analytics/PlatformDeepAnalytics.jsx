@@ -7,6 +7,8 @@ import { formatNumber } from '@/lib/utils';
 import { getPlatform } from '@/config/platforms';
 import PlatformIcon from '@/components/ui/PlatformIcon';
 import PlatformAnalyticsBanner from './shared/PlatformAnalyticsBanner';
+import { PlatformAnalyticsThemeProvider } from './shared/PlatformAnalyticsThemeContext';
+import { getPlatformAnalyticsTheme } from './shared/platformAnalyticsTheme';
 import DeepTimelineChart from './shared/DeepTimelineChart';
 import MetricsLineChart from './shared/MetricsLineChart';
 import EngagementPieChart from './shared/EngagementPieChart';
@@ -65,20 +67,28 @@ export default function PlatformDeepAnalytics({ platform, accountId: initialAcco
         }
     };
 
+    const theme = getPlatformAnalyticsTheme(platform);
+
     if (loading && !data) {
         return (
-            <div className="analytics-panel flex flex-col items-center justify-center gap-3 py-20">
-                <Loader2 className="h-8 w-8 animate-spin text-[var(--viralix-primary)]" />
-                <p className="text-sm text-[var(--viralix-muted)]">Loading {config.label} analytics…</p>
-            </div>
+            <PlatformAnalyticsThemeProvider platform={platform}>
+                <div className={theme.pageShell}>
+                    <div className="analytics-panel pa-panel flex flex-col items-center justify-center gap-3 py-20">
+                        <Loader2 className={cn('h-8 w-8 animate-spin', platform === 'tiktok' ? 'text-[#00F2EA]' : 'text-[#E4405F]')} />
+                        <p className="text-sm pa-muted">Loading {config.label} analytics…</p>
+                    </div>
+                </div>
+            </PlatformAnalyticsThemeProvider>
         );
     }
 
     if (!data && error) {
         return (
-            <div className="analytics-panel border-amber-200/80 bg-amber-50/90 px-4 py-6 text-sm text-amber-900 text-center">
-                {error}
-            </div>
+            <PlatformAnalyticsThemeProvider platform={platform}>
+                <div className={theme.pageShell}>
+                    <div className="analytics-panel pa-panel px-4 py-6 text-sm text-center pa-muted">{error}</div>
+                </div>
+            </PlatformAnalyticsThemeProvider>
         );
     }
 
@@ -91,17 +101,23 @@ export default function PlatformDeepAnalytics({ platform, accountId: initialAcco
             : null;
 
     return (
-        <div className="space-y-6">
+        <PlatformAnalyticsThemeProvider platform={platform}>
+        <div className={cn(theme.pageShell, 'space-y-6')}>
             {/* Toolbar */}
-            <div className="analytics-panel p-4 sm:p-5">
+            <div className="analytics-panel pa-panel p-4 sm:p-5">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <div className="flex items-center gap-3">
-                    <div className={cn('flex h-11 w-11 items-center justify-center rounded-xl border border-[var(--viralix-border)] bg-[var(--viralix-inset)] shadow-sm', config.lightBg)}>
+                    <div className={cn(
+                        'flex h-11 w-11 items-center justify-center rounded-xl border shadow-sm',
+                        platform === 'instagram'
+                            ? 'border-pink-200/60 bg-white/80'
+                            : 'border-white/10 bg-white/5'
+                    )}>
                         <PlatformIcon platform={platform} size={28} />
                     </div>
                     <div>
-                        <h2 className="text-lg font-semibold text-[var(--viralix-accent)]">{config.label} Analytics</h2>
-                        <p className="text-xs text-[var(--viralix-muted)]">Native content synced from {config.label}</p>
+                        <h2 className="text-lg font-semibold pa-title">{config.label} Analytics</h2>
+                        <p className="text-xs pa-muted">Native content synced from {config.label}</p>
                     </div>
                 </div>
                 <div className="flex flex-wrap items-center gap-2">
@@ -109,7 +125,7 @@ export default function PlatformDeepAnalytics({ platform, accountId: initialAcco
                         <select
                             value={accountId}
                             onChange={(e) => setAccountId(e.target.value)}
-                            className="rounded-lg border border-[var(--viralix-border)] bg-[var(--viralix-surface)] px-3 py-2 text-sm text-[var(--viralix-accent)] shadow-sm"
+                            className="pa-select rounded-lg px-3 py-2 text-sm shadow-sm"
                         >
                             <option value="">All accounts</option>
                             {accounts.map((a) => (
@@ -119,7 +135,7 @@ export default function PlatformDeepAnalytics({ platform, accountId: initialAcco
                             ))}
                         </select>
                     )}
-                    <div className="flex rounded-lg border border-[var(--viralix-border)] bg-[var(--viralix-inset)] p-0.5">
+                    <div className="pa-period-track flex rounded-lg p-0.5">
                         {PERIODS.map((p) => (
                             <button
                                 key={p.id}
@@ -128,8 +144,8 @@ export default function PlatformDeepAnalytics({ platform, accountId: initialAcco
                                 className={cn(
                                     'rounded-md px-2.5 py-1.5 text-xs font-medium transition-all',
                                     period === p.id
-                                        ? 'bg-[var(--viralix-surface)] text-[var(--viralix-accent)] shadow-sm'
-                                        : 'text-[var(--viralix-muted)] hover:text-[var(--viralix-accent)]'
+                                        ? 'pa-period-active'
+                                        : 'pa-muted hover:opacity-100 opacity-80'
                                 )}
                             >
                                 {p.label}
@@ -140,12 +156,15 @@ export default function PlatformDeepAnalytics({ platform, accountId: initialAcco
                         type="button"
                         onClick={handleSync}
                         disabled={syncing}
-                        className="btn-secondary btn-sm shadow-sm"
+                        className="pa-btn inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium shadow-sm disabled:opacity-50"
                     >
                         <RefreshCw className={cn('h-3.5 w-3.5', syncing && 'animate-spin')} />
                         Sync
                     </button>
-                    <Link href={`/dashboard/platforms/${platform}`} className="btn-secondary btn-sm shadow-sm">
+                    <Link
+                        href={`/dashboard/platforms/${platform}`}
+                        className="pa-btn inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium shadow-sm"
+                    >
                         <ExternalLink className="h-3.5 w-3.5" />
                         Platform
                     </Link>
@@ -154,7 +173,7 @@ export default function PlatformDeepAnalytics({ platform, accountId: initialAcco
             </div>
 
             {error && (
-                <div className="analytics-panel border-amber-200/80 bg-amber-50/90 px-4 py-3 text-sm text-amber-900">{error}</div>
+                <div className="analytics-panel pa-panel border-amber-200/80 bg-amber-50/90 px-4 py-3 text-sm text-amber-900">{error}</div>
             )}
 
             {/* Account banner — profile left, metrics right */}
@@ -168,11 +187,14 @@ export default function PlatformDeepAnalytics({ platform, accountId: initialAcco
 
             {/* Charts section */}
             <div className="space-y-5">
-                <div className="analytics-panel px-4 py-3 flex items-center gap-2">
-                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[var(--viralix-inset)]">
-                        <BarChart3 className="h-4 w-4 text-[var(--viralix-primary-dark)]" />
+                <div className="analytics-panel pa-panel px-4 py-3 flex items-center gap-2">
+                    <div className={cn(
+                        'flex h-8 w-8 items-center justify-center rounded-lg',
+                        platform === 'instagram' ? 'bg-pink-100' : 'bg-white/10'
+                    )}>
+                        <BarChart3 className={cn('h-4 w-4', platform === 'instagram' ? 'text-[#833AB4]' : 'text-[#00F2EA]')} />
                     </div>
-                    <h3 className="text-sm font-semibold text-[var(--viralix-accent)]">Visual analytics</h3>
+                    <h3 className="text-sm font-semibold pa-title">Visual analytics</h3>
                 </div>
 
                 <div className="grid gap-5 lg:grid-cols-2">
@@ -254,18 +276,18 @@ export default function PlatformDeepAnalytics({ platform, accountId: initialAcco
 
             {/* Media type breakdown cards (Instagram) */}
             {platform === 'instagram' && (data?.mediaTypeBreakdown?.length > 0) && (
-                <div className="analytics-panel p-4 sm:p-5">
-                    <h3 className="text-sm font-semibold text-[var(--viralix-accent)] mb-4 pb-3 border-b border-[var(--viralix-border)]">Content by type</h3>
+                <div className="analytics-panel pa-panel p-4 sm:p-5">
+                    <h3 className="text-sm font-semibold pa-title mb-4 pb-3 border-b pa-border">Content by type</h3>
                     <div className="grid gap-3 sm:grid-cols-3">
                         {data.mediaTypeBreakdown.map((mt) => (
-                            <div key={mt.type} className="analytics-inset p-4">
+                            <div key={mt.type} className="analytics-inset pa-inset p-4">
                                 <div className="flex items-center gap-2 mb-2">
-                                    {mt.type === 'video' ? <Video className="h-4 w-4 text-[var(--viralix-primary-dark)]" /> : <ImageIcon className="h-4 w-4 text-[var(--viralix-primary-dark)]" />}
-                                    <span className="text-sm font-medium capitalize text-[var(--viralix-accent)]">{mt.type}</span>
-                                    <span className="text-xs text-[var(--viralix-muted)]">({mt.count})</span>
+                                    {mt.type === 'video' ? <Video className="h-4 w-4 text-[#E4405F]" /> : <ImageIcon className="h-4 w-4 text-[#833AB4]" />}
+                                    <span className="text-sm font-medium capitalize pa-text">{mt.type}</span>
+                                    <span className="text-xs pa-muted">({mt.count})</span>
                                 </div>
-                                <p className="text-lg font-bold text-[var(--viralix-accent)]">{formatNumber(mt.views)} views</p>
-                                <p className="text-xs text-[var(--viralix-muted)]">{formatNumber(mt.engagement)} engagement</p>
+                                <p className="text-lg font-bold pa-accent">{formatNumber(mt.views)} views</p>
+                                <p className="text-xs pa-muted">{formatNumber(mt.engagement)} engagement</p>
                             </div>
                         ))}
                     </div>
@@ -287,8 +309,8 @@ export default function PlatformDeepAnalytics({ platform, accountId: initialAcco
 
             {/* All posts grid */}
             {(data?.allPosts?.length > 0) && (
-                <div className="analytics-panel p-4 sm:p-5">
-                    <h3 className="text-sm font-semibold text-[var(--viralix-accent)] mb-4 pb-3 border-b border-[var(--viralix-border)]">
+                <div className="analytics-panel pa-panel p-4 sm:p-5">
+                    <h3 className="text-sm font-semibold pa-title mb-4 pb-3 border-b pa-border">
                         All content — click for post analytics
                     </h3>
                     <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
@@ -296,7 +318,12 @@ export default function PlatformDeepAnalytics({ platform, accountId: initialAcco
                             <Link
                                 key={post.id}
                                 href={post.detailUrl}
-                                className="group relative aspect-square overflow-hidden rounded-xl border border-[var(--viralix-border)] bg-[var(--viralix-inset)] shadow-sm analytics-panel-hover"
+                                className={cn(
+                                    'group relative aspect-square overflow-hidden rounded-xl border shadow-sm transition-shadow hover:shadow-md',
+                                    platform === 'instagram'
+                                        ? 'border-pink-200/50 bg-pink-50'
+                                        : 'border-white/10 bg-[#1e1e1e]'
+                                )}
                             >
                                 {post.thumbnail ? (
                                     <img src={post.thumbnail} alt="" className="absolute inset-0 h-full w-full object-cover group-hover:scale-105 transition-transform" />
@@ -318,5 +345,6 @@ export default function PlatformDeepAnalytics({ platform, accountId: initialAcco
                 </div>
             )}
         </div>
+        </PlatformAnalyticsThemeProvider>
     );
 }

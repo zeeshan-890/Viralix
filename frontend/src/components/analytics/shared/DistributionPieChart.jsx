@@ -3,7 +3,8 @@
 import {
     PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend,
 } from 'recharts';
-import { ChartPanel, ChartEmpty, ChartTooltipBox, PIE_COLORS } from './ChartPanel';
+import { ChartPanel, ChartEmpty, ChartTooltipBox } from './ChartPanel';
+import { usePlatformAnalyticsTheme } from './PlatformAnalyticsThemeContext';
 
 export default function DistributionPieChart({
     items = [],
@@ -12,6 +13,7 @@ export default function DistributionPieChart({
     valueKey = 'value',
     nameKey = 'name',
 }) {
+    const theme = usePlatformAnalyticsTheme();
     const data = items.filter((d) => (d[valueKey] || 0) > 0);
 
     const chart = !data.length ? (
@@ -31,11 +33,11 @@ export default function DistributionPieChart({
                         labelLine={false}
                     >
                         {data.map((_, i) => (
-                            <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />
+                            <Cell key={i} fill={theme.chartColors[i % theme.chartColors.length]} />
                         ))}
                     </Pie>
                     <Tooltip content={<ChartTooltipBox />} />
-                    <Legend formatter={(v) => <span className="text-xs capitalize">{v}</span>} />
+                    <Legend formatter={(v) => <span className="text-xs pa-muted capitalize">{v}</span>} />
                 </PieChart>
             </ResponsiveContainer>
         </div>
