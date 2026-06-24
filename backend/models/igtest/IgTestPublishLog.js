@@ -23,7 +23,7 @@ const IgTestPublishLogSchema = new mongoose.Schema({
     publishedMediaId: String,
     status: {
         type: String,
-        enum: ['pending', 'published', 'failed'],
+        enum: ['pending', 'processing', 'published', 'failed'],
         default: 'pending'
     },
     error: String

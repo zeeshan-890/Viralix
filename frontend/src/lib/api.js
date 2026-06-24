@@ -338,6 +338,7 @@ export const igTestAPI = {
     accounts: () => api.get('/ig-test/accounts'),
     disconnect: (id) => api.delete(`/ig-test/accounts/${id}`),
     publish: (payload) => api.post('/ig-test/publish', payload),
+    publishStatus: (logId) => api.get(`/ig-test/publish/${logId}`),
     publishLimit: (accountId) => api.get(`/ig-test/publish-limit/${accountId}`),
     logs: () => api.get('/ig-test/logs'),
 };

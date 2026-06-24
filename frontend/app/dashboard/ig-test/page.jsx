@@ -195,6 +195,18 @@ export default function IgTestPage() {
         return media.length >= 1;
     };
 
+    const pollPublishStatus = async (logId) => {
+        const maxAttempts = 100;
+        for (let attempt = 0; attempt < maxAttempts; attempt++) {
+            await new Promise((resolve) => setTimeout(resolve, 3000));
+            const res = await igTestAPI.publishStatus(logId);
+            const { status, mediaId, error } = res.data;
+            if (status === 'published') return { mediaId };
+            if (status === 'failed') throw new Error(error || 'Publish failed');
+        }
+        throw new Error('Still processing on Instagram. Check Recent attempts for the final status.');
+    };
+
     const handlePublish = async () => {
         if (!igTestAvailable) {
             notify.warning('IG Test backend endpoints are not deployed yet.');
@@ -211,13 +223,23 @@ export default function IgTestPage() {
             } else if (mediaType === 'IMAGE') {
                 payload.imageUrl = media[0].url;
                 if (altText) payload.altText = altText;
+            } else if (media[0].type === 'image') {
+                payload.imageUrl = media[0].url;
+                if (altText) payload.altText = altText;
             } else {
                 payload.videoUrl = media[0].url;
             }
 
             const res = await igTestAPI.publish(payload);
-            setResult({ ok: true, ...res.data });
-            notify.success('Published to Instagram');
+            if (res.data?.async) {
+                notify.info(res.data.message || 'Processing on Instagram…');
+                const polled = await pollPublishStatus(res.data.logId);
+                setResult({ ok: true, mediaId: polled.mediaId, async: true });
+                notify.success('Published to Instagram');
+            } else {
+                setResult({ ok: true, ...res.data });
+                notify.success('Published to Instagram');
+            }
             setMedia([]);
             setCaption('');
             setAltText('');
@@ -226,6 +248,7 @@ export default function IgTestPage() {
             const msg = error.response?.data?.message || error.message || 'Publish failed';
             setResult({ ok: false, message: msg });
             notify.error(msg);
+            loadLogs();
         } finally {
             setPublishing(false);
         }
@@ -516,7 +539,9 @@ export default function IgTestPage() {
                                         ? 'bg-green-100 text-green-700 border-green-200'
                                         : log.status === 'failed'
                                             ? 'bg-red-100 text-red-700 border-red-200'
-                                            : 'bg-amber-100 text-amber-700 border-amber-200'
+                                            : log.status === 'processing'
+                                                ? 'bg-blue-100 text-blue-700 border-blue-200'
+                                                : 'bg-amber-100 text-amber-700 border-amber-200'
                                         }`}
                                 >
                                     {log.status}

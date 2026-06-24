@@ -256,12 +256,16 @@ async function verifyInstagramImageUrl(url) {
     }
 }
 
-function waitOptionsForMediaType(mediaType) {
+function waitOptionsForMediaType(mediaType, { background = false } = {}) {
     const type = String(mediaType || '').toUpperCase();
+    if (background) {
+        // Video/reel/story processing can take several minutes on Instagram's side.
+        return { intervalMs: 3000, maxAttempts: 100 };
+    }
     if (type === 'IMAGE') {
         return { intervalMs: 1000, maxAttempts: 20 };
     }
-    // Heroku HTTP requests time out at 30s — keep video polling within that budget.
+    // Sync HTTP path — stay within Heroku's ~30s router timeout.
     return { intervalMs: 2000, maxAttempts: 12 };
 }
 
