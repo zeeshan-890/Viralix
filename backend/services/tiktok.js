@@ -32,13 +32,20 @@ function formatTikTokApiError(error) {
     return error.message || 'TikTok API request failed';
 }
 
+/** Normalize privacy_level_options entries to string values */
+function normalizePrivacyOptionValues(privacyLevelOptions = []) {
+    return privacyLevelOptions.map((o) => (typeof o === 'string' ? o : o?.value || o?.id || '')).filter(Boolean);
+}
+
 /** Public accounts include PUBLIC_TO_EVERYONE in creator_info privacy_level_options */
 function isPrivateTikTokAccount(privacyLevelOptions = []) {
-    return !privacyLevelOptions.includes('PUBLIC_TO_EVERYONE');
+    const values = normalizePrivacyOptionValues(privacyLevelOptions);
+    return !values.includes('PUBLIC_TO_EVERYONE');
 }
 
 function resolvePrivacyLevelOptions(privacyLevelOptions = []) {
-    const options = privacyLevelOptions.length ? privacyLevelOptions : ['SELF_ONLY'];
+    const values = normalizePrivacyOptionValues(privacyLevelOptions);
+    const options = values.length ? values : ['SELF_ONLY'];
     return isPrivateTikTokAccount(options) ? ['SELF_ONLY'] : options;
 }
 

@@ -99,6 +99,7 @@ router.get('/status', auth, async (req, res) => {
             connected: tiktokAccounts.length > 0,
             accounts: tiktokAccounts.map(acc => ({
                 accountId: acc.platformAccountId,
+                platformAccountId: acc.platformAccountId,
                 accountName: acc.accountName,
                 connectedAt: acc.connectedAt,
                 tokenExpires: acc.tokenExpires,

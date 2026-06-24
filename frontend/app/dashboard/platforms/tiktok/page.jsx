@@ -5,6 +5,7 @@ import { platformSyncAPI } from '@/lib/api';
 import PlatformPageLayout from '../components/PlatformPageLayout';
 import CreateTikTokPost from './components/CreateTikTokPost';
 import TikTokPublishingStatus from '@/components/tiktok/TikTokPublishingStatus';
+import { getTikTokAccountId } from '@/lib/tiktokAccount';
 import { Plus } from 'lucide-react';
 
 export default function TikTokPage() {
@@ -97,8 +98,8 @@ export default function TikTokPage() {
                     <div className="mb-6 space-y-4">
                         {ttAccounts.map((acc) => (
                             <TikTokPublishingStatus
-                                key={acc.platformAccountId}
-                                accountId={acc.platformAccountId}
+                                key={getTikTokAccountId(acc)}
+                                accountId={getTikTokAccountId(acc)}
                                 accountName={acc.accountName}
                                 tokenExpired={acc.isExpired}
                                 variant={ttAccounts.length === 1 ? 'full' : 'compact'}

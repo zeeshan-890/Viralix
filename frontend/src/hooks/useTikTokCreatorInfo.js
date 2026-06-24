@@ -8,10 +8,14 @@ const CACHE_MS = 60_000;
 
 export function useTikTokCreatorInfo(accountId) {
     const [info, setInfo] = useState(() => {
-        const hit = cache.get(accountId);
+        const hit = accountId ? cache.get(accountId) : null;
         return hit && Date.now() - hit.at < CACHE_MS ? hit.data : null;
     });
-    const [loading, setLoading] = useState(false);
+    const [loading, setLoading] = useState(() => {
+        if (!accountId) return false;
+        const hit = cache.get(accountId);
+        return !(hit && Date.now() - hit.at < CACHE_MS);
+    });
     const [error, setError] = useState(null);
 
     const refresh = useCallback(async () => {

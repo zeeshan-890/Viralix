@@ -9,6 +9,7 @@ import TikTokPublishingStatus from '@/components/tiktok/TikTokPublishingStatus';
 import TikTokAccountTypeBadge from '@/components/tiktok/TikTokAccountTypeBadge';
 import { platformButtonClass } from '@/config/platforms';
 import { cn } from '@/lib/utils';
+import { getTikTokAccountId } from '@/lib/tiktokAccount';
 
 export default function TikTokManagePage() {
     const [status, setStatus] = useState({ connected: false, accounts: [] });
@@ -63,8 +64,8 @@ export default function TikTokManagePage() {
     }, [loadStatus]);
 
     useEffect(() => {
-        if (selectedAccount?.accountId) {
-            loadAccountDetails(selectedAccount.accountId);
+        if (selectedAccount?.accountId || getTikTokAccountId(selectedAccount)) {
+            loadAccountDetails(getTikTokAccountId(selectedAccount));
         }
     }, [selectedAccount, loadAccountDetails]);
 
@@ -181,11 +182,13 @@ export default function TikTokManagePage() {
                         <div className="dash-card dash-card-hover rounded-xl border border-[var(--viralix-border)] p-4">
                             <h3 className="font-semibold text-gray-900 mb-4">Connected Accounts</h3>
                             <div className="space-y-2">
-                                {status.accounts.map(account => (
+                                {status.accounts.map(account => {
+                                    const id = getTikTokAccountId(account);
+                                    return (
                                     <button
-                                        key={account.platformAccountId}
+                                        key={id}
                                         onClick={() => setSelectedAccount(account)}
-                                        className={`w-full text-left p-3 rounded-lg border-2 transition-all ${selectedAccount?.platformAccountId === account.platformAccountId
+                                        className={`w-full text-left p-3 rounded-lg border-2 transition-all ${getTikTokAccountId(selectedAccount) === id
                                             ? 'border-black bg-gray-50'
                                             : 'border-gray-200 hover:border-gray-300'
                                             }`}
@@ -199,7 +202,7 @@ export default function TikTokManagePage() {
                                                     {account.accountName}
                                                 </div>
                                                 <div className="flex flex-wrap items-center gap-1.5 mt-1">
-                                                    <TikTokAccountTypeBadge accountId={account.platformAccountId} size="sm" />
+                                                    <TikTokAccountTypeBadge accountId={id} size="sm" />
                                                     {account.isExpired ? (
                                                         <span className="text-xs text-amber-600">Token expired</span>
                                                     ) : (
@@ -209,7 +212,7 @@ export default function TikTokManagePage() {
                                             </div>
                                         </div>
                                     </button>
-                                ))}
+                                );})}
                             </div>
                             <button
                                 onClick={handleConnect}
@@ -249,7 +252,7 @@ export default function TikTokManagePage() {
                                                 )}
                                                 <div className="flex flex-wrap items-center gap-2 mt-1">
                                                     <TikTokAccountTypeBadge
-                                                        accountId={selectedAccount.platformAccountId}
+                                                        accountId={getTikTokAccountId(selectedAccount)}
                                                         size="md"
                                                     />
                                                     {selectedAccount.isExpired ? (
@@ -266,7 +269,7 @@ export default function TikTokManagePage() {
                                         </div>
                                         <div className="flex gap-2">
                                             <button
-                                                onClick={() => handleRefreshToken(selectedAccount.platformAccountId)}
+                                                onClick={() => handleRefreshToken(getTikTokAccountId(selectedAccount))}
                                                 disabled={refreshing}
                                                 className="px-3 py-2 text-sm font-medium text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors flex items-center gap-2"
                                             >
@@ -274,7 +277,7 @@ export default function TikTokManagePage() {
                                                 Refresh
                                             </button>
                                             <button
-                                                onClick={() => handleDisconnect(selectedAccount.platformAccountId)}
+                                                onClick={() => handleDisconnect(getTikTokAccountId(selectedAccount))}
                                                 className="px-3 py-2 text-sm font-medium text-red-600 border border-red-200 rounded-lg hover:bg-red-50 transition-colors flex items-center gap-2"
                                             >
                                                 <Trash2 className="w-4 h-4" />
@@ -315,7 +318,7 @@ export default function TikTokManagePage() {
                                 </div>
 
                                 <TikTokPublishingStatus
-                                    accountId={selectedAccount.platformAccountId}
+                                    accountId={getTikTokAccountId(selectedAccount)}
                                     accountName={selectedAccount.accountName}
                                     tokenExpired={selectedAccount.isExpired}
                                     variant="full"

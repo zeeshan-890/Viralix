@@ -355,14 +355,13 @@ export async function handleMockRequest(config) {
             accountName: 'viralix_creators',
             avatarUrl: PLACEHOLDER_IMG,
             canPost: true,
+            isPrivateAccount: false,
+            isUnaudited: true,
+            requiresSelfOnly: true,
             commentDisabled: false,
             duetDisabled: false,
             stitchDisabled: false,
-            privacyLevelOptions: [
-                { value: 'PUBLIC_TO_EVERYONE', label: 'Public' },
-                { value: 'MUTUAL_FOLLOW_FRIENDS', label: 'Friends' },
-                { value: 'SELF_ONLY', label: 'Only me' },
-            ],
+            privacyLevelOptions: ['PUBLIC_TO_EVERYONE', 'MUTUAL_FOLLOW_FRIENDS', 'SELF_ONLY'],
         };
     }
     if (method === 'get' && path.match(/^\/tiktok-oauth\/videos\//)) {

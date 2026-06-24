@@ -3,6 +3,7 @@
 import { AlertCircle, CheckCircle2, Loader2, Shield } from 'lucide-react';
 import { useTikTokCreatorInfo } from '@/hooks/useTikTokCreatorInfo';
 import TikTokAccountTypeBadge from './TikTokAccountTypeBadge';
+import { inferTikTokIsPublic } from '@/lib/tiktokAccount';
 import { cn } from '@/lib/utils';
 
 const PRIVACY_LABELS = {
@@ -61,7 +62,7 @@ export default function TikTokPublishingStatus({
 
     if (!info) return null;
 
-    const isPublic = !info.isPrivateAccount;
+    const isPublic = inferTikTokIsPublic(info) !== false;
     const appLive = !info.isUnaudited;
 
     if (variant === 'inline') {

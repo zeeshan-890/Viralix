@@ -2,6 +2,7 @@
 
 import { Eye, EyeOff, Loader2 } from 'lucide-react';
 import { useTikTokCreatorInfo } from '@/hooks/useTikTokCreatorInfo';
+import { inferTikTokIsPublic } from '@/lib/tiktokAccount';
 import { cn } from '@/lib/utils';
 
 /**
@@ -22,9 +23,23 @@ export default function TikTokAccountTypeBadge({ accountId, size = 'md', classNa
         );
     }
 
-    if (error || !info) return null;
+    if (error) {
+        return (
+            <span
+                className={cn(
+                    'inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded-full border bg-red-50 text-red-700 border-red-200',
+                    className
+                )}
+                title={error}
+            >
+                Status unavailable
+            </span>
+        );
+    }
 
-    const isPublic = !info.isPrivateAccount;
+    if (!info) return null;
+
+    const isPublic = inferTikTokIsPublic(info) !== false;
 
     const sizes = {
         sm: {

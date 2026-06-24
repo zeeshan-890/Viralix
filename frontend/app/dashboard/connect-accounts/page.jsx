@@ -9,6 +9,7 @@ import { platformButtonClass } from '@/config/platforms';
 import PlatformIcon from '@/components/ui/PlatformIcon';
 import TikTokPublishingStatus from '@/components/tiktok/TikTokPublishingStatus';
 import TikTokAccountTypeBadge from '@/components/tiktok/TikTokAccountTypeBadge';
+import { getTikTokAccountId } from '@/lib/tiktokAccount';
 import { cn } from '@/lib/utils';
 
 export default function ConnectAccountsPage() {
@@ -254,12 +255,11 @@ export default function ConnectAccountsPage() {
                                             <div className="min-w-0 flex-1">
                                                 <div className="font-medium truncate">{acc.accountName}</div>
                                                 <div className="flex flex-wrap items-center gap-2 mt-1">
-                                                    <TikTokAccountTypeBadge accountId={acc.platformAccountId} size="sm" />
+                                                    <TikTokAccountTypeBadge accountId={getTikTokAccountId(acc)} size="sm" />
                                                     <TikTokPublishingStatus
-                                                        accountId={acc.platformAccountId}
+                                                        accountId={getTikTokAccountId(acc)}
                                                         tokenExpired={acc.isExpired}
                                                         variant="compact"
-                                                        className="hidden sm:block"
                                                     />
                                                 </div>
                                             </div>
