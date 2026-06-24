@@ -2,10 +2,11 @@
 import notify from '@/lib/notify';
 import { useState, useEffect } from 'react';
 import { competitorAPI } from '@/lib/api';
+import PlatformIcon from '@/components/ui/PlatformIcon';
+import { getPlatform } from '@/config/platforms';
+import { cn } from '@/lib/utils';
 
-const platformIcons = {
-    instagram: '📸', facebook: '👤', twitter: '🐦', tiktok: '🎵', youtube: '▶️'
-};
+const PLATFORM_IDS = ['instagram', 'facebook', 'tiktok', 'youtube'];
 
 export default function CompetitorAnalysis() {
     const [competitors, setCompetitors] = useState([]);
@@ -157,7 +158,7 @@ export default function CompetitorAnalysis() {
                                 <div key={comp._id} className="p-4 rounded-lg border border-gray-200 hover:border-blue-200 transition">
                                     <div className="flex items-center justify-between mb-3">
                                         <div className="flex items-center gap-2">
-                                            <span>{platformIcons[comp.platform] || '💬'}</span>
+                                            <PlatformIcon platform={comp.platform} size={18} />
                                             <div>
                                                 <h4 className="text-sm font-semibold text-gray-800">{comp.name}</h4>
                                                 <p className="text-xs text-gray-400">@{comp.handle} · {comp.platform}</p>
@@ -259,7 +260,7 @@ export default function CompetitorAnalysis() {
                                         {comparison.competitors.map(comp => (
                                             <tr key={comp._id} className="border-t hover:bg-gray-50">
                                                 <td className="px-4 py-2">
-                                                    <span className="mr-1">{platformIcons[comp.platform]}</span>
+                                                    <PlatformIcon platform={comp.platform} size={14} className="mr-1 inline-block" />
                                                     {comp.name}
                                                     <span className="text-xs text-gray-400 ml-1">@{comp.handle}</span>
                                                 </td>

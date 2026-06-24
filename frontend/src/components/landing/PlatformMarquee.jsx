@@ -1,24 +1,18 @@
 'use client';
 
-import { Facebook, Instagram, Music2, Youtube } from 'lucide-react';
-
-const PLATFORMS = [
-    { name: 'Instagram', icon: Instagram, color: '#E4405F' },
-    { name: 'TikTok', icon: Music2, color: '#010101' },
-    { name: 'YouTube', icon: Youtube, color: '#FF0000' },
-    { name: 'Facebook', icon: Facebook, color: '#1877F2' },
-];
+import { PLATFORM_LIST } from '@/config/platforms';
+import PlatformIcon from '@/components/ui/PlatformIcon';
 
 function MarqueeTrack() {
     return (
         <>
-            {PLATFORMS.map((p) => (
+            {PLATFORM_LIST.map((p) => (
                 <div
-                    key={p.name}
+                    key={p.id}
                     className="mx-6 flex shrink-0 items-center gap-2.5 rounded-full border border-[#E2E8E4] bg-white px-5 py-2.5 shadow-sm"
                 >
-                    <p.icon className="h-4 w-4" style={{ color: p.color }} />
-                    <span className="text-sm font-medium text-[#354F52]">{p.name}</span>
+                    <PlatformIcon platform={p.id} size={16} />
+                    <span className="text-sm font-medium text-[#354F52]">{p.label}</span>
                 </div>
             ))}
         </>

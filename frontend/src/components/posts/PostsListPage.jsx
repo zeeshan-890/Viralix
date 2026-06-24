@@ -22,6 +22,7 @@ import { useAccounts } from '@/hooks/useAccounts';
 import { getPostStatus } from './postUtils';
 import PostTableRow, { PostMobileCard } from './PostTableRow';
 import { PLATFORM_CONFIG } from '@/components/dashboard/constants';
+import PlatformBadge from '@/components/ui/PlatformBadge';
 
 const FILTERS = [
     { id: 'all', label: 'All' },
@@ -270,15 +271,10 @@ export default function PostsListPage() {
                         Platforms
                     </p>
                     <ul className="mt-3 space-y-2">
-                        {connectedPlatforms.map(({ id, label, icon: Icon, bg, color, connected }) => (
+                        {connectedPlatforms.map(({ id, label, connected }) => (
                             <li key={id} className="flex items-center justify-between py-1">
                                 <span className="flex items-center gap-2 text-sm text-[var(--viralix-accent)]">
-                                    <span
-                                        className="flex h-6 w-6 items-center justify-center rounded-md"
-                                        style={{ backgroundColor: bg }}
-                                    >
-                                        <Icon className="h-3 w-3" style={{ color }} aria-hidden />
-                                    </span>
+                                    <PlatformBadge platform={id} size="sm" />
                                     {label}
                                 </span>
                                 <span

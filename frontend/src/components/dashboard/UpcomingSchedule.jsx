@@ -1,7 +1,10 @@
 import Link from 'next/link';
 import { format, isToday, isTomorrow } from 'date-fns';
 import { ArrowUpRight, Clock } from 'lucide-react';
+import { cn } from '@/lib/utils';
 import { PLATFORM_CONFIG, STATUS_CONFIG } from './constants';
+import PlatformIcon from '@/components/ui/PlatformIcon';
+import { getPlatform } from '@/config/platforms';
 
 function formatScheduleDate(dateStr) {
     const d = new Date(dateStr);
@@ -70,16 +73,18 @@ export default function UpcomingSchedule({ posts = [] }) {
                                         </p>
                                         <div className="mt-1.5 flex flex-wrap gap-1">
                                             {platforms.map((pl) => {
-                                                const cfg = PLATFORM_CONFIG[pl];
+                                                const cfg = getPlatform(pl);
                                                 if (!cfg) return null;
-                                                const Icon = cfg.icon;
                                                 return (
                                                     <span
                                                         key={pl}
-                                                        className="inline-flex items-center gap-0.5 rounded px-1.5 py-0.5 text-[0.625rem] font-medium"
-                                                        style={{ backgroundColor: cfg.bg, color: cfg.color }}
+                                                        className={cn(
+                                                            'inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-[0.625rem] font-medium',
+                                                            cfg.lightBg,
+                                                            cfg.textColor
+                                                        )}
                                                     >
-                                                        <Icon className="h-2.5 w-2.5" aria-hidden />
+                                                        <PlatformIcon platform={pl} size={10} />
                                                         {cfg.label}
                                                     </span>
                                                 );

@@ -3,7 +3,10 @@ import { useCallback, useEffect, useState } from "react";
 import { tiktokAPI } from "@/lib/api";
 import Link from "next/link";
 import { Video, CheckCircle2, AlertCircle, Loader2, ArrowLeft, RefreshCw, Trash2, Eye, Heart, MessageCircle, Share2, Users } from "lucide-react";
-import Image from "next/image";
+import PlatformIcon from '@/components/ui/PlatformIcon';
+import PlatformBadge from '@/components/ui/PlatformBadge';
+import { platformButtonClass } from '@/config/platforms';
+import { cn } from '@/lib/utils';
 
 export default function TikTokManagePage() {
     const [status, setStatus] = useState({ connected: false, accounts: [] });
@@ -125,7 +128,7 @@ export default function TikTokManagePage() {
                 </Link>
                 <div className="flex items-center gap-4">
                     <div className="w-14 h-14 rounded-xl flex items-center justify-center bg-[var(--viralix-surface)] border border-[var(--viralix-border)] shadow-sm">
-                        <Image src="/tiktok.png" alt="TikTok" width={28} height={28} className="w-7 h-7 object-contain" />
+                        <PlatformIcon platform="tiktok" size={28} />
                     </div>
                     <div>
                         <h1 className="text-3xl font-bold" style={{ color: '#354F52' }}>TikTok Accounts</h1>
@@ -151,22 +154,21 @@ export default function TikTokManagePage() {
 
             {loading ? (
                 <div className="dash-card dash-card-hover rounded-xl border border-[var(--viralix-border)] p-12 text-center">
-                    <Loader2 className="w-12 h-12 mx-auto mb-4 animate-spin" style={{ color: '#84A98C' }} />
+                    <Loader2 className="w-12 h-12 mx-auto mb-4 animate-spin text-gray-900" />
                     <p className="text-gray-600">Loading TikTok accounts...</p>
                 </div>
             ) : !status.connected || status.accounts?.length === 0 ? (
                 <div className="dash-card dash-card-hover rounded-xl border border-[var(--viralix-border)] p-12 text-center">
                     <div className="w-20 h-20 rounded-full bg-[var(--viralix-surface)] border border-[var(--viralix-border)] flex items-center justify-center mx-auto mb-4 shadow-sm">
-                        <Image src="/tiktok.png" alt="TikTok" width={40} height={40} className="w-10 h-10 object-contain" />
+                        <PlatformIcon platform="tiktok" size={40} />
                     </div>
                     <h2 className="text-xl font-semibold mb-2" style={{ color: '#354F52' }}>No TikTok Accounts Connected</h2>
                     <p className="text-gray-600 mb-6">Connect your TikTok account to start publishing videos</p>
                     <button
                         onClick={handleConnect}
-                        className="px-6 py-3 rounded-lg text-white font-medium shadow-md hover:opacity-90 transition-all flex items-center gap-2 mx-auto"
-                        style={{ backgroundColor: '#000' }}
+                        className={cn('px-6 py-3 rounded-lg font-medium shadow-md hover:opacity-90 transition-all flex items-center gap-2 mx-auto', platformButtonClass('tiktok'))}
                     >
-                        <Image src="/tiktok.png" alt="TikTok" width={20} height={20} className="w-5 h-5 object-contain brightness-0 invert" />
+                        <PlatformIcon platform="tiktok" size={20} inverted />
                         Connect TikTok Account
                     </button>
                 </div>
@@ -188,7 +190,7 @@ export default function TikTokManagePage() {
                                     >
                                         <div className="flex items-center gap-3">
                                             <div className="w-10 h-10 rounded-full bg-[var(--viralix-surface)] border border-[var(--viralix-border)] flex items-center justify-center shadow-sm">
-                                                <Image src="/tiktok.png" alt="TikTok" width={20} height={20} className="w-5 h-5 object-contain" />
+                                                <PlatformIcon platform="tiktok" size={20} />
                                             </div>
                                             <div className="flex-1 min-w-0">
                                                 <div className="font-medium text-gray-900 truncate">
@@ -210,7 +212,7 @@ export default function TikTokManagePage() {
                                 onClick={handleConnect}
                                 className="w-full mt-4 px-4 py-2 text-sm font-medium text-gray-700 border-2 border-dashed border-gray-300 rounded-lg hover:border-gray-400 hover:bg-gray-50 transition-colors flex items-center justify-center gap-2"
                             >
-                                <Image src="/tiktok.png" alt="Add" width={16} height={16} className="w-4 h-4 object-contain" />
+                                <PlatformIcon platform="tiktok" size={16} />
                                 Add Another Account
                             </button>
                         </div>
@@ -232,7 +234,7 @@ export default function TikTokManagePage() {
                                                         className="w-16 h-16 rounded-full object-cover"
                                                     />
                                                 ) : (
-                                                    <Image src="/tiktok.png" alt="TikTok" width={32} height={32} className="w-8 h-8 object-contain" />
+                                                    <PlatformIcon platform="tiktok" size={32} />
                                                 )}
                                             </div>
                                             <div>
@@ -370,7 +372,7 @@ export default function TikTokManagePage() {
                         ) : (
                             <div className="dash-card dash-card-hover rounded-xl border border-[var(--viralix-border)] p-12 text-center">
                                 <div className="w-12 h-12 mx-auto mb-4 bg-[var(--viralix-surface)] border border-[var(--viralix-border)] rounded-full flex items-center justify-center shadow-sm">
-                                    <Image src="/tiktok.png" alt="Select" width={24} height={24} className="w-6 h-6 object-contain" />
+                                    <PlatformIcon platform="tiktok" size={24} />
                                 </div>
                                 <p className="text-gray-600">Select an account to view details</p>
                             </div>

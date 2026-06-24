@@ -1,11 +1,4 @@
-import { Facebook, Instagram, Music2, Youtube } from 'lucide-react';
-
-export const PLATFORM_CONFIG = {
-    facebook: { label: 'Facebook', icon: Facebook, color: '#1877F2', bg: '#EBF3FE' },
-    instagram: { label: 'Instagram', icon: Instagram, color: '#E4405F', bg: '#FDEEF1' },
-    tiktok: { label: 'TikTok', icon: Music2, color: '#010101', bg: '#F3F3F3' },
-    youtube: { label: 'YouTube', icon: Youtube, color: '#FF0000', bg: '#FEECEC' },
-};
+export { PLATFORM_CONFIG, PLATFORMS, PLATFORM_LIST, getPlatform, platformButtonClass, platformButtonStyle } from '@/config/platforms';
 
 export const STATUS_CONFIG = {
     draft: { label: 'Draft', variant: 'default', dot: '#94A3B8' },

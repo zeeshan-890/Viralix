@@ -1,6 +1,7 @@
 'use client';
 import { useState, useRef } from 'react';
 import Image from 'next/image';
+import PlatformIcon from '@/components/ui/PlatformIcon';
 import { X, Upload, Calendar, Clock, MessageCircle, Users, Link2, FileText, Image as ImageIcon, Trash2, Plus, Sparkles } from 'lucide-react';
 import { instagramAPI, uploadAPI } from '@/lib/api';
 
@@ -177,7 +178,7 @@ export default function CreateInstagramPost({ isOpen, onClose, account, onSucces
                 <div className="flex items-center justify-between p-5 border-b border-gray-200">
                     <div className="flex items-center gap-3">
                         <div className="w-10 h-10 bg-pink-50 rounded-xl flex items-center justify-center">
-                            <Image src="/instagram.png" alt="Instagram" width={24} height={24} />
+                            <PlatformIcon platform="instagram" size={24} />
                         </div>
                         <div>
                             <h2 className="text-xl font-bold" style={{ color: '#354F52' }}>Create Instagram Post</h2>

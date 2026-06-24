@@ -20,6 +20,8 @@ import {
 import { cn } from '@/lib/utils';
 import TagsInput from '../../../app/dashboard/upload/components/TagsInput';
 import { PLATFORM_CONFIG } from '@/components/dashboard/constants';
+import PlatformBadge from '@/components/ui/PlatformBadge';
+import { getPlatform } from '@/config/platforms';
 
 const TABS = [
     { id: 'targets', label: 'Platforms', icon: Target },
@@ -138,8 +140,7 @@ export default function UploadSidebar({
                             <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-1">
                                 {connectedTargets.map((t) => {
                                     const selected = selectedPlatforms.some((p) => p.name === t.name && p.accountId === t.accountId);
-                                    const cfg = PLATFORM_CONFIG[t.name];
-                                    const Icon = cfg?.icon;
+                                    const platformCfg = getPlatform(t.name);
                                     return (
                                         <button
                                             key={t.key}
@@ -148,17 +149,18 @@ export default function UploadSidebar({
                                             className={cn(
                                                 'flex items-center gap-2.5 rounded-xl border px-3 py-3 text-left transition-all',
                                                 selected
-                                                    ? 'border-[#84A98C] bg-[#84A98C]/8 shadow-sm'
+                                                    ? cn('shadow-sm', platformCfg?.selectedBorder, platformCfg?.selectedBg)
                                                     : 'border-[var(--viralix-border)] hover:border-[var(--viralix-border)] hover:bg-[var(--viralix-bg)]'
                                             )}
                                         >
-                                            {cfg && Icon && (
-                                                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg" style={{ backgroundColor: cfg.bg }}>
-                                                    <Icon className="h-4 w-4" style={{ color: cfg.color }} aria-hidden />
-                                                </span>
-                                            )}
+                                            <PlatformBadge platform={t.name} size="md" />
                                             <span className="min-w-0 flex-1 truncate text-sm font-medium text-[var(--viralix-accent)]">{t.label}</span>
-                                            {selected && <CheckCircle2 className="h-4 w-4 shrink-0 text-[#84A98C]" />}
+                                            {selected && (
+                                                <CheckCircle2
+                                                    className="h-4 w-4 shrink-0"
+                                                    style={{ color: platformCfg?.color || '#84A98C' }}
+                                                />
+                                            )}
                                         </button>
                                     );
                                 })}
@@ -193,7 +195,7 @@ export default function UploadSidebar({
                                 {advancedUploadPath && selectedPlatforms.some((p) => p.name === platform) && (
                                     <Link
                                         href={advancedUploadPath}
-                                        className="mt-1.5 flex items-center gap-1 font-medium text-[#84A98C] hover:underline"
+                                        className="mt-1.5 flex items-center gap-1 font-medium text-pink-600 hover:underline"
                                     >
                                         Open Instagram Upload
                                         <ExternalLink className="h-3 w-3" />

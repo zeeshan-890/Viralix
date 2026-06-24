@@ -3,6 +3,9 @@
 import { useState } from 'react';
 import { cn } from '@/lib/utils';
 import { PLATFORM_CONFIG } from '@/components/dashboard/constants';
+import PlatformBadge from '@/components/ui/PlatformBadge';
+import PlatformIcon from '@/components/ui/PlatformIcon';
+import { getPlatform } from '@/config/platforms';
 import { X, Plus } from 'lucide-react';
 
 const RULE_TYPES = [
@@ -100,7 +103,7 @@ export default function RuleEditor({ rule, onSave, onCancel, saving }) {
                 <PanelLabel>Platforms</PanelLabel>
                 <div className="mt-2 flex flex-wrap gap-2">
                     {Object.entries(PLATFORM_CONFIG).map(([key, cfg]) => {
-                        const Icon = cfg.icon;
+                        const platformCfg = getPlatform(key);
                         const on = form.platforms.includes(key);
                         return (
                             <button
@@ -109,11 +112,14 @@ export default function RuleEditor({ rule, onSave, onCancel, saving }) {
                                 onClick={() => togglePlatform(key)}
                                 className={cn(
                                     'inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-medium transition',
-                                    on ? 'ring-2 ring-[#84A98C] ring-offset-1' : 'opacity-60 hover:opacity-100'
+                                    on
+                                        ? cn('ring-2 ring-offset-1', platformCfg?.selectedRing)
+                                        : 'opacity-60 hover:opacity-100',
+                                    platformCfg?.lightBg,
+                                    platformCfg?.textColor
                                 )}
-                                style={{ backgroundColor: cfg.bg, color: cfg.color }}
                             >
-                                <Icon className="h-3 w-3" />
+                                <PlatformIcon platform={key} size={12} />
                                 {cfg.label}
                             </button>
                         );

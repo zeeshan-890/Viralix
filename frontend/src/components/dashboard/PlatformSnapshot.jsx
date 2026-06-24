@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { ArrowUpRight } from 'lucide-react';
 import { formatNumber } from '@/lib/utils';
 import { PLATFORM_CONFIG } from './constants';
+import PlatformBadge from '@/components/ui/PlatformBadge';
 
 export default function PlatformSnapshot({ accounts, platformBreakdown = {} }) {
     const connected = accounts.filter((a) => a.isActive !== false);
@@ -46,7 +47,6 @@ export default function PlatformSnapshot({ accounts, platformBreakdown = {} }) {
                 ) : (
                     connected.map((account) => {
                         const cfg = PLATFORM_CONFIG[account.platform] || PLATFORM_CONFIG.facebook;
-                        const Icon = cfg.icon;
                         const stats = platformBreakdown[account.platform] || {};
                         const views = stats.engagement?.views || 0;
                         const posts = stats.posts || 0;
@@ -59,12 +59,7 @@ export default function PlatformSnapshot({ accounts, platformBreakdown = {} }) {
                                 className="rounded-lg border border-[var(--viralix-border)] p-3 transition-colors hover:bg-[var(--viralix-bg)]"
                             >
                                 <div className="flex items-center gap-2.5">
-                                    <div
-                                        className="flex h-8 w-8 items-center justify-center rounded-lg"
-                                        style={{ backgroundColor: cfg.bg }}
-                                    >
-                                        <Icon className="h-4 w-4" style={{ color: cfg.color }} aria-hidden />
-                                    </div>
+                                    <PlatformBadge platform={account.platform} size="sm" />
                                     <div className="min-w-0 flex-1">
                                         <p className="truncate text-xs font-medium text-[var(--viralix-accent)]">
                                             {account.accountName}

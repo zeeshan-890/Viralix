@@ -3,6 +3,8 @@
 import { Calendar, Link2, Sparkles } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useInView } from './useInView';
+import { PLATFORM_LIST } from '@/config/platforms';
+import PlatformIcon from '@/components/ui/PlatformIcon';
 
 const STEPS = [
     {
@@ -58,6 +60,15 @@ export default function HowItWorks() {
                             </div>
                             <h3 className="text-lg font-semibold text-[#354F52]">{s.title}</h3>
                             <p className="mt-2 text-sm leading-relaxed text-[#52796F]">{s.description}</p>
+                            {s.step === '01' && (
+                                <div className="mt-4 flex justify-center gap-2">
+                                    {PLATFORM_LIST.map((p) => (
+                                        <span key={p.id} className={`inline-flex h-9 w-9 items-center justify-center rounded-lg border border-[#E2E8E4] ${p.lightBg}`}>
+                                            <PlatformIcon platform={p.id} size={18} />
+                                        </span>
+                                    ))}
+                                </div>
+                            )}
                         </div>
                     ))}
                 </div>

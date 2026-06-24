@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { analyticsAPI } from '@/lib/api';
 import { formatNumber } from '@/lib/utils';
 import { PLATFORM_CONFIG } from '@/components/dashboard/constants';
+import PlatformBadge from '@/components/ui/PlatformBadge';
 import { Eye, Heart, Loader2 } from 'lucide-react';
 
 function PanelLabel({ children }) {
@@ -108,20 +109,11 @@ export default function TopPostsTable() {
                                     </td>
                                     <td className="hidden px-4 py-3 sm:table-cell">
                                         <div className="flex -space-x-1">
-                                            {(post.platforms || []).slice(0, 4).map((p, i) => {
-                                                const cfg = PLATFORM_CONFIG[p.name];
-                                                if (!cfg) return null;
-                                                const Icon = cfg.icon;
-                                                return (
-                                                    <span
-                                                        key={i}
-                                                        className="inline-flex h-6 w-6 items-center justify-center rounded-full ring-2 ring-white"
-                                                        style={{ backgroundColor: cfg.bg }}
-                                                    >
-                                                        <Icon className="h-3 w-3" style={{ color: cfg.color }} aria-hidden />
-                                                    </span>
-                                                );
-                                            })}
+                                            {(post.platforms || []).slice(0, 4).map((p, i) => (
+                                                <span key={i} className="ring-2 ring-white rounded-full">
+                                                    <PlatformBadge platform={p.name} size="xs" rounded="full" />
+                                                </span>
+                                            ))}
                                         </div>
                                     </td>
                                     <td className="px-4 py-3 text-right tabular-nums text-[#354F52]">

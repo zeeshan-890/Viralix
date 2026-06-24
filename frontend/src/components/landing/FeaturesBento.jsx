@@ -6,6 +6,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { PLATFORM_CONFIG } from '@/components/dashboard/constants';
+import PlatformIcon from '@/components/ui/PlatformIcon';
 import { useInView } from './useInView';
 
 const PILLARS = [
@@ -164,7 +165,7 @@ function CrossPostPreview({ active }) {
                                 style={{ animationDelay: `${i * 100}ms` }}
                             >
                                 <div className="flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-[#2F3E46] shadow-lg">
-                                    <p.icon className="h-4 w-4" style={{ color: p.color }} />
+                                    <PlatformIcon platform={key} size={16} />
                                 </div>
                                 <span className="text-[0.5625rem] text-white/40">{p.label}</span>
                             </div>

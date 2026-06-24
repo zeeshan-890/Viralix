@@ -1,43 +1,25 @@
 'use client';
 import Image from 'next/image';
 import Link from 'next/link';
-import { RefreshCw, ExternalLink, ArrowLeft, AlertCircle } from 'lucide-react';
+import { RefreshCw, ExternalLink, ArrowLeft } from 'lucide-react';
+import { getPlatform, platformButtonClass } from '@/config/platforms';
+import PlatformIcon from '@/components/ui/PlatformIcon';
+import { cn } from '@/lib/utils';
 
-// Platform configuration with colors and icons
-export const platformConfig = {
-    instagram: {
-        name: 'Instagram',
-        icon: '/instagram.png',
-        color: '#E4405F',
-        bgColor: 'bg-gradient-to-br from-purple-500 via-pink-500 to-orange-400',
-        lightBg: 'bg-pink-50',
-        textColor: 'text-pink-600'
-    },
-    tiktok: {
-        name: 'TikTok',
-        icon: '/tiktok.png',
-        color: '#000000',
-        bgColor: 'bg-black',
-        lightBg: 'bg-gray-100',
-        textColor: 'text-gray-900'
-    },
-    youtube: {
-        name: 'YouTube',
-        icon: '/youtube.png',
-        color: '#FF0000',
-        bgColor: 'bg-red-600',
-        lightBg: 'bg-red-50',
-        textColor: 'text-red-600'
-    },
-    facebook: {
-        name: 'Facebook',
-        icon: '/facebook.png',
-        color: '#1877F2',
-        bgColor: 'btn btn-confirm',
-        lightBg: 'bg-blue-50',
-        textColor: 'text-blue-600'
-    }
-};
+/** @deprecated Use getPlatform() from @/config/platforms */
+export const platformConfig = Object.fromEntries(
+    ['facebook', 'instagram', 'tiktok', 'youtube'].map((id) => {
+        const p = getPlatform(id);
+        return [id, {
+            name: p.label,
+            icon: p.icon,
+            color: p.color,
+            bgColor: p.gradientClass || p.buttonClass,
+            lightBg: p.lightBg,
+            textColor: p.textColor,
+        }];
+    })
+);
 
 export default function PlatformPageLayout({
     platform,
@@ -49,7 +31,7 @@ export default function PlatformPageLayout({
     onRefresh,
     children
 }) {
-    const config = platformConfig[platform] || platformConfig.instagram;
+    const config = getPlatform(platform) || getPlatform('instagram');
     const hasAccounts = accounts.length > 0;
 
     const formatNumber = (num) => {
@@ -67,11 +49,11 @@ export default function PlatformPageLayout({
                         <ArrowLeft className="w-4 h-4" />
                         Back to Platforms
                     </Link>
-                    <h1 className="text-3xl font-bold" style={{ color: '#354F52' }}>{config.name}</h1>
+                    <h1 className="text-3xl font-bold" style={{ color: '#354F52' }}>{config.label}</h1>
                 </div>
                 <div className="dash-card dash-card-hover rounded-xl border border-[var(--viralix-border)] p-12 text-center">
                     <div className="animate-spin w-12 h-12 border-4 border-gray-200 rounded-full mx-auto mb-4" style={{ borderTopColor: '#84A98C' }}></div>
-                    <p className="text-gray-500">Loading {config.name} data...</p>
+                    <p className="text-gray-500">Loading {config.label} data...</p>
                 </div>
             </div>
         );
@@ -87,11 +69,11 @@ export default function PlatformPageLayout({
                 </Link>
                 <div className="flex items-center justify-between">
                     <div className="flex items-center gap-4">
-                        <div className={`w-16 h-16 ${config.lightBg} rounded-2xl flex items-center justify-center shadow-sm border border-gray-100`}>
-                            <Image src={config.icon} alt={config.name} width={40} height={40} className="object-contain" />
+                        <div className={cn('w-16 h-16 rounded-2xl flex items-center justify-center shadow-sm border border-gray-100', config.lightBg)}>
+                            <PlatformIcon platform={platform} size={40} />
                         </div>
                         <div>
-                            <h1 className="text-3xl font-bold" style={{ color: '#354F52' }}>{config.name}</h1>
+                            <h1 className="text-3xl font-bold" style={{ color: '#354F52' }}>{config.label}</h1>
                             <p className="text-gray-600">
                                 {hasAccounts ? `${accounts.length} account${accounts.length > 1 ? 's' : ''} connected` : 'No accounts connected'}
                             </p>
@@ -113,20 +95,22 @@ export default function PlatformPageLayout({
             {!hasAccounts ? (
                 /* No Accounts Connected State */
                 <div className="dash-card dash-card-hover rounded-xl border border-[var(--viralix-border)] p-12 text-center shadow-sm">
-                    <div className={`w-20 h-20 ${config.lightBg} rounded-2xl flex items-center justify-center mx-auto mb-6`}>
-                        <Image src={config.icon} alt={config.name} width={40} height={40} />
+                    <div className={cn('w-20 h-20 rounded-2xl flex items-center justify-center mx-auto mb-6', config.lightBg)}>
+                        <PlatformIcon platform={platform} size={40} />
                     </div>
-                    <h2 className="text-2xl font-bold mb-3" style={{ color: '#354F52' }}>Connect your {config.name} account</h2>
+                    <h2 className="text-2xl font-bold mb-3" style={{ color: '#354F52' }}>Connect your {config.label} account</h2>
                     <p className="text-gray-600 mb-8 max-w-md mx-auto">
-                        Connect your {config.name} account to view your content, track analytics, and manage your posts all in one place.
+                        Connect your {config.label} account to view your content, track analytics, and manage your posts all in one place.
                     </p>
                     <Link
                         href="/dashboard/connect-accounts"
-                        className="inline-flex items-center gap-2 px-6 py-3 rounded-xl text-white font-medium shadow-lg hover:shadow-xl transition-all"
-                        style={{ backgroundColor: '#84A98C' }}
+                        className={cn(
+                            'inline-flex items-center gap-2 px-6 py-3 rounded-xl font-medium shadow-lg hover:shadow-xl transition-all',
+                            platformButtonClass(platform)
+                        )}
                     >
-                        <Image src={config.icon} alt={config.name} width={20} height={20} className="brightness-0 invert" />
-                        Connect {config.name}
+                        <PlatformIcon platform={platform} size={20} inverted />
+                        Connect {config.label}
                     </Link>
                 </div>
             ) : (
@@ -140,12 +124,12 @@ export default function PlatformPageLayout({
                                         {account.avatarUrl ? (
                                             <img src={account.avatarUrl} alt={account.accountName} className="w-14 h-14 rounded-full border-2 border-gray-100 object-cover" />
                                         ) : (
-                                            <div className={`w-14 h-14 ${config.lightBg} rounded-full flex items-center justify-center border border-gray-100`}>
-                                                <Image src={config.icon} alt={config.name} width={32} height={32} className="object-contain" />
+                                            <div className={cn('w-14 h-14 rounded-full flex items-center justify-center border border-gray-100', config.lightBg)}>
+                                                <PlatformIcon platform={platform} size={32} />
                                             </div>
                                         )}
-                                        <div className={`absolute -bottom-1 -right-1 w-5 h-5 ${config.lightBg} rounded-full flex items-center justify-center border border-gray-200`}>
-                                            <Image src={config.icon} alt="" width={14} height={14} className="object-contain" />
+                                        <div className={cn('absolute -bottom-1 -right-1 w-5 h-5 rounded-full flex items-center justify-center border border-gray-200', config.lightBg)}>
+                                            <PlatformIcon platform={platform} size={14} />
                                         </div>
                                     </div>
                                     <div className="flex-1 min-w-0">
@@ -281,17 +265,19 @@ export default function PlatformPageLayout({
                     {/* Empty Content State */}
                     {content.length === 0 && (
                         <div className="dash-card dash-card-hover rounded-xl border border-[var(--viralix-border)] p-12 text-center shadow-sm">
-                            <div className={`w-16 h-16 ${config.lightBg} rounded-2xl flex items-center justify-center mx-auto mb-4 border border-gray-100`}>
-                                <Image src={config.icon} alt={config.name} width={32} height={32} className="object-contain" />
+                            <div className={cn('w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-gray-100', config.lightBg)}>
+                                <PlatformIcon platform={platform} size={32} />
                             </div>
                             <h3 className="text-lg font-semibold mb-2" style={{ color: '#354F52' }}>No content yet</h3>
                             <p className="text-gray-600 mb-6">
                                 Start publishing content to see it here
                             </p>
                             <Link
-                                href="/dashboard/schedule"
-                                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg text-white font-medium shadow-md hover:shadow-lg transition-all"
-                                style={{ backgroundColor: '#84A98C' }}
+                                href="/dashboard/upload"
+                                className={cn(
+                                    'inline-flex items-center gap-2 px-5 py-2.5 rounded-lg font-medium shadow-md hover:shadow-lg transition-all',
+                                    platformButtonClass(platform)
+                                )}
                             >
                                 Create Post
                             </Link>

@@ -1,7 +1,7 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
-import Image from 'next/image';
+import PlatformIcon from '@/components/ui/PlatformIcon';
 import Link from 'next/link';
 import { ArrowLeft, Heart, MessageCircle, Share2, ExternalLink, Play, Eye, MousePointer2, Users } from 'lucide-react';
 import { facebookAPI } from '@/lib/api';
@@ -98,7 +98,7 @@ export default function FacebookPostDetailPage() {
                 <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
                         <div className="w-12 h-12 bg-blue-50 rounded-xl flex items-center justify-center border border-gray-100">
-                            <Image src="/facebook.png" alt="Facebook" width={28} height={28} className="object-contain" />
+                            <PlatformIcon platform="facebook" size={28} />
                         </div>
                         <div>
                             <h1 className="text-2xl font-bold" style={{ color: '#354F52' }}>Post Insights</h1>

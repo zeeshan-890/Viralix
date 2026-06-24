@@ -3,7 +3,8 @@
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { youtubeAPI } from '@/lib/api';
-import { ArrowLeft, BarChart3, Heart, MessageCircle, Eye, Youtube, AlertCircle, ExternalLink } from 'lucide-react';
+import PlatformIcon from '@/components/ui/PlatformIcon';
+import { ArrowLeft, BarChart3, Heart, MessageCircle, Eye, AlertCircle, ExternalLink } from 'lucide-react';
 
 export default function YouTubePostDetailPage() {
     const params = useParams();
@@ -106,7 +107,7 @@ export default function YouTubePostDetailPage() {
                     <div className="dash-card rounded-2xl border border-[var(--viralix-border)] overflow-hidden">
                         <div className="p-4 border-b border-gray-50 flex items-center justify-between bg-gray-50/50">
                             <h2 className="font-semibold text-gray-900">Video Preview</h2>
-                            <Youtube className="w-5 h-5 text-red-600" />
+                            <PlatformIcon platform="youtube" size={20} />
                         </div>
                         <div className="relative aspect-video bg-black">
                             <iframe

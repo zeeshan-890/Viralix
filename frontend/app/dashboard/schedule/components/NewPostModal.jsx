@@ -1,17 +1,11 @@
 'use client';
 import notify from '@/lib/notify';
 import { useState, useEffect } from 'react';
-import { X, Loader2, Image as ImageIcon, Sparkles, Clock, Trash2, Facebook, Instagram, Linkedin, Twitter, Youtube, Music2 } from 'lucide-react';
+import { X, Loader2, Image as ImageIcon, Sparkles, Clock, Trash2 } from 'lucide-react';
 import { postsAPI, aiAPI, uploadAPI } from '@/lib/api';
-
-const platformConfig = {
-    facebook: { icon: Facebook, label: 'Facebook', color: 'text-blue-600', bg: 'bg-blue-50', border: 'border-blue-300' },
-    instagram: { icon: Instagram, label: 'Instagram', color: 'text-pink-600', bg: 'bg-pink-50', border: 'border-pink-300' },
-    twitter: { icon: Twitter, label: 'Twitter', color: 'text-sky-500', bg: 'bg-sky-50', border: 'border-sky-300' },
-    linkedin: { icon: Linkedin, label: 'LinkedIn', color: 'text-blue-700', bg: 'bg-blue-50', border: 'border-blue-300' },
-    tiktok: { icon: Music2, label: 'TikTok', color: 'text-gray-900', bg: 'bg-gray-100', border: 'border-gray-300' },
-    youtube: { icon: Youtube, label: 'YouTube', color: 'text-red-600', bg: 'bg-red-50', border: 'border-red-300' },
-};
+import PlatformIcon from '@/components/ui/PlatformIcon';
+import { getPlatform } from '@/config/platforms';
+import { cn } from '@/lib/utils';
 
 export default function NewPostModal({ isOpen, onClose, initialDate, initialData, onSave, connectedPlatforms }) {
     const isEditing = !!initialData;
@@ -191,21 +185,21 @@ export default function NewPostModal({ isOpen, onClose, initialDate, initialData
                         <label className="block text-sm font-medium text-gray-700 mb-2">Platforms</label>
                         <div className="flex flex-wrap gap-2">
                             {availablePlatforms.map(name => {
-                                const config = platformConfig[name];
+                                const config = getPlatform(name);
                                 if (!config) return null;
-                                const Icon = config.icon;
                                 const isSelected = selectedPlatforms.some(p => p.name === name);
                                 return (
                                     <button
                                         key={name}
                                         onClick={() => togglePlatform(name)}
-                                        className={`flex items-center gap-2 px-3 py-2 rounded-lg border text-sm font-medium transition
-                                            ${isSelected
-                                                ? `${config.bg} ${config.border} ${config.color} border-2`
+                                        className={cn(
+                                            'flex items-center gap-2 px-3 py-2 rounded-lg border text-sm font-medium transition',
+                                            isSelected
+                                                ? cn('border-2 shadow-sm', config.selectedBorder, config.selectedBg, config.textColor)
                                                 : 'bg-[var(--viralix-surface)] border-[var(--viralix-border)] text-gray-500 hover:bg-gray-50'
-                                            }`}
+                                        )}
                                     >
-                                        <Icon size={16} />
+                                        <PlatformIcon platform={name} size={16} />
                                         {config.label}
                                     </button>
                                 );

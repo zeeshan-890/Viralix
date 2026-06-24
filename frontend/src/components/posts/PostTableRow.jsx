@@ -7,6 +7,7 @@ import { cn, formatNumber } from '@/lib/utils';
 import { statusBadge } from '@/components/calendar/calendarTheme';
 import { getPostStatus, STATUS_LABELS, formatRelativeDate, aggregateEngagement } from './postUtils';
 import { PLATFORM_CONFIG } from '@/components/dashboard/constants';
+import PlatformBadge from '@/components/ui/PlatformBadge';
 
 const STATUS_DOT = {
     scheduled: 'bg-amber-500',
@@ -85,21 +86,11 @@ export default function PostTableRow({ post }) {
             </td>
             <td className="hidden px-4 py-3 md:table-cell">
                 <div className="flex -space-x-1">
-                    {(post.platforms || []).slice(0, 4).map((p) => {
-                        const cfg = PLATFORM_CONFIG[p.name];
-                        if (!cfg) return null;
-                        const Icon = cfg.icon;
-                        return (
-                            <span
-                                key={p.name + p.accountId}
-                                className="inline-flex h-7 w-7 items-center justify-center rounded-full ring-2 ring-white"
-                                style={{ backgroundColor: cfg.bg }}
-                                title={cfg.label}
-                            >
-                                <Icon className="h-3.5 w-3.5" style={{ color: cfg.color }} aria-hidden />
-                            </span>
-                        );
-                    })}
+                    {(post.platforms || []).slice(0, 4).map((p) => (
+                        <span key={p.name + p.accountId} className="ring-2 ring-white rounded-full" title={PLATFORM_CONFIG[p.name]?.label}>
+                            <PlatformBadge platform={p.name} size="xs" rounded="full" />
+                        </span>
+                    ))}
                 </div>
             </td>
             <td className="hidden px-4 py-3 text-xs text-[#52796F] lg:table-cell">

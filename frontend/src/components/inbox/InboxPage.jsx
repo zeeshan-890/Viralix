@@ -7,6 +7,9 @@ import { useSearchParams } from 'next/navigation';
 import { inboxAPI, autoReplyAPI } from '@/lib/api';
 import { cn } from '@/lib/utils';
 import { PLATFORM_CONFIG } from '@/components/dashboard/constants';
+import PlatformBadge from '@/components/ui/PlatformBadge';
+import PlatformIcon from '@/components/ui/PlatformIcon';
+import { getPlatform } from '@/config/platforms';
 import AiReplyPanel from './AiReplyPanel';
 import {
     Inbox, Search, Loader2, Send, MessageSquare, MailOpen, Archive, Clock, Bot,
@@ -170,20 +173,16 @@ export default function InboxPage() {
                             <p className="text-lg font-bold tabular-nums leading-none">{openCount}</p>
                             <p className="mt-0.5 text-[0.625rem] font-medium uppercase tracking-wider opacity-70">Open</p>
                         </div>
-                        {platformStats.map(({ key, count, unread }) => {
-                            const cfg = PLATFORM_CONFIG[key];
-                            const Icon = cfg?.icon;
-                            return (
+                        {platformStats.map(({ key, count, unread }) => (
                                 <div key={key} className="rounded-lg bg-white/10 px-3 py-1.5 text-center">
                                     <div className="flex items-center justify-center gap-1">
-                                        {Icon && <Icon className="h-3 w-3 opacity-70" aria-hidden />}
+                                        <PlatformIcon platform={key} size={12} />
                                         <p className="text-lg font-bold tabular-nums leading-none">{count}</p>
                                         {unread > 0 && <span className="text-xs text-red-300">({unread})</span>}
                                     </div>
                                     <p className="mt-0.5 text-[0.625rem] font-medium uppercase tracking-wider opacity-70 capitalize">{key}</p>
                                 </div>
-                            );
-                        })}
+                            ))}
                         <Link
                             href="/dashboard/inbox/auto-reply"
                             className="inline-flex items-center gap-1.5 rounded-lg bg-[#84A98C]/30 px-3 py-2 text-xs font-medium text-white hover:bg-[#84A98C]/40"
@@ -257,8 +256,7 @@ export default function InboxPage() {
                             </div>
                         ) : (
                             conversations.map((conv) => {
-                                const cfg = PLATFORM_CONFIG[conv.platform];
-                                const Icon = cfg?.icon;
+                                const platformCfg = getPlatform(conv.platform);
                                 const isActive = selected?._id === conv._id;
                                 return (
                                     <button
@@ -267,19 +265,12 @@ export default function InboxPage() {
                                         onClick={() => selectConversation(conv)}
                                         className={cn(
                                             'w-full border-b border-[var(--viralix-border)] px-4 py-3 text-left transition hover:bg-[var(--viralix-bg)]',
-                                            isActive && 'border-l-2 border-l-[#84A98C] bg-[var(--viralix-inset)]'
+                                            isActive && cn('border-l-2 bg-[var(--viralix-inset)]', platformCfg?.selectedBorder?.replace('border-', 'border-l-') || 'border-l-[#84A98C]')
                                         )}
                                     >
                                         <div className="flex items-start justify-between gap-2">
                                             <div className="flex min-w-0 items-center gap-2">
-                                                {cfg && Icon && (
-                                                    <span
-                                                        className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg"
-                                                        style={{ backgroundColor: cfg.bg }}
-                                                    >
-                                                        <Icon className="h-3.5 w-3.5" style={{ color: cfg.color }} aria-hidden />
-                                                    </span>
-                                                )}
+                                                <PlatformBadge platform={conv.platform} size="sm" />
                                                 <div className="min-w-0">
                                                     <p className="truncate text-sm font-semibold text-[var(--viralix-accent)]">{conv.participantName}</p>
                                                     <p className="truncate text-xs text-[var(--viralix-muted)]">

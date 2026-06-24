@@ -7,6 +7,7 @@ import { cn, formatNumber } from '@/lib/utils';
 import { statusBadge, statusBorder } from '@/components/calendar/calendarTheme';
 import { getPostStatus, STATUS_LABELS, formatRelativeDate, aggregateEngagement } from './postUtils';
 import { PLATFORM_CONFIG } from '@/components/dashboard/constants';
+import PlatformBadge from '@/components/ui/PlatformBadge';
 
 function PostThumbnail({ post }) {
     const media = post.media?.[0];
@@ -73,20 +74,9 @@ export default function PostRow({ post }) {
                         {dateLabel}
                     </span>
                     <span className="flex items-center gap-1">
-                        {(post.platforms || []).slice(0, 4).map((p) => {
-                            const cfg = PLATFORM_CONFIG[p.name];
-                            if (!cfg) return null;
-                            const Icon = cfg.icon;
-                            return (
-                                <span
-                                    key={p.name + p.accountId}
-                                    className="inline-flex h-5 w-5 items-center justify-center rounded"
-                                    style={{ backgroundColor: cfg.bg }}
-                                >
-                                    <Icon className="h-3 w-3" style={{ color: cfg.color }} aria-hidden />
-                                </span>
-                            );
-                        })}
+                        {(post.platforms || []).slice(0, 4).map((p) => (
+                            <PlatformBadge key={p.name + p.accountId} platform={p.name} size="xs" />
+                        ))}
                     </span>
                     {status === 'published' && (
                         <span>{formatNumber(engagement.views)} views · {formatNumber(engagement.likes)} likes</span>

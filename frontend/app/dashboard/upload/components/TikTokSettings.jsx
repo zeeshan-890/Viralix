@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import { tiktokAPI } from '@/lib/api';
 import { AlertCircle, CheckCircle2, User, Shield, MessageSquare, Copy, Scissors, Info, Tag, Building2, Handshake } from 'lucide-react';
-import Image from 'next/image';
+import PlatformIcon from '@/components/ui/PlatformIcon';
 
 const PRIVACY_LABELS = {
     PUBLIC_TO_EVERYONE: 'Public',
@@ -194,7 +194,7 @@ export default function TikTokSettings({ accountId, settings, onSettingsChange, 
                         <p className="font-medium text-gray-900">{creatorInfo.creatorNickname}</p>
                         <p className="text-xs text-gray-500">Posting to TikTok • @{creatorInfo.accountName}</p>
                     </div>
-                    <Image src="/tiktok.png" alt="TikTok" width={24} height={24} className="opacity-60" />
+                    <PlatformIcon platform="tiktok" size={24} className="opacity-60" />
                 </div>
 
                 {/* Rate limit warning */}

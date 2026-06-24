@@ -2,7 +2,10 @@
 import { useState, useEffect } from 'react';
 import { CheckCircle2, XCircle, Loader2, ExternalLink, RefreshCw } from 'lucide-react';
 import Link from 'next/link';
-import Image from 'next/image';
+import PlatformIcon from '@/components/ui/PlatformIcon';
+import PlatformBadge from '@/components/ui/PlatformBadge';
+import { platformButtonClass } from '@/config/platforms';
+import { cn } from '@/lib/utils';
 import { instagramOAuthAPI } from '@/lib/api';
 
 export default function InstagramOAuthPage() {
@@ -120,9 +123,7 @@ export default function InstagramOAuthPage() {
         <div className="max-w-4xl mx-auto">
             <div className="mb-8">
                 <div className="flex items-center gap-3 mb-3">
-                    <div className="w-12 h-12 rounded-xl flex items-center justify-center bg-[var(--viralix-surface)] border border-[var(--viralix-border)] shadow-sm">
-                        <Image src="/instagram.png" alt="Instagram" width={24} height={24} className="w-6 h-6 object-contain" />
-                    </div>
+                    <PlatformBadge platform="instagram" size="lg" />
                     <div>
                         <h1 className="text-3xl font-bold" style={{ color: '#354F52' }}>
                             Connect Instagram
@@ -157,7 +158,7 @@ export default function InstagramOAuthPage() {
 
             {loading ? (
                 <div className="dash-card dash-card-hover rounded-xl border border-[var(--viralix-border)] p-12 text-center">
-                    <Loader2 className="w-12 h-12 mx-auto mb-4 animate-spin" style={{ color: '#84A98C' }} />
+                    <Loader2 className="w-12 h-12 mx-auto mb-4 animate-spin text-pink-500" />
                     <p className="text-gray-600">Loading Instagram accounts...</p>
                 </div>
             ) : (
@@ -175,9 +176,7 @@ export default function InstagramOAuthPage() {
                                         className="flex items-center justify-between p-4 border-2 border-gray-200 rounded-xl hover:shadow-md transition-all"
                                     >
                                         <div className="flex items-center gap-4">
-                                            <div className="w-12 h-12 rounded-full flex items-center justify-center bg-[var(--viralix-surface)] border border-[var(--viralix-border)] shadow-sm">
-                                                <Image src="/instagram.png" alt="Instagram" width={24} height={24} className="w-6 h-6 object-contain" />
-                                            </div>
+                                            <PlatformBadge platform="instagram" size="md" rounded="full" />
                                             <div>
                                                 <div className="flex items-center gap-2">
                                                     <h3 className="font-semibold" style={{ color: '#354F52' }}>
@@ -212,9 +211,7 @@ export default function InstagramOAuthPage() {
 
                     {/* Connect New Account */}
                     <div className="dash-card dash-card-hover rounded-xl border border-[var(--viralix-border)] p-8 text-center">
-                        <div className="w-16 h-16 mx-auto mb-4 rounded-full flex items-center justify-center bg-[var(--viralix-surface)] border border-[var(--viralix-border)] shadow-sm">
-                            <Image src="/instagram.png" alt="Instagram" width={32} height={32} className="w-8 h-8 object-contain" />
-                        </div>
+                        <PlatformBadge platform="instagram" size="xl" rounded="full" className="mx-auto mb-4" />
                         <h2 className="text-xl font-semibold mb-2" style={{ color: '#354F52' }}>
                             {accounts.length > 0 ? 'Connect Another Account' : 'Connect Your Instagram Account'}
                         </h2>
@@ -225,8 +222,7 @@ export default function InstagramOAuthPage() {
                         <button
                             onClick={handleConnect}
                             disabled={connecting}
-                            className="inline-flex items-center gap-2 px-6 py-3 text-white rounded-lg font-medium shadow-lg hover:opacity-90 transition-all disabled:opacity-50"
-                            style={{ backgroundColor: '#84A98C' }}
+                            className={cn('inline-flex items-center gap-2 px-6 py-3 rounded-lg font-medium shadow-lg hover:opacity-90 transition-all disabled:opacity-50', platformButtonClass('instagram'))}
                         >
                             {connecting ? (
                                 <>
@@ -235,7 +231,7 @@ export default function InstagramOAuthPage() {
                                 </>
                             ) : (
                                 <>
-                                    <Image src="/instagram.png" alt="Info" width={20} height={20} className="w-5 h-5 object-contain brightness-0 invert" />
+                                    <PlatformIcon platform="instagram" size={20} inverted />
                                     Connect Instagram
                                     <ExternalLink className="w-4 h-4" />
                                 </>
@@ -256,7 +252,7 @@ export default function InstagramOAuthPage() {
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="text-sm mt-3 inline-flex items-center gap-1 hover:underline"
-                                style={{ color: '#84A98C' }}
+                                className="text-sm font-medium hover:underline text-pink-600"
                             >
                                 Learn how to switch to a Professional account
                                 <ExternalLink className="w-3 h-3" />
@@ -268,8 +264,7 @@ export default function InstagramOAuthPage() {
                     <div className="mt-6 text-center">
                         <Link
                             href="/dashboard/connect-accounts"
-                            className="text-sm font-medium hover:underline"
-                            style={{ color: '#84A98C' }}
+                            className="text-sm font-medium hover:underline text-pink-600"
                         >
                             ← Back to Connect Accounts
                         </Link>

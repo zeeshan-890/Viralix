@@ -1,7 +1,8 @@
 'use client';
 import { useState, useRef } from 'react';
 import Image from 'next/image';
-import { X, Upload, Calendar, Clock, MessageCircle, Users, Link2, FileText, Image as ImageIcon, Trash2, Plus, Sparkles, Facebook } from 'lucide-react';
+import { X, Upload, Calendar, Clock, MessageCircle, Users, Link2, FileText, Image as ImageIcon, Trash2, Plus, Sparkles } from 'lucide-react';
+import PlatformIcon from '@/components/ui/PlatformIcon';
 import { facebookAPI, facebookAutoReplyAPI, uploadAPI } from '@/lib/api';
 
 export default function CreateFacebookPost({ isOpen, onClose, pages = [], onSuccess }) {
@@ -133,7 +134,7 @@ export default function CreateFacebookPost({ isOpen, onClose, pages = [], onSucc
                 <div className="flex items-center justify-between p-5 border-b border-gray-200">
                     <div className="flex items-center gap-3">
                         <div className="w-10 h-10 bg-blue-50 rounded-xl flex items-center justify-center">
-                            <Facebook className="w-6 h-6 text-blue-600" />
+                            <PlatformIcon platform="facebook" size={24} />
                         </div>
                         <div>
                             <h2 className="text-xl font-bold" style={{ color: '#354F52' }}>Create Facebook Post</h2>

@@ -5,7 +5,9 @@ import notify from "@/lib/notify";
 import Link from "next/link";
 import { CheckCircle2, ExternalLink, Loader2, AlertCircle, HelpCircle, BookOpen } from "lucide-react";
 import { useAccounts } from "@/hooks/useAccounts";
-import Image from "next/image";
+import { platformButtonClass } from '@/config/platforms';
+import PlatformIcon from '@/components/ui/PlatformIcon';
+import { cn } from '@/lib/utils';
 
 export default function ConnectAccountsPage() {
     const { accounts, isLoading, disconnect } = useAccounts();
@@ -156,7 +158,7 @@ export default function ConnectAccountsPage() {
                         <div className="flex items-center justify-between">
                             <div className="flex items-center gap-4">
                                 <div className="w-14 h-14 rounded-xl flex items-center justify-center bg-[var(--viralix-surface)] border border-[var(--viralix-border)] shadow-sm">
-                                    <Image src="/facebook.png" alt="Facebook" width={32} height={32} className="w-8 h-8 object-contain" />
+                                    <PlatformIcon platform="facebook" size={32} />
                                 </div>
                                 <div>
                                     <h2 className="text-xl font-semibold mb-1" style={{ color: '#354F52' }}>Facebook</h2>
@@ -164,8 +166,8 @@ export default function ConnectAccountsPage() {
                                 </div>
                             </div>
                             {!fbStatus.connected ? (
-                                <button onClick={connectFacebook} disabled={connecting} className="px-5 py-2.5 rounded-lg text-white transition-all shadow-md flex items-center gap-2" style={{ backgroundColor: '#84A98C' }}>
-                                    {connecting ? <Loader2 className="animate-spin w-4 h-4" /> : <Image src="/facebook.png" alt="FB" width={16} height={16} className="w-4 h-4 object-contain brightness-0 invert" />} Connect
+                                <button onClick={connectFacebook} disabled={connecting} className={cn('px-5 py-2.5 rounded-lg transition-all shadow-md flex items-center gap-2', platformButtonClass('facebook'))}>
+                                    {connecting ? <Loader2 className="animate-spin w-4 h-4" /> : <PlatformIcon platform="facebook" size={16} inverted />} Connect
                                 </button>
                             ) : (
                                 <button onClick={disconnectFacebook} className="px-5 py-2.5 rounded-lg border-2 border-gray-300 hover:bg-gray-50 font-medium">Disconnect</button>
@@ -186,15 +188,15 @@ export default function ConnectAccountsPage() {
                         <div className="flex items-center justify-between">
                             <div className="flex items-center gap-4">
                                 <div className="w-14 h-14 rounded-xl flex items-center justify-center bg-[var(--viralix-surface)] border border-[var(--viralix-border)] shadow-sm">
-                                    <Image src="/instagram.png" alt="Instagram" width={32} height={32} className="w-8 h-8 object-contain" />
+                                    <PlatformIcon platform="instagram" size={32} />
                                 </div>
                                 <div>
                                     <h2 className="text-xl font-semibold mb-1" style={{ color: '#354F52' }}>Instagram</h2>
                                     <p className="text-sm text-gray-600">Direct OAuth Connection</p>
                                 </div>
                             </div>
-                            <Link href="/dashboard/connect-accounts/instagram-oauth" className="px-5 py-2.5 rounded-lg text-white shadow-md flex items-center gap-2" style={{ backgroundColor: '#84A98C' }}>
-                                <Image src="/instagram.png" alt="IG" width={16} height={16} className="w-4 h-4 object-contain brightness-0 invert" /> {igAccounts.length > 0 ? 'Manage' : 'Connect'}
+                            <Link href="/dashboard/connect-accounts/instagram-oauth" className={cn('px-5 py-2.5 rounded-lg shadow-md flex items-center gap-2', platformButtonClass('instagram'))}>
+                                <PlatformIcon platform="instagram" size={16} inverted /> {igAccounts.length > 0 ? 'Manage' : 'Connect'}
                             </Link>
                         </div>
                         {igAccounts.length > 0 && (
@@ -203,7 +205,7 @@ export default function ConnectAccountsPage() {
                                     <div key={acc.platformAccountId || acc._id} className="flex items-center justify-between p-3 border rounded-lg">
                                         <div className="flex items-center gap-3">
                                             <div className="w-10 h-10 rounded-full bg-[var(--viralix-surface)] border border-[var(--viralix-border)] flex items-center justify-center">
-                                                <Image src="/instagram.png" alt="IG" width={20} height={20} className="w-5 h-5 object-contain" />
+                                                <PlatformIcon platform="instagram" size={20} />
                                             </div>
                                             <div>
                                                 <div className="font-medium">@{acc.accountName || acc.metadata?.username || 'Instagram Account'}</div>
@@ -222,7 +224,7 @@ export default function ConnectAccountsPage() {
                         <div className="flex items-center justify-between">
                             <div className="flex items-center gap-4">
                                 <div className="w-14 h-14 rounded-xl flex items-center justify-center bg-[var(--viralix-surface)] border border-[var(--viralix-border)] shadow-sm">
-                                    <Image src="/tiktok.png" alt="TikTok" width={32} height={32} className="w-8 h-8 object-contain" />
+                                    <PlatformIcon platform="tiktok" size={32} />
                                 </div>
                                 <div>
                                     <h2 className="text-xl font-semibold mb-1" style={{ color: '#354F52' }}>TikTok</h2>
@@ -230,11 +232,11 @@ export default function ConnectAccountsPage() {
                                 </div>
                             </div>
                             {!ttAccounts.length ? (
-                                <button onClick={connectTikTok} disabled={connectingTikTok} className="px-5 py-2.5 rounded-lg text-white bg-black shadow-md flex items-center gap-2">
-                                    {connectingTikTok ? <Loader2 className="animate-spin w-4 h-4" /> : <Image src="/tiktok.png" alt="TT" width={16} height={16} className="w-4 h-4 object-contain brightness-0 invert" />} Connect
+                                <button onClick={connectTikTok} disabled={connectingTikTok} className={cn('px-5 py-2.5 rounded-lg shadow-md flex items-center gap-2', platformButtonClass('tiktok'))}>
+                                    {connectingTikTok ? <Loader2 className="animate-spin w-4 h-4" /> : <PlatformIcon platform="tiktok" size={16} inverted />} Connect
                                 </button>
                             ) : (
-                                <Link href="/dashboard/connect-accounts/tiktok" className="px-5 py-2.5 rounded-lg text-white shadow-md flex items-center gap-2" style={{ backgroundColor: '#84A98C' }}>
+                                <Link href="/dashboard/connect-accounts/tiktok" className={cn('px-5 py-2.5 rounded-lg shadow-md flex items-center gap-2', platformButtonClass('tiktok'))}>
                                     Manage
                                 </Link>
                             )}
@@ -244,8 +246,8 @@ export default function ConnectAccountsPage() {
                                 {ttAccounts.map(acc => (
                                     <div key={acc.platformAccountId} className="flex items-center justify-between p-3 border rounded-lg">
                                         <div className="flex items-center gap-3">
-                                            <div className="w-10 h-10 rounded-full  flex items-center justify-center text-white">
-                                                <Image src="/tiktok.png" alt="TT" width={20} height={20} className="w-5 h-5 object-contain" />
+                                            <div className="w-10 h-10 rounded-full flex items-center justify-center">
+                                                <PlatformIcon platform="tiktok" size={20} />
                                             </div>
                                             <div className="font-medium">{acc.accountName}</div>
                                         </div>
@@ -261,7 +263,7 @@ export default function ConnectAccountsPage() {
                         <div className="flex items-center justify-between">
                             <div className="flex items-center gap-4">
                                 <div className="w-14 h-14 rounded-xl flex items-center justify-center bg-[var(--viralix-surface)] border border-[var(--viralix-border)] shadow-sm">
-                                    <Image src="/youtube.png" alt="YouTube" width={32} height={32} className="w-8 h-8 object-contain" />
+                                    <PlatformIcon platform="youtube" size={32} />
                                 </div>
                                 <div>
                                     <h2 className="text-xl font-semibold mb-1" style={{ color: '#354F52' }}>YouTube</h2>
@@ -269,11 +271,12 @@ export default function ConnectAccountsPage() {
                                 </div>
                             </div>
                             {!ytAccounts.length ? (
-                                <button onClick={connectYouTube} disabled={connectingYouTube} className="px-5 py-2.5 rounded-lg text-white bg-red-600 hover:bg-red-700 shadow-md flex items-center gap-2">
-                                    {connectingYouTube ? <Loader2 className="animate-spin w-4 h-4" /> : <Image src="/youtube.png" alt="YT" width={16} height={16} className="w-4 h-4 object-contain brightness-0 invert" />} Connect
+                                <button onClick={connectYouTube} disabled={connectingYouTube} className={cn('px-5 py-2.5 rounded-lg shadow-md flex items-center gap-2', platformButtonClass('youtube'))}>
+                                    {connectingYouTube ? <Loader2 className="animate-spin w-4 h-4" /> : <PlatformIcon platform="youtube" size={16} inverted />} Connect
                                 </button>
                             ) : (
                                 <Link href="/dashboard/connect-accounts/youtube" className="px-5 py-2.5 rounded-lg border-2 border-gray-200 hover:bg-gray-50 font-medium flex items-center gap-2">
+                                    <PlatformIcon platform="youtube" size={16} />
                                     Manage
                                 </Link>
                             )}
@@ -283,8 +286,8 @@ export default function ConnectAccountsPage() {
                                 {ytAccounts.map(acc => (
                                     <div key={acc.platformAccountId} className="flex items-center justify-between p-3 border rounded-lg">
                                         <div className="flex items-center gap-3">
-                                            <div className="w-10 h-10 rounded-full  flex items-center justify-center text-white">
-                                                <Image src="/youtube.png" alt="YT" width={20} height={20} className="w-5 h-5 object-contain" />
+                                            <div className="w-10 h-10 rounded-full flex items-center justify-center">
+                                                <PlatformIcon platform="youtube" size={20} />
                                             </div>
                                             <div className="font-medium">{acc.accountName}</div>
                                         </div>

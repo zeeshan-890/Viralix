@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { formatDistanceToNow } from 'date-fns';
 import { ArrowUpRight, MessageSquare, Bot } from 'lucide-react';
 import { PLATFORM_CONFIG } from './constants';
+import PlatformBadge from '@/components/ui/PlatformBadge';
 
 export default function InboxPreview({ conversations = [], unreadTotal = 0 }) {
     const open = conversations
@@ -47,19 +48,13 @@ export default function InboxPreview({ conversations = [], unreadTotal = 0 }) {
                 <ul className="divide-y divide-[var(--viralix-border)]">
                     {open.map((conv) => {
                         const cfg = PLATFORM_CONFIG[conv.platform] || PLATFORM_CONFIG.instagram;
-                        const Icon = cfg.icon;
                         return (
                             <li key={conv._id}>
                                 <Link
                                     href={`/dashboard/inbox?conversation=${conv._id}`}
                                     className="flex items-start gap-2.5 px-4 py-3 transition-colors hover:bg-[var(--viralix-bg)]"
                                 >
-                                    <div
-                                        className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full"
-                                        style={{ backgroundColor: cfg.bg }}
-                                    >
-                                        <Icon className="h-3.5 w-3.5" style={{ color: cfg.color }} aria-hidden />
-                                    </div>
+                                    <PlatformBadge platform={conv.platform || 'instagram'} size="sm" rounded="full" />
                                     <div className="min-w-0 flex-1">
                                         <div className="flex items-center justify-between gap-2">
                                             <p className="truncate text-xs font-medium text-[var(--viralix-accent)]">

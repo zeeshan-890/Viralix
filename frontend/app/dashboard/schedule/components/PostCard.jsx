@@ -1,14 +1,7 @@
 'use client';
-import { Clock, Facebook, Instagram, Linkedin, Twitter, Youtube, Music2 } from 'lucide-react';
-
-const platformIcons = {
-    facebook: { icon: Facebook, color: 'text-blue-600', bg: 'bg-blue-50' },
-    instagram: { icon: Instagram, color: 'text-pink-600', bg: 'bg-pink-50' },
-    twitter: { icon: Twitter, color: 'text-sky-500', bg: 'bg-sky-50' },
-    linkedin: { icon: Linkedin, color: 'text-blue-700', bg: 'bg-blue-50' },
-    tiktok: { icon: Music2, color: 'text-gray-900', bg: 'bg-gray-100' },
-    youtube: { icon: Youtube, color: 'text-red-600', bg: 'bg-red-50' },
-};
+import { Clock } from 'lucide-react';
+import PlatformIcon from '@/components/ui/PlatformIcon';
+import { getPlatform } from '@/config/platforms';
 
 const statusStyles = {
     draft: 'bg-gray-100 text-gray-600',
@@ -24,7 +17,6 @@ function getPostStatus(post) {
     if (post.isScheduled) return 'scheduled';
     if (post.approvalStatus === 'pending') return 'pending';
 
-    // Check platform-level statuses
     const statuses = post.platforms?.map(p => p.status) || [];
     if (statuses.includes('failed')) return 'failed';
     if (statuses.includes('processing')) return 'processing';
@@ -43,16 +35,14 @@ export default function PostCard({ post, onClick }) {
     return (
         <div
             onClick={onClick}
-            className="p-2.5 rounded-lg border border-[var(--viralix-border)] bg-[var(--viralix-surface)] hover:shadow-md hover:border-blue-200 cursor-pointer transition-all duration-150 group"
+            className="p-2.5 rounded-lg border border-[var(--viralix-border)] bg-[var(--viralix-surface)] hover:shadow-md cursor-pointer transition-all duration-150 group"
         >
-            {/* Platform icons */}
             <div className="flex items-center gap-1 mb-1.5">
                 {post.platforms?.map((p, i) => {
-                    const config = platformIcons[p.name] || platformIcons.twitter;
-                    const Icon = config.icon;
+                    const cfg = getPlatform(p.name);
                     return (
-                        <span key={i} className={`w-5 h-5 rounded flex items-center justify-center ${config.bg}`}>
-                            <Icon size={12} className={config.color} />
+                        <span key={i} className={`w-5 h-5 rounded flex items-center justify-center ${cfg?.lightBg || 'bg-gray-100'}`}>
+                            <PlatformIcon platform={p.name} size={12} />
                         </span>
                     );
                 })}
@@ -61,12 +51,10 @@ export default function PostCard({ post, onClick }) {
                 </span>
             </div>
 
-            {/* Title / Content */}
             <p className="text-xs font-medium text-gray-800 line-clamp-2 leading-snug">
                 {post.title || post.content?.substring(0, 60) || 'Untitled Post'}
             </p>
 
-            {/* Time */}
             {time && (
                 <div className="flex items-center gap-1 mt-1.5 text-[11px] text-gray-400">
                     <Clock size={10} />
@@ -74,15 +62,13 @@ export default function PostCard({ post, onClick }) {
                 </div>
             )}
 
-            {/* Media indicator */}
             {post.media?.length > 0 && (
                 <div className="mt-1 flex gap-1">
                     {post.media.slice(0, 3).map((m, i) => (
-                        <div key={i} className="w-6 h-6 rounded bg-gray-100 overflow-hidden">
-                            {m.type === 'image' ? (
-                                <img src={m.url} alt="" className="w-full h-full object-cover" />
-                            ) : (
-                                <div className="w-full h-full flex items-center justify-center text-[8px] text-gray-400">▶</div>
+                        <div key={i} className="h-6 w-6 rounded bg-gray-200 overflow-hidden">
+                            {m.url && (
+                                // eslint-disable-next-line @next/next/no-img-element
+                                <img src={m.url} alt="" className="h-full w-full object-cover" />
                             )}
                         </div>
                     ))}

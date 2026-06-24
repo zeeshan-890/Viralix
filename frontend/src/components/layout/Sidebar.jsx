@@ -7,6 +7,8 @@ import { cn } from '../../lib/utils';
 import { NAV_SECTIONS, isNavItemActive } from '../../config/navigation';
 import { useAuthStore } from '../../store/authStore';
 import Image from 'next/image';
+import PlatformIcon from '../ui/PlatformIcon';
+import { getPlatform } from '@/config/platforms';
 
 export default function Sidebar({ open = false, onClose = () => {} }) {
     const pathname = usePathname();
@@ -81,6 +83,17 @@ export default function Sidebar({ open = false, onClose = () => {} }) {
                                         {section.items.map((item) => {
                                             const Icon = item.icon;
                                             const active = isNavItemActive(pathname, item);
+                                            const platformCfg = item.platform ? getPlatform(item.platform) : null;
+                                            const activeStyle = active
+                                                ? platformCfg
+                                                    ? platformCfg.gradientClass
+                                                        ? undefined
+                                                        : { backgroundColor: platformCfg.color }
+                                                    : { backgroundColor: '#84A98C' }
+                                                : undefined;
+                                            const activeClass = active && platformCfg?.gradientClass
+                                                ? platformCfg.gradientClass
+                                                : undefined;
                                             return (
                                                 <li key={item.href}>
                                                     <Link
@@ -89,12 +102,16 @@ export default function Sidebar({ open = false, onClose = () => {} }) {
                                                         className={cn(
                                                             'flex items-center gap-2.5 rounded-md px-2.5 py-2 text-xs font-medium transition-all',
                                                             active
-                                                                ? 'text-white shadow-sm'
+                                                                ? cn('text-white shadow-sm', activeClass)
                                                                 : 'text-white/65 hover:bg-[var(--viralix-surface)]/8 hover:text-white'
                                                         )}
-                                                        style={active ? { backgroundColor: '#84A98C' } : undefined}
+                                                        style={activeStyle}
                                                     >
-                                                        {Icon && <Icon className="h-3.5 w-3.5 shrink-0 opacity-90" />}
+                                                        {item.platform ? (
+                                                            <PlatformIcon platform={item.platform} size={14} inverted={active} />
+                                                        ) : (
+                                                            Icon && <Icon className="h-3.5 w-3.5 shrink-0 opacity-90" />
+                                                        )}
                                                         <span className="truncate">{item.name}</span>
                                                     </Link>
                                                 </li>

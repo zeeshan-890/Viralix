@@ -1,7 +1,9 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import Image from 'next/image';
+import PlatformIcon from '@/components/ui/PlatformIcon';
+import PlatformBadge from '@/components/ui/PlatformBadge';
+import { platformButtonClass } from '@/config/platforms';
 import {
     Loader2,
     ExternalLink,
@@ -271,9 +273,7 @@ export default function InstagramPublishPanel({
             {/* Header */}
             <div className="mb-8">
                 <div className="flex items-center gap-3 mb-3">
-                    <div className="w-12 h-12 rounded-xl flex items-center justify-center bg-[var(--viralix-surface)] border border-[var(--viralix-border)] shadow-sm">
-                        <Image src="/instagram.png" alt="Instagram" width={24} height={24} className="w-6 h-6 object-contain" />
-                    </div>
+                    <PlatformBadge platform="instagram" size="md" />
                     <div>
                         <h1 className="text-3xl font-bold text-[var(--viralix-accent)]">{title}</h1>
                         <p className="text-gray-600">{subtitle}</p>
@@ -315,7 +315,7 @@ export default function InstagramPublishPanel({
                                         <img src={acc.profilePictureUrl} alt="" className="w-10 h-10 rounded-full object-cover" />
                                     ) : (
                                         <div className="w-10 h-10 rounded-full flex items-center justify-center bg-[var(--viralix-surface)] border border-[var(--viralix-border)]">
-                                            <Image src="/instagram.png" alt="IG" width={20} height={20} className="w-5 h-5 object-contain" />
+                                            <PlatformBadge platform="instagram" size="sm" rounded="full" />
                                         </div>
                                     )}
                                     <div>
@@ -346,7 +346,7 @@ export default function InstagramPublishPanel({
                         </>
                     ) : (
                         <>
-                            <Image src="/instagram.png" alt="" width={16} height={16} className="w-4 h-4 object-contain brightness-0 invert" />
+                            <PlatformIcon platform="instagram" size={16} inverted />
                             {accounts.length > 0 ? 'Connect Another' : 'Connect Instagram'}
                             <ExternalLink className="w-4 h-4" />
                         </>

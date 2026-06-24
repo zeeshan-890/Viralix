@@ -10,10 +10,6 @@ import {
     Layers,
     Link2,
     Settings,
-    Facebook,
-    Instagram,
-    Youtube,
-    Music2,
     Bot,
 } from 'lucide-react';
 
@@ -87,12 +83,12 @@ export const NAV_SECTIONS = [
         label: 'Platforms',
         items: [
             { name: 'All Platforms', href: '/dashboard/platforms', icon: Layers, exact: true },
-            { name: 'Instagram', href: '/dashboard/platforms/instagram', icon: Instagram },
-            { name: 'Instagram Upload', href: '/dashboard/platforms/instagram/upload', icon: Upload },
-            { name: 'TikTok', href: '/dashboard/platforms/tiktok', icon: Music2 },
-            { name: 'YouTube', href: '/dashboard/platforms/youtube', icon: Youtube },
-            { name: 'Facebook', href: '/dashboard/platforms/facebook', icon: Facebook },
-            { name: 'IG Publish Test', href: '/dashboard/ig-test', icon: Instagram },
+            { name: 'Instagram', href: '/dashboard/platforms/instagram', platform: 'instagram' },
+            { name: 'Instagram Upload', href: '/dashboard/platforms/instagram/upload', platform: 'instagram' },
+            { name: 'TikTok', href: '/dashboard/platforms/tiktok', platform: 'tiktok' },
+            { name: 'YouTube', href: '/dashboard/platforms/youtube', platform: 'youtube' },
+            { name: 'Facebook', href: '/dashboard/platforms/facebook', platform: 'facebook' },
+            { name: 'IG Publish Test', href: '/dashboard/ig-test', platform: 'instagram' },
         ],
         topLinks: [
             { name: 'All', href: '/dashboard/platforms', exact: true },
@@ -110,10 +106,10 @@ export const NAV_SECTIONS = [
         label: 'Connections',
         items: [
             { name: 'Connect Accounts', href: '/dashboard/connect-accounts', icon: Link2, exact: true },
-            { name: 'Facebook', href: '/dashboard/connect-accounts/facebook', icon: Facebook },
-            { name: 'Instagram', href: '/dashboard/connect-accounts/instagram-oauth', icon: Instagram },
-            { name: 'TikTok', href: '/dashboard/connect-accounts/tiktok', icon: Music2 },
-            { name: 'YouTube', href: '/dashboard/connect-accounts/youtube', icon: Youtube },
+            { name: 'Facebook', href: '/dashboard/connect-accounts/facebook', platform: 'facebook' },
+            { name: 'Instagram', href: '/dashboard/connect-accounts/instagram-oauth', platform: 'instagram' },
+            { name: 'TikTok', href: '/dashboard/connect-accounts/tiktok', platform: 'tiktok' },
+            { name: 'YouTube', href: '/dashboard/connect-accounts/youtube', platform: 'youtube' },
         ],
         topLinks: [
             { name: 'Hub', href: '/dashboard/connect-accounts', exact: true },

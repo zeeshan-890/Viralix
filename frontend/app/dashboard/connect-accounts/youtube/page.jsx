@@ -4,7 +4,10 @@ import { CheckCircle2, XCircle, Loader2, ExternalLink } from 'lucide-react';
 import Link from 'next/link';
 import { youtubeAPI } from '@/lib/api';
 import { useAccounts } from '@/hooks/useAccounts';
-import Image from 'next/image';
+import PlatformIcon from '@/components/ui/PlatformIcon';
+import PlatformBadge from '@/components/ui/PlatformBadge';
+import { platformButtonClass } from '@/config/platforms';
+import { cn } from '@/lib/utils';
 
 export default function YouTubeManagePage() {
     const { accounts, isLoading, disconnect } = useAccounts();
@@ -67,7 +70,7 @@ export default function YouTubeManagePage() {
             <div className="mb-8">
                 <div className="flex items-center gap-3 mb-3">
                     <div className="w-12 h-12 rounded-xl flex items-center justify-center bg-[var(--viralix-surface)] border border-[var(--viralix-border)] shadow-sm">
-                        <Image src="/youtube.png" alt="YouTube" width={24} height={24} className="w-6 h-6 object-contain" />
+                        <PlatformBadge platform="youtube" size="md" />
                     </div>
                     <div>
                         <h1 className="text-3xl font-bold" style={{ color: '#354F52' }}>
@@ -96,7 +99,7 @@ export default function YouTubeManagePage() {
 
             {isLoading ? (
                 <div className="dash-card dash-card-hover rounded-xl border border-[var(--viralix-border)] p-12 text-center">
-                    <Loader2 className="w-12 h-12 mx-auto mb-4 animate-spin" style={{ color: '#84A98C' }} />
+                    <Loader2 className="w-12 h-12 mx-auto mb-4 animate-spin text-red-600" />
                     <p className="text-gray-600">Loading YouTube channels...</p>
                 </div>
             ) : (
@@ -115,7 +118,7 @@ export default function YouTubeManagePage() {
                                     >
                                         <div className="flex items-center gap-4">
                                             <div className="w-12 h-12 rounded-full flex items-center justify-center bg-[var(--viralix-surface)] border border-[var(--viralix-border)] shadow-sm">
-                                                <Image src="/youtube.png" alt="YouTube" width={24} height={24} className="w-6 h-6 object-contain" />
+                                                <PlatformBadge platform="youtube" size="md" rounded="full" />
                                             </div>
                                             <div>
                                                 <h3 className="font-semibold" style={{ color: '#354F52' }}>
@@ -141,7 +144,7 @@ export default function YouTubeManagePage() {
                     {/* Connect New Account */}
                     <div className="dash-card dash-card-hover rounded-xl border border-[var(--viralix-border)] p-8 text-center">
                         <div className="w-16 h-16 mx-auto mb-4 rounded-full flex items-center justify-center bg-[var(--viralix-surface)] border border-[var(--viralix-border)] shadow-sm">
-                            <Image src="/youtube.png" alt="YouTube" width={32} height={32} className="w-8 h-8 object-contain" />
+                            <PlatformBadge platform="youtube" size="xl" rounded="full" className="mx-auto mb-4" />
                         </div>
                         <h2 className="text-xl font-semibold mb-2" style={{ color: '#354F52' }}>
                             {ytAccounts.length > 0 ? 'Connect Another Channel' : 'Connect Your YouTube Channel'}
@@ -153,7 +156,7 @@ export default function YouTubeManagePage() {
                         <button
                             onClick={handleConnect}
                             disabled={connecting}
-                            className="inline-flex items-center gap-2 px-6 py-3 text-white rounded-lg font-medium shadow-lg hover:opacity-90 transition-all disabled:opacity-50 bg-red-600"
+                            className={cn('inline-flex items-center gap-2 px-6 py-3 rounded-lg font-medium shadow-lg hover:opacity-90 transition-all disabled:opacity-50', platformButtonClass('youtube'))}
                         >
                             {connecting ? (
                                 <>
@@ -162,7 +165,7 @@ export default function YouTubeManagePage() {
                                 </>
                             ) : (
                                 <>
-                                    <Image src="/youtube.png" alt="YT" width={20} height={20} className="w-5 h-5 object-contain brightness-0 invert" />
+                                    <PlatformIcon platform="youtube" size={20} inverted />
                                     Connect YouTube
                                     <ExternalLink className="w-4 h-4" />
                                 </>
@@ -174,8 +177,7 @@ export default function YouTubeManagePage() {
                     <div className="mt-6 text-center">
                         <Link
                             href="/dashboard/connect-accounts"
-                            className="text-sm font-medium hover:underline"
-                            style={{ color: '#84A98C' }}
+                            className="text-sm font-medium hover:underline text-red-600"
                         >
                             ← Back to Connect Accounts
                         </Link>

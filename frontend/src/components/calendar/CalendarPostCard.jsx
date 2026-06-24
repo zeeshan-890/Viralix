@@ -1,18 +1,11 @@
 'use client';
 
-import { Clock, GripVertical, Facebook, Instagram, Linkedin, Twitter, Youtube, Music2 } from 'lucide-react';
+import { Clock, GripVertical } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { formatPostTime, getPostStatus } from './calendarUtils';
 import { statusBorder, statusBadge } from './calendarTheme';
-
-const platformIcons = {
-    facebook: { icon: Facebook, color: 'text-blue-600', bg: 'bg-blue-50' },
-    instagram: { icon: Instagram, color: 'text-pink-600', bg: 'bg-pink-50' },
-    twitter: { icon: Twitter, color: 'text-sky-500', bg: 'bg-sky-50' },
-    linkedin: { icon: Linkedin, color: 'text-blue-700', bg: 'bg-blue-50' },
-    tiktok: { icon: Music2, color: 'text-gray-900', bg: 'bg-gray-100' },
-    youtube: { icon: Youtube, color: 'text-red-600', bg: 'bg-red-50' },
-};
+import PlatformIcon from '@/components/ui/PlatformIcon';
+import { getPlatform } from '@/config/platforms';
 
 export default function CalendarPostCard({ post, onClick, isDragging, dragHandleProps, compact = false }) {
     const status = getPostStatus(post);
@@ -26,7 +19,7 @@ export default function CalendarPostCard({ post, onClick, isDragging, dragHandle
                 statusBorder[status] || statusBorder.draft,
                 compact ? 'p-1.5' : 'p-2',
                 isDragging && 'shadow-lg ring-2 ring-[#84A98C]/50',
-                !isDragging && 'hover:border-[#84A98C] hover:shadow-sm',
+                !isDragging && 'hover:border-[var(--viralix-border)] hover:shadow-sm',
                 onClick && 'cursor-pointer'
             )}
         >
@@ -45,11 +38,10 @@ export default function CalendarPostCard({ post, onClick, isDragging, dragHandle
                 <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-1">
                         {(post.platforms || []).slice(0, 3).map((p, i) => {
-                            const cfg = platformIcons[p.name] || platformIcons.twitter;
-                            const Icon = cfg.icon;
+                            const cfg = getPlatform(p.name);
                             return (
-                                <span key={i} className={cn('flex h-4 w-4 items-center justify-center rounded', cfg.bg)}>
-                                    <Icon className={cn('h-2.5 w-2.5', cfg.color)} aria-hidden />
+                                <span key={i} className={cn('flex h-4 w-4 items-center justify-center rounded', cfg?.lightBg || 'bg-gray-100')}>
+                                    <PlatformIcon platform={p.name} size={10} />
                                 </span>
                             );
                         })}
@@ -62,18 +54,15 @@ export default function CalendarPostCard({ post, onClick, isDragging, dragHandle
                             {status}
                         </span>
                     </div>
-                    <p
-                        className={cn(
-                            'mt-1 font-medium leading-snug text-[var(--viralix-accent)]',
-                            compact ? 'line-clamp-1 text-[0.6875rem]' : 'line-clamp-2 text-xs'
-                        )}
-                    >
+                    <p className={cn('mt-0.5 line-clamp-2 font-medium text-[var(--viralix-accent)]', compact ? 'text-[0.625rem]' : 'text-xs')}>
                         {post.title || post.content?.substring(0, 50) || 'Untitled'}
                     </p>
-                    <div className="mt-0.5 flex items-center gap-1 text-[0.625rem] text-[var(--viralix-muted)]">
-                        <Clock className="h-2.5 w-2.5" aria-hidden />
-                        {time}
-                    </div>
+                    {time && (
+                        <div className="mt-0.5 flex items-center gap-0.5 text-[0.625rem] text-[var(--viralix-muted)]">
+                            <Clock className="h-2.5 w-2.5" aria-hidden />
+                            {time}
+                        </div>
+                    )}
                 </div>
             </div>
         </div>

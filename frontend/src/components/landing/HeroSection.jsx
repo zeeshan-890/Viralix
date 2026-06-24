@@ -3,6 +3,8 @@
 import Link from 'next/link';
 import { ArrowRight, Play } from 'lucide-react';
 import DashboardMockup from './DashboardMockup';
+import { PLATFORM_LIST } from '@/config/platforms';
+import PlatformIcon from '@/components/ui/PlatformIcon';
 
 export default function HeroSection() {
     return (
@@ -35,6 +37,18 @@ export default function HeroSection() {
                         <p className="landing-fade-up-delay-2 mt-5 max-w-lg text-base leading-relaxed text-white/60 sm:text-lg">
                             Schedule posts, reply with AI, track analytics, and manage Instagram, TikTok, YouTube & Facebook — all from one beautiful dashboard.
                         </p>
+
+                        <div className="landing-fade-up-delay-2 mt-5 flex flex-wrap items-center gap-3">
+                            {PLATFORM_LIST.map((p) => (
+                                <span
+                                    key={p.id}
+                                    className={`inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-medium text-white/80 ${p.id === 'instagram' ? '' : ''}`}
+                                >
+                                    <PlatformIcon platform={p.id} size={16} />
+                                    {p.label}
+                                </span>
+                            ))}
+                        </div>
 
                         <div className="landing-fade-up-delay-3 mt-8 flex flex-wrap items-center gap-3">
                             <Link

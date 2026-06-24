@@ -19,6 +19,7 @@ import {
 import { cn, formatNumber } from '@/lib/utils';
 import { statusBadge } from '@/components/calendar/calendarTheme';
 import { PLATFORM_CONFIG } from '@/components/dashboard/constants';
+import PlatformBadge from '@/components/ui/PlatformBadge';
 import { getPostStatus, STATUS_LABELS } from './postUtils';
 
 function PanelLabel({ children }) {
@@ -251,7 +252,6 @@ export default function PostDetailView({ contentId }) {
                                     <tbody>
                                         {platforms.map((p, idx) => {
                                             const cfg = PLATFORM_CONFIG[p.name];
-                                            const Icon = cfg?.icon;
                                             const pStatus = p.status || 'draft';
                                             return (
                                                 <tr
@@ -260,18 +260,7 @@ export default function PostDetailView({ contentId }) {
                                                 >
                                                     <td className="px-4 py-2.5 sm:px-5">
                                                         <span className="flex items-center gap-2 capitalize text-[var(--viralix-accent)]">
-                                                            {cfg && Icon && (
-                                                                <span
-                                                                    className="flex h-7 w-7 items-center justify-center rounded-md"
-                                                                    style={{ backgroundColor: cfg.bg }}
-                                                                >
-                                                                    <Icon
-                                                                        className="h-3.5 w-3.5"
-                                                                        style={{ color: cfg.color }}
-                                                                        aria-hidden
-                                                                    />
-                                                                </span>
-                                                            )}
+                                                            <PlatformBadge platform={p.name} size="sm" />
                                                             {p.name}
                                                         </span>
                                                     </td>
@@ -335,18 +324,10 @@ export default function PostDetailView({ contentId }) {
                             {publishedPlatforms.map((p, idx) => {
                                 const e = p.engagement || {};
                                 const cfg = PLATFORM_CONFIG[p.name];
-                                const Icon = cfg?.icon;
                                 return (
                                     <div key={idx} className="border-t border-[var(--viralix-border)]">
                                         <div className="flex items-center gap-2 bg-[#354F52]/5 px-4 py-2 sm:px-5">
-                                            {cfg && Icon && (
-                                                <span
-                                                    className="flex h-6 w-6 items-center justify-center rounded-md"
-                                                    style={{ backgroundColor: cfg.bg }}
-                                                >
-                                                    <Icon className="h-3 w-3" style={{ color: cfg.color }} aria-hidden />
-                                                </span>
-                                            )}
+                                            <PlatformBadge platform={p.name} size="sm" />
                                             <span className="text-sm font-medium capitalize text-[var(--viralix-accent)]">{p.name}</span>
                                             {p.publishedAt && (
                                                 <span className="ml-auto text-[0.6875rem] text-[var(--viralix-muted)]">

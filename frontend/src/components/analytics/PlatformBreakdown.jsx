@@ -2,6 +2,7 @@
 
 import { formatNumber } from '@/lib/utils';
 import { PLATFORM_CONFIG } from '@/components/dashboard/constants';
+import PlatformBadge from '@/components/ui/PlatformBadge';
 
 function PanelLabel({ children }) {
     return <p className="text-[0.6875rem] font-semibold uppercase tracking-wider text-[var(--viralix-muted)]">{children}</p>;
@@ -32,18 +33,10 @@ export default function PlatformBreakdown({ analytics }) {
             <ul className="divide-y divide-[var(--viralix-border)]">
                 {platforms.map(({ name, data, eng, rate }) => {
                     const cfg = PLATFORM_CONFIG[name];
-                    const Icon = cfg?.icon;
                     return (
                         <li key={name} className="px-4 py-3 transition-colors hover:bg-[var(--viralix-bg)] sm:px-5">
                             <div className="flex items-center gap-3">
-                                {cfg && Icon && (
-                                    <span
-                                        className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg"
-                                        style={{ backgroundColor: cfg.bg }}
-                                    >
-                                        <Icon className="h-4 w-4" style={{ color: cfg.color }} aria-hidden />
-                                    </span>
-                                )}
+                                {cfg && <PlatformBadge platform={name} size="md" />}
                                 <div className="min-w-0 flex-1">
                                     <p className="text-sm font-semibold capitalize text-[var(--viralix-accent)]">{name}</p>
                                     <p className="text-xs text-[var(--viralix-muted)]">
