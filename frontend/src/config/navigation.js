@@ -91,6 +91,7 @@ export const NAV_SECTIONS = [
             { name: 'TikTok', href: '/dashboard/platforms/tiktok', icon: Music2 },
             { name: 'YouTube', href: '/dashboard/platforms/youtube', icon: Youtube },
             { name: 'Facebook', href: '/dashboard/platforms/facebook', icon: Facebook },
+            { name: 'IG Publish Test', href: '/dashboard/ig-test', icon: Instagram },
         ],
         topLinks: [
             { name: 'All', href: '/dashboard/platforms', exact: true },
@@ -98,8 +99,9 @@ export const NAV_SECTIONS = [
             { name: 'TikTok', href: '/dashboard/platforms/tiktok' },
             { name: 'YouTube', href: '/dashboard/platforms/youtube' },
             { name: 'Facebook', href: '/dashboard/platforms/facebook' },
+            { name: 'IG Test', href: '/dashboard/ig-test' },
         ],
-        match: (path) => path.startsWith('/dashboard/platforms'),
+        match: (path) => path.startsWith('/dashboard/platforms') || path.startsWith('/dashboard/ig-test'),
     },
     {
         id: 'connections',

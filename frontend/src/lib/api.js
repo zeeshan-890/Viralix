@@ -332,6 +332,16 @@ export const instagramOAuthAPI = {
     disconnect: (accountId) => api.delete(`/instagram-oauth/disconnect/${accountId}`),
 };
 
+// Instagram Publishing Test module (isolated sandbox)
+export const igTestAPI = {
+    connect: () => api.get('/ig-test/connect'),
+    accounts: () => api.get('/ig-test/accounts'),
+    disconnect: (id) => api.delete(`/ig-test/accounts/${id}`),
+    publish: (payload) => api.post('/ig-test/publish', payload),
+    publishLimit: (accountId) => api.get(`/ig-test/publish-limit/${accountId}`),
+    logs: () => api.get('/ig-test/logs'),
+};
+
 export const uploadAPI = {
     // Get user's uploaded media
     getMedia: (params = {}) => {

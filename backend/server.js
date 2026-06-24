@@ -152,6 +152,12 @@ try {
     console.warn('Instagram routes not mounted yet:', e.message);
 }
 try {
+    app.use('/api/ig-test', require('./routes/ig-test'));
+    console.log('📸 Instagram Publishing Test routes mounted');
+} catch (e) {
+    console.warn('Instagram Test routes not mounted yet:', e.message);
+}
+try {
     app.use('/api/tiktok-oauth', require('./routes/tiktok-oauth'));
     console.log('🎵 TikTok OAuth routes mounted');
 } catch (e) {
