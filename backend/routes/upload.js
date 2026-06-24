@@ -42,16 +42,26 @@ router.post('/media', auth, upload.array('files', 10), async (req, res) => {
         const uploadPromises = req.files.map(async (file) => {
             return new Promise((resolve, reject) => {
                 const publicId = `autoreach/${req.user.id}/${uuidv4()}`;
+                const forInstagram = req.query.for === 'instagram';
+                const isImage = file.mimetype.startsWith('image/');
 
-                const uploadOptions = {
-                    public_id: publicId,
-                    resource_type: 'auto', // Automatically detect file type
-                    folder: 'autoreach-ai',
-                    transformation: [
-                        { quality: 'auto' },
-                        { fetch_format: 'auto' }
-                    ]
-                };
+                const uploadOptions = forInstagram && isImage
+                    ? {
+                        public_id: publicId,
+                        resource_type: 'image',
+                        folder: 'autoreach-ai',
+                        format: 'jpg',
+                        transformation: [{ quality: 'auto:good' }]
+                    }
+                    : {
+                        public_id: publicId,
+                        resource_type: 'auto',
+                        folder: 'autoreach-ai',
+                        transformation: [
+                            { quality: 'auto' },
+                            { fetch_format: 'auto' }
+                        ]
+                    };
 
                 // Upload to Cloudinary
                 cloudinary.uploader.upload_stream(

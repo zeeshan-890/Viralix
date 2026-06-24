@@ -160,8 +160,9 @@ async function postGraph(paths, token, params) {
     let lastErr;
     for (const path of paths) {
         try {
-            const { data } = await axios.post(buildGraphUrl(path), null, {
-                params: { ...params, access_token: token }
+            const body = new URLSearchParams({ ...params, access_token: token });
+            const { data } = await axios.post(buildGraphUrl(path), body, {
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
             });
             return data;
         } catch (error) {
@@ -192,12 +193,67 @@ async function getGraph(paths, token, params) {
     throw lastErr;
 }
 
+function appendJpgExtension(url) {
+    const [path, query] = url.split('?');
+    if (/\.jpe?g$/i.test(path)) return url;
+    const base = path.replace(/\.(webp|png|gif|avif)$/i, '');
+    return `${base}.jpg${query ? `?${query}` : ''}`;
+}
+
 function ensureInstagramImageUrl(url) {
-    if (!url || !url.includes('res.cloudinary.com') || !url.includes('/image/upload/')) {
-        return url;
+    if (!url) return url;
+
+    if (url.includes('res.cloudinary.com') && url.includes('/image/upload/')) {
+        let transformed = url;
+        if (!/\/f_jpg|,f_jpg,/.test(url)) {
+            transformed = url.replace('/image/upload/', '/image/upload/f_jpg,q_auto:good,fl_progressive/');
+        }
+        return appendJpgExtension(transformed);
     }
-    if (url.includes('/f_jpg') || url.includes('f_jpg,')) return url;
-    return url.replace('/image/upload/', '/image/upload/f_jpg,q_auto/');
+
+    return url;
+}
+
+const CONTAINER_STATUS_HINTS = {
+    2207052: 'Instagram could not download the image. The URL must be a public JPEG file.',
+    2207004: 'Image is larger than 8 MB.',
+    2207027: 'Media is still processing — wait and try again.',
+    2207076: 'Instagram could not download the media from the URL.',
+    2207082: 'Video transcoding failed on Instagram.',
+    ERROR: 'Instagram rejected the media (use JPEG, aspect ratio between 4:5 and 1.91:1, max 8 MB).',
+};
+
+function describeContainerFailure(data) {
+    const code = data?.status_code;
+    const subcode = String(data?.status || '').trim();
+    const hint = CONTAINER_STATUS_HINTS[subcode] || CONTAINER_STATUS_HINTS.ERROR;
+    if (subcode && subcode !== 'ERROR' && subcode !== code) {
+        return `Instagram media processing failed (${code}, subcode ${subcode}). ${hint}`;
+    }
+    return `Instagram media processing failed (${code}). ${hint}`;
+}
+
+async function verifyInstagramImageUrl(url) {
+    try {
+        const res = await axios.head(url, {
+            timeout: 15000,
+            maxRedirects: 5,
+            validateStatus: (status) => status >= 200 && status < 400,
+        });
+        const contentType = (res.headers['content-type'] || '').toLowerCase();
+        const contentLength = Number(res.headers['content-length'] || 0);
+        if (contentLength > 8 * 1024 * 1024) {
+            throw new Error('Image is larger than 8 MB');
+        }
+        if (contentType && !contentType.includes('jpeg') && !contentType.includes('jpg')) {
+            throw new Error(`URL returns ${contentType}, but Instagram requires image/jpeg`);
+        }
+    } catch (error) {
+        if (error.message?.includes('Instagram requires') || error.message?.includes('larger than')) {
+            throw error;
+        }
+        throw new Error(`Image URL is not publicly reachable (${error.message})`);
+    }
 }
 
 function waitOptionsForMediaType(mediaType) {
@@ -229,8 +285,8 @@ async function waitForContainer(containerId, token, { intervalMs = 2000, maxAtte
         const status = data.status_code;
         if (status === 'FINISHED') return true;
         if (status === 'ERROR' || status === 'EXPIRED') {
-            const detail = data.status ? `${status}: ${data.status}` : status;
-            throw new Error(`Instagram media processing failed (${detail})`);
+            console.error('[igTest] Container failed:', JSON.stringify(data));
+            throw new Error(describeContainerFailure(data));
         }
         if (attempt < maxAttempts - 1) {
             await new Promise((r) => setTimeout(r, intervalMs));
@@ -262,6 +318,7 @@ module.exports = {
     getMeProfile,
     getProfile,
     ensureInstagramImageUrl,
+    verifyInstagramImageUrl,
     waitOptionsForMediaType,
     createMediaContainer,
     getContainerStatus,

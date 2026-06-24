@@ -355,10 +355,11 @@ export const uploadAPI = {
         return api.post('/upload/media', formData, { headers: { 'Content-Type': 'multipart/form-data' } });
     },
     // Convenience single-file upload using the same /upload/media endpoint
-    uploadFile: (file, onProgress) => {
+    uploadFile: (file, onProgress, options = {}) => {
         const formData = new FormData();
         formData.append('files', file);
-        return api.post('/upload/media', formData, {
+        const query = options.forInstagram ? '?for=instagram' : '';
+        return api.post(`/upload/media${query}`, formData, {
             headers: {
                 'Content-Type': 'multipart/form-data',
             },

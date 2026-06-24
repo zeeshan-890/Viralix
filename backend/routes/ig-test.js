@@ -124,7 +124,10 @@ router.post('/publish', auth, async (req, res) => {
             if (children.length > 10) throw new Error('CAROUSEL supports a maximum of 10 items');
         } else if (type === 'IMAGE') {
             if (!imageUrl) throw new Error('imageUrl is required for IMAGE');
-            mediaUrls.push(imageUrl);
+            const preparedImageUrl = igTest.ensureInstagramImageUrl(imageUrl);
+            await igTest.verifyInstagramImageUrl(preparedImageUrl);
+            console.log('[igTest] Publishing image URL:', preparedImageUrl);
+            mediaUrls.push(preparedImageUrl);
         } else {
             if (!videoUrl) throw new Error('videoUrl is required for REELS/STORIES');
             mediaUrls.push(videoUrl);
@@ -178,7 +181,7 @@ router.post('/publish', auth, async (req, res) => {
             if (isAiGenerated) payload.is_ai_generated = true;
 
             if (type === 'IMAGE') {
-                payload.image_url = igTest.ensureInstagramImageUrl(imageUrl);
+                payload.image_url = mediaUrls[0];
                 if (altText) payload.alt_text = altText;
             } else {
                 payload.media_type = type; // REELS or STORIES
@@ -204,7 +207,9 @@ router.post('/publish', auth, async (req, res) => {
 
         res.json({ success: true, mediaId: published.id, containerId: creationId });
     } catch (error) {
-        const msg = igTest.formatIgApiError(error);
+        const msg = error.response?.data?.error
+            ? igTest.formatIgApiError(error)
+            : (error.message || 'Publish failed');
         if (log) {
             log.status = 'failed';
             log.error = msg;
