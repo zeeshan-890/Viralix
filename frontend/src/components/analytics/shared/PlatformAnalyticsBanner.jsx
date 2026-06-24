@@ -63,8 +63,10 @@ export default function PlatformAnalyticsBanner({
                             {isAllAccounts ? `All ${config.label} accounts` : (acc?.accountName || config.label)}
                         </h3>
 
-                        {!isAllAccounts && acc?.username && (
-                            <p className="text-xs text-white/55 mt-0.5 truncate w-full">@{acc.username}</p>
+                        {!isAllAccounts && acc?.username != null && acc.username !== '' && (
+                            <p className="text-xs text-white/55 mt-0.5 truncate w-full">
+                                @{String(acc.username).replace(/^@/, '')}
+                            </p>
                         )}
                         {isAllAccounts && (
                             <p className="text-xs text-white/55 mt-0.5">{accounts.length} connected accounts</p>

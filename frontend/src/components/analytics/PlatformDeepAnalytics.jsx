@@ -74,6 +74,14 @@ export default function PlatformDeepAnalytics({ platform, accountId: initialAcco
         );
     }
 
+    if (!data && error) {
+        return (
+            <div className="analytics-panel border-amber-200/80 bg-amber-50/90 px-4 py-6 text-sm text-amber-900 text-center">
+                {error}
+            </div>
+        );
+    }
+
     const s = data?.summary || {};
     const accounts = data?.accounts || [];
     const activeAccount = accountId
@@ -105,7 +113,9 @@ export default function PlatformDeepAnalytics({ platform, accountId: initialAcco
                         >
                             <option value="">All accounts</option>
                             {accounts.map((a) => (
-                                <option key={a.accountId} value={a.accountId}>{a.accountName || a.username}</option>
+                                <option key={a.accountId} value={a.accountId}>
+                                    {a.accountName || (a.username != null ? String(a.username) : 'Account')}
+                                </option>
                             ))}
                         </select>
                     )}

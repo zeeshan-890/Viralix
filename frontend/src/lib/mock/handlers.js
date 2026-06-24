@@ -6,6 +6,7 @@ import {
     derivePostStatus,
     getPostsList,
     buildAnalyticsOverview,
+    buildDeepAnalyticsMock,
     getConnectedAccountsResponse,
 } from './store';
 import { MOCK_USER, MOCK_TOKEN } from './fixtures';
@@ -198,6 +199,10 @@ export async function handleMockRequest(config) {
 
     // ─── Analytics ───
     if (method === 'get' && path === '/analytics/overview') return buildAnalyticsOverview();
+    if (method === 'get' && path.match(/^\/analytics\/deep\/(tiktok|instagram)$/)) {
+        const platform = path.split('/')[3];
+        return buildDeepAnalyticsMock(platform, params);
+    }
     if (method === 'post' && path === '/analytics/refresh') return { message: 'Analytics refreshed', updated: 6 };
     if (method === 'get' && path === '/analytics/performance') {
         const days = params.period === '7d' ? 7 : params.period === '90d' ? 90 : params.period === '1y' ? 365 : 30;

@@ -28,8 +28,11 @@ function lookupAccountStats(accountBreakdown, platformId, account) {
 }
 
 function formatAccountLabel(account) {
-    if (account.username) return `@${account.username.replace(/^@/, '')}`;
-    const name = account.accountName?.trim();
+    if (account.username != null && account.username !== '') {
+        const u = String(account.username).trim().replace(/^@/, '');
+        if (u) return `@${u}`;
+    }
+    const name = account.accountName != null ? String(account.accountName).trim() : '';
     if (name && !/^\d{12,}$/.test(name)) return name;
     return 'Connected account';
 }

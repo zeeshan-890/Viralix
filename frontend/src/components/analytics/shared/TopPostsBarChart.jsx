@@ -64,7 +64,7 @@ export function AccountComparisonBarChart({
     subtitle = 'Views and engagement per connected account',
 }) {
     const data = accounts.map((a) => ({
-        name: (a.accountName || a.username || 'Account').slice(0, 12),
+        name: String(a.accountName || a.username || 'Account').slice(0, 12),
         views: a.contentStats?.views || 0,
         engagement: a.contentStats?.engagement || 0,
         posts: a.contentStats?.posts || 0,

@@ -197,6 +197,205 @@ export function buildAnalyticsOverview() {
     };
 }
 
+const DEEP_MOCK_POSTS = {
+    tiktok: [
+        { id: 'tt-v-001', accountId: 'tt-open-301', title: 'Summer launch teaser', views: 22100, likes: 2100, comments: 178, shares: 412, mediaType: 'video' },
+        { id: 'tt-v-002', accountId: 'tt-open-301', title: 'Tips for creators', views: 18400, likes: 1650, comments: 142, shares: 298, mediaType: 'video' },
+        { id: 'tt-v-003', accountId: 'tt-open-302', title: 'Day in the life', views: 1420, likes: 89, comments: 12, shares: 34, mediaType: 'video' },
+    ],
+    instagram: [
+        { id: 'ig-p-001', accountId: 'ig-user-201', title: 'Product launch carousel', views: 8420, likes: 1240, comments: 89, shares: 34, saves: 120, mediaType: 'image' },
+        { id: 'ig-p-002', accountId: 'ig-user-202', title: 'Reel: Quick tips', views: 12400, likes: 1840, comments: 92, shares: 48, saves: 86, mediaType: 'reel' },
+        { id: 'ig-p-003', accountId: 'ig-user-201', title: 'Behind the scenes', views: 5200, likes: 680, comments: 45, shares: 22, saves: 40, mediaType: 'image' },
+    ],
+};
+
+function engagementRate(views, engagement) {
+    if (!views) return 0;
+    return Math.round((engagement / views) * 10000) / 100;
+}
+
+/** Mock deep analytics for TikTok / Instagram (matches backend shape) */
+export function buildDeepAnalyticsMock(platform, params = {}) {
+    const store = getMockStore();
+    const { period = '30d', accountId } = params;
+
+    if (!['tiktok', 'instagram'].includes(platform)) {
+        throw new Error('Unsupported platform');
+    }
+
+    const platformAccounts = store.accounts.filter(
+        (a) => a.platform === platform && a.isActive !== false
+    );
+    const filteredAccounts = accountId
+        ? platformAccounts.filter(
+            (a) => a.platformAccountId === accountId || a.accountId === accountId
+        )
+        : platformAccounts;
+
+    const accountIds = new Set(
+        filteredAccounts.map((a) => a.platformAccountId || a.accountId)
+    );
+
+    let posts = (DEEP_MOCK_POSTS[platform] || []).filter((p) => accountIds.has(p.accountId));
+    if (!posts.length && filteredAccounts.length) {
+        const accId = filteredAccounts[0].platformAccountId || filteredAccounts[0].accountId;
+        posts = [{
+            id: `${platform}-demo-1`,
+            accountId: accId,
+            title: 'Synced content',
+            views: 14,
+            likes: 0,
+            comments: 0,
+            shares: 0,
+            saves: 0,
+            mediaType: platform === 'tiktok' ? 'video' : 'image',
+        }];
+    }
+
+    let totalViews = 0;
+    let totalLikes = 0;
+    let totalComments = 0;
+    let totalShares = 0;
+    let totalSaves = 0;
+    const byAccount = {};
+    const byMediaType = {};
+    const timeline = {};
+
+    const now = Date.now();
+    posts.forEach((p, i) => {
+        totalViews += p.views;
+        totalLikes += p.likes;
+        totalComments += p.comments;
+        totalShares += p.shares;
+        totalSaves += p.saves || 0;
+
+        if (!byAccount[p.accountId]) {
+            byAccount[p.accountId] = { accountId: p.accountId, posts: 0, views: 0, likes: 0, comments: 0, shares: 0, saves: 0, engagement: 0 };
+        }
+        const eng = p.likes + p.comments + p.shares + (p.saves || 0);
+        byAccount[p.accountId].posts += 1;
+        byAccount[p.accountId].views += p.views;
+        byAccount[p.accountId].likes += p.likes;
+        byAccount[p.accountId].comments += p.comments;
+        byAccount[p.accountId].shares += p.shares;
+        byAccount[p.accountId].saves += p.saves || 0;
+        byAccount[p.accountId].engagement += eng;
+
+        const mt = p.mediaType || 'unknown';
+        if (!byMediaType[mt]) {
+            byMediaType[mt] = { type: mt, count: 0, views: 0, likes: 0, engagement: 0 };
+        }
+        byMediaType[mt].count += 1;
+        byMediaType[mt].views += p.views;
+        byMediaType[mt].likes += p.likes;
+        byMediaType[mt].engagement += eng;
+
+        const day = new Date(now - i * 3 * 86400000).toISOString().split('T')[0];
+        if (!timeline[day]) {
+            timeline[day] = { date: day, views: 0, likes: 0, comments: 0, shares: 0, engagement: 0, posts: 0 };
+        }
+        timeline[day].views += p.views;
+        timeline[day].likes += p.likes;
+        timeline[day].comments += p.comments;
+        timeline[day].shares += p.shares;
+        timeline[day].engagement += eng;
+        timeline[day].posts += 1;
+    });
+
+    const postCount = posts.length;
+    const totalEngagement = totalLikes + totalComments + totalShares + totalSaves;
+
+    const mapPost = (p) => {
+        const eng = p.likes + p.comments + p.shares + (p.saves || 0);
+        return {
+            id: p.id,
+            accountId: p.accountId,
+            title: p.title,
+            description: '',
+            thumbnail: null,
+            mediaType: p.mediaType,
+            permalink: null,
+            publishedAt: new Date(now - 86400000).toISOString(),
+            lastSyncedAt: new Date().toISOString(),
+            metrics: {
+                views: p.views,
+                likes: p.likes,
+                comments: p.comments,
+                shares: p.shares,
+                saves: p.saves || 0,
+                engagement: eng,
+                engagementRate: engagementRate(p.views, eng),
+                likeRate: engagementRate(p.views, p.likes),
+                commentRate: engagementRate(p.views, p.comments),
+                shareRate: engagementRate(p.views, p.shares),
+            },
+            detailUrl: `/dashboard/platforms/${platform}/post/${p.id}`,
+        };
+    };
+
+    const mapped = posts.map(mapPost);
+    const topByViews = [...mapped].sort((a, b) => b.metrics.views - a.metrics.views).slice(0, 10);
+
+    const accountMeta = filteredAccounts.map((acc) => {
+        const accId = acc.platformAccountId || acc.accountId;
+        const stats = byAccount[accId] || { posts: 0, views: 0, likes: 0, comments: 0, shares: 0, saves: 0, engagement: 0 };
+        const base = {
+            accountId: accId,
+            accountName: acc.accountName,
+            username: acc.username,
+            avatarUrl: acc.avatar || `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(acc.accountName || accId)}`,
+            followers: acc.followerCount || 0,
+            contentStats: stats,
+            avgViewsPerPost: stats.posts ? Math.round(stats.views / stats.posts) : 0,
+            avgEngagementPerPost: stats.posts ? Math.round(stats.engagement / stats.posts) : 0,
+        };
+        if (platform === 'tiktok') {
+            return { ...base, videoCount: stats.posts + 12, following: 120, likes: 45000 };
+        }
+        return {
+            ...base,
+            following: 890,
+            mediaCount: stats.posts + 8,
+            accountInsights: { reach: 4200, profile_views: 890, accounts_engaged: 312, total_interactions: stats.engagement },
+        };
+    });
+
+    return {
+        platform,
+        period,
+        accountId: accountId || null,
+        generatedAt: new Date().toISOString(),
+        summary: {
+            totalPosts: postCount,
+            totalViews,
+            totalLikes,
+            totalComments,
+            totalShares,
+            totalSaves,
+            totalEngagement,
+            engagementRate: engagementRate(totalViews, totalEngagement),
+            avgViewsPerPost: postCount ? Math.round(totalViews / postCount) : 0,
+            avgLikesPerPost: postCount ? Math.round(totalLikes / postCount) : 0,
+            avgCommentsPerPost: postCount ? Math.round(totalComments / postCount) : 0,
+            avgEngagementPerPost: postCount ? Math.round(totalEngagement / postCount) : 0,
+            likeToViewRatio: engagementRate(totalViews, totalLikes),
+            commentToViewRatio: engagementRate(totalViews, totalComments),
+            shareToViewRatio: engagementRate(totalViews, totalShares),
+        },
+        accounts: accountMeta,
+        accountBreakdown: Object.values(byAccount),
+        mediaTypeBreakdown: Object.values(byMediaType),
+        timeline: Object.values(timeline).sort((a, b) => a.date.localeCompare(b.date)),
+        topPosts: {
+            byViews: topByViews,
+            byEngagement: [...mapped].sort((a, b) => b.metrics.engagement - a.metrics.engagement).slice(0, 10),
+            byEngagementRate: [...mapped].filter((p) => p.metrics.views >= 100).sort((a, b) => b.metrics.engagementRate - a.metrics.engagementRate).slice(0, 10),
+        },
+        allPosts: mapped,
+    };
+}
+
 export function getConnectedAccountsResponse() {
     const store = getMockStore();
     const accounts = store.accounts;

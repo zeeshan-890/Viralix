@@ -95,7 +95,7 @@ export default function Sidebar({ open = false, onClose = () => {} }) {
                                                 ? platformCfg.gradientClass
                                                 : undefined;
                                             return (
-                                                <li key={item.href}>
+                                                <li key={`${section.id}-${item.name}`}>
                                                     <Link
                                                         href={item.href}
                                                         onClick={onClose}
