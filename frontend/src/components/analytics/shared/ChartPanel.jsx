@@ -1,13 +1,14 @@
 'use client';
 
 import { formatNumber } from '@/lib/utils';
+import { cn } from '@/lib/utils';
 
 export function ChartPanel({ title, subtitle, children, className = '' }) {
     return (
-        <div className={`rounded-xl border border-[var(--viralix-border)] bg-[var(--viralix-surface)] p-4 ${className}`}>
-            <div className="mb-4">
-                <h3 className="text-sm font-semibold text-[#354F52]">{title}</h3>
-                {subtitle && <p className="text-xs text-gray-500 mt-0.5">{subtitle}</p>}
+        <div className={cn('analytics-panel p-4 sm:p-5', className)}>
+            <div className="mb-4 border-b border-[var(--viralix-border)] pb-3">
+                <h3 className="text-sm font-semibold text-[var(--viralix-accent)]">{title}</h3>
+                {subtitle && <p className="text-xs text-[var(--viralix-muted)] mt-0.5">{subtitle}</p>}
             </div>
             {children}
         </div>
@@ -16,8 +17,8 @@ export function ChartPanel({ title, subtitle, children, className = '' }) {
 
 export function ChartEmpty({ message = 'No data for this chart' }) {
     return (
-        <div className="flex h-56 items-center justify-center rounded-lg border border-dashed border-gray-200 bg-gray-50/80">
-            <p className="text-sm text-gray-500">{message}</p>
+        <div className="analytics-inset flex h-56 items-center justify-center">
+            <p className="text-sm text-[var(--viralix-muted)]">{message}</p>
         </div>
     );
 }
@@ -25,10 +26,10 @@ export function ChartEmpty({ message = 'No data for this chart' }) {
 export function ChartTooltipBox({ active, payload, label }) {
     if (!active || !payload?.length) return null;
     return (
-        <div className="rounded-lg border border-[var(--viralix-border)] bg-white px-3 py-2 shadow-md text-sm">
-            {label && <p className="text-xs text-gray-500 mb-1">{label}</p>}
+        <div className="analytics-panel px-3 py-2 text-sm shadow-lg">
+            {label && <p className="text-xs text-[var(--viralix-muted)] mb-1">{label}</p>}
             {payload.map((p) => (
-                <p key={p.dataKey || p.name} className="font-medium" style={{ color: p.color || p.payload?.fill }}>
+                <p key={p.dataKey || p.name} className="font-medium text-[var(--viralix-accent)]" style={{ color: p.color || p.payload?.fill }}>
                     {p.name}: {formatNumber(p.value)}
                 </p>
             ))}

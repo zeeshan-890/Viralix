@@ -72,10 +72,10 @@ export default function InstagramPostDetailPage() {
 
     if (loading) {
         return (
-            <div className="max-w-6xl mx-auto p-6">
-                <div className="dash-card rounded-xl border border-[var(--viralix-border)] p-12 text-center">
-                    <div className="animate-spin w-12 h-12 border-4 border-gray-200 rounded-full mx-auto mb-4" style={{ borderTopColor: '#E4405F' }} />
-                    <p className="text-gray-500">Loading post analytics…</p>
+            <div className="max-w-6xl mx-auto">
+                <div className="analytics-panel p-12 text-center">
+                    <div className="animate-spin w-10 h-10 border-2 border-[var(--viralix-border)] border-t-[#E4405F] rounded-full mx-auto mb-4" />
+                    <p className="text-[var(--viralix-muted)]">Loading post analytics…</p>
                 </div>
             </div>
         );
@@ -83,11 +83,11 @@ export default function InstagramPostDetailPage() {
 
     if (error) {
         return (
-            <div className="max-w-6xl mx-auto p-6">
+            <div className="max-w-6xl mx-auto">
                 <PostAnalyticsHeader platform="instagram" title="Post analytics" live={false} />
-                <div className="bg-white rounded-xl border border-red-200 p-12 text-center">
+                <div className="analytics-panel p-12 text-center border-red-200">
                     <h2 className="text-xl font-semibold text-red-600 mb-2">Failed to load insights</h2>
-                    <p className="text-gray-600">{error}</p>
+                    <p className="text-[var(--viralix-muted)]">{error}</p>
                 </div>
             </div>
         );
@@ -98,15 +98,15 @@ export default function InstagramPostDetailPage() {
     const views = engagement?.views || engagement?.plays || 0;
 
     const metricCards = [
-        ...(isVideo ? [{ label: 'Views', value: views, icon: Eye, iconBg: 'bg-purple-50 text-purple-600' }] : []),
-        { label: 'Likes', value: engagement?.likes, icon: Heart, iconBg: 'bg-pink-50 text-pink-600', rate: views ? ((engagement?.likes / views) * 100).toFixed(2) : null },
-        { label: 'Comments', value: engagement?.comments, icon: MessageCircle, iconBg: 'bg-blue-50 text-blue-600', rate: views ? ((engagement?.comments / views) * 100).toFixed(2) : null },
-        { label: 'Saves', value: engagement?.saves, icon: Bookmark, iconBg: 'bg-orange-50 text-orange-600' },
-        { label: 'Shares', value: engagement?.shares, icon: Share2, iconBg: 'bg-green-50 text-green-600' },
+        ...(isVideo ? [{ label: 'Views', value: views, icon: Eye, iconBg: 'bg-purple-50', iconColor: 'text-purple-600' }] : []),
+        { label: 'Likes', value: engagement?.likes, icon: Heart, iconBg: 'bg-pink-50', iconColor: 'text-pink-600', rate: views ? ((engagement?.likes / views) * 100).toFixed(2) : null },
+        { label: 'Comments', value: engagement?.comments, icon: MessageCircle, iconBg: 'bg-blue-50', iconColor: 'text-blue-600', rate: views ? ((engagement?.comments / views) * 100).toFixed(2) : null },
+        { label: 'Saves', value: engagement?.saves, icon: Bookmark, iconBg: 'bg-orange-50', iconColor: 'text-orange-600' },
+        { label: 'Shares', value: engagement?.shares, icon: Share2, iconBg: 'bg-emerald-50', iconColor: 'text-emerald-700' },
     ];
 
     return (
-        <div className="max-w-6xl mx-auto p-6">
+        <div className="max-w-6xl mx-auto pb-6">
             <PostAnalyticsHeader
                 platform="instagram"
                 title="Instagram post analytics"
@@ -116,9 +116,9 @@ export default function InstagramPostDetailPage() {
                 refreshing={refreshing}
             />
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-                <div className="dash-card rounded-xl border border-[var(--viralix-border)] overflow-hidden shadow-sm">
-                    <div className="relative aspect-square bg-gray-900">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 mt-5">
+                <div className="analytics-panel overflow-hidden">
+                    <div className="relative aspect-square bg-[#1a1a1a]">
                         {isVideo && media?.mediaUrl ? (
                             <video src={media.mediaUrl} poster={media.thumbnailUrl} controls className="w-full h-full object-contain" />
                         ) : media?.mediaUrl ? (
@@ -134,13 +134,13 @@ export default function InstagramPostDetailPage() {
                         )}
                     </div>
                     {media?.caption && (
-                        <div className="p-4 border-t border-gray-100">
-                            <p className="text-gray-700 text-sm leading-relaxed whitespace-pre-wrap">{media.caption}</p>
+                        <div className="p-4 border-t border-[var(--viralix-border)]">
+                            <p className="text-[var(--viralix-accent)] text-sm leading-relaxed whitespace-pre-wrap">{media.caption}</p>
                         </div>
                     )}
                 </div>
 
-                <div className="space-y-6">
+                <div className="space-y-5">
                     <EngagementMetricGrid metrics={metricCards} columns={isVideo ? 3 : 2} />
                     <EngagementBreakdownPanel
                         views={views}
@@ -154,16 +154,16 @@ export default function InstagramPostDetailPage() {
                 </div>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 mt-5">
                 {/* Auto-Reply Rules Section */}
-                <div className="dash-card rounded-xl border border-[var(--viralix-border)] p-6 shadow-sm">
-                        <div className="flex items-center gap-3 mb-4">
+                <div className="analytics-panel p-5 sm:p-6">
+                        <div className="flex items-center gap-3 mb-4 pb-3 border-b border-[var(--viralix-border)]">
                             <div className="w-10 h-10 bg-purple-100 rounded-xl flex items-center justify-center">
                                 <Sparkles className="w-5 h-5 text-purple-600" />
                             </div>
                             <div>
-                                <h2 className="text-lg font-semibold" style={{ color: '#354F52' }}>Auto-Reply DM</h2>
-                                <p className="text-xs text-gray-500">Automated responses for this post</p>
+                                <h2 className="text-base font-semibold text-[var(--viralix-accent)]">Auto-Reply DM</h2>
+                                <p className="text-xs text-[var(--viralix-muted)]">Automated responses for this post</p>
                             </div>
                         </div>
 
@@ -257,8 +257,8 @@ export default function InstagramPostDetailPage() {
                     </div>
 
                 {/* Comments Section */}
-                <div className="dash-card rounded-xl border border-[var(--viralix-border)] p-6 shadow-sm">
-                        <h2 className="text-lg font-semibold mb-4" style={{ color: '#354F52' }}>
+                <div className="analytics-panel p-5 sm:p-6">
+                    <h2 className="text-base font-semibold text-[var(--viralix-accent)] mb-4 pb-3 border-b border-[var(--viralix-border)]">
                             Comments ({comments?.length || 0})
                         </h2>
                         {comments && comments.length > 0 ? (

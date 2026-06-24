@@ -45,17 +45,20 @@ export default function TikTokPostDetailPage() {
 
     if (loading) {
         return (
-            <div className="max-w-6xl mx-auto p-6 flex items-center justify-center min-h-[400px]">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-black" />
+            <div className="max-w-6xl mx-auto">
+                <div className="analytics-panel flex items-center justify-center min-h-[320px] gap-3">
+                    <div className="animate-spin rounded-full h-8 w-8 border-2 border-[var(--viralix-border)] border-t-[var(--viralix-accent)]" />
+                    <p className="text-sm text-[var(--viralix-muted)]">Loading post analytics…</p>
+                </div>
             </div>
         );
     }
 
     if (error) {
         return (
-            <div className="max-w-6xl mx-auto p-6">
+            <div className="max-w-6xl mx-auto">
                 <PostAnalyticsHeader platform="tiktok" title="Post analytics" live={false} />
-                <div className="bg-red-50 border border-red-200 rounded-xl p-6 text-center text-red-600">
+                <div className="analytics-panel border-red-200 bg-red-50/80 p-8 text-center text-red-700">
                     <AlertCircle className="w-12 h-12 mx-auto mb-3 opacity-50" />
                     <h3 className="text-lg font-semibold mb-2">Error loading insights</h3>
                     <p>{error}</p>
@@ -71,14 +74,14 @@ export default function TikTokPostDetailPage() {
     const views = metrics.views || 0;
 
     const metricCards = [
-        { label: 'Views', value: views, icon: Eye, iconBg: 'bg-gray-100 text-gray-800' },
-        { label: 'Likes', value: metrics.likes, icon: Heart, iconBg: 'bg-pink-50 text-pink-600', rate: views ? ((metrics.likes / views) * 100).toFixed(2) : 0 },
-        { label: 'Comments', value: metrics.comments, icon: MessageCircle, iconBg: 'bg-blue-50 text-blue-600', rate: views ? ((metrics.comments / views) * 100).toFixed(2) : 0 },
-        { label: 'Shares', value: metrics.shares, icon: Share2, iconBg: 'bg-green-50 text-green-600', rate: views ? ((metrics.shares / views) * 100).toFixed(2) : 0 },
+        { label: 'Views', value: views, icon: Eye, iconBg: 'bg-[#E8F0ED]', iconColor: 'text-[#354F52]' },
+        { label: 'Likes', value: metrics.likes, icon: Heart, iconBg: 'bg-pink-50', iconColor: 'text-pink-600', rate: views ? ((metrics.likes / views) * 100).toFixed(2) : 0 },
+        { label: 'Comments', value: metrics.comments, icon: MessageCircle, iconBg: 'bg-blue-50', iconColor: 'text-blue-600', rate: views ? ((metrics.comments / views) * 100).toFixed(2) : 0 },
+        { label: 'Shares', value: metrics.shares, icon: Share2, iconBg: 'bg-emerald-50', iconColor: 'text-emerald-700', rate: views ? ((metrics.shares / views) * 100).toFixed(2) : 0 },
     ];
 
     return (
-        <div className="max-w-6xl mx-auto p-6 space-y-6">
+        <div className="max-w-6xl mx-auto pb-6">
             <PostAnalyticsHeader
                 platform="tiktok"
                 title="TikTok post analytics"
@@ -88,43 +91,43 @@ export default function TikTokPostDetailPage() {
                 refreshing={refreshing}
             />
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <div className="lg:col-span-1 space-y-6">
-                    <div className="dash-card rounded-2xl border border-[var(--viralix-border)] overflow-hidden">
-                        <div className="p-4 border-b border-gray-50 flex items-center justify-between bg-gray-50/50">
-                            <h2 className="font-semibold text-gray-900">Preview</h2>
-                            <Video className="w-4 h-4 text-gray-400" />
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 mt-5">
+                <div className="lg:col-span-1 space-y-5">
+                    <div className="analytics-panel overflow-hidden">
+                        <div className="px-4 py-3 border-b border-[var(--viralix-border)] bg-[var(--viralix-inset)]/50 flex items-center justify-between">
+                            <h2 className="font-semibold text-[var(--viralix-accent)] text-sm">Preview</h2>
+                            <Video className="w-4 h-4 text-[var(--viralix-muted)]" />
                         </div>
-                        <div className="relative aspect-[9/16] bg-black">
+                        <div className="relative aspect-[9/16] bg-[#1a1a1a]">
                             {postData.thumbnail ? (
                                 <img src={postData.thumbnail} alt="" className="w-full h-full object-cover" />
                             ) : (
                                 <div className="w-full h-full flex items-center justify-center text-gray-500">No preview</div>
                             )}
                         </div>
-                        <div className="p-4 border-t border-gray-50">
-                            <p className="text-sm text-gray-700 line-clamp-4">{postData.description || postData.title || 'No caption'}</p>
+                        <div className="p-4 border-t border-[var(--viralix-border)]">
+                            <p className="text-sm text-[var(--viralix-accent)] line-clamp-4">{postData.description || postData.title || 'No caption'}</p>
                         </div>
                     </div>
 
-                    <div className="dash-card rounded-2xl border border-[var(--viralix-border)] p-5 text-sm space-y-3">
-                        <h3 className="font-semibold text-gray-900">Post details</h3>
-                        <div className="flex justify-between py-2 border-b border-gray-50">
-                            <span className="text-gray-500">Type</span>
-                            <span className="font-medium">Video</span>
+                    <div className="analytics-panel p-5 text-sm space-y-3">
+                        <h3 className="font-semibold text-[var(--viralix-accent)] pb-2 border-b border-[var(--viralix-border)]">Post details</h3>
+                        <div className="flex justify-between py-2 border-b border-[var(--viralix-border)]">
+                            <span className="text-[var(--viralix-muted)]">Type</span>
+                            <span className="font-medium text-[var(--viralix-accent)]">Video</span>
                         </div>
-                        <div className="flex justify-between py-2 border-b border-gray-50">
-                            <span className="text-gray-500">Published</span>
-                            <span className="font-medium text-right">{formatDate(postData.createdTime)}</span>
+                        <div className="flex justify-between py-2 border-b border-[var(--viralix-border)]">
+                            <span className="text-[var(--viralix-muted)]">Published</span>
+                            <span className="font-medium text-right text-[var(--viralix-accent)]">{formatDate(postData.createdTime)}</span>
                         </div>
                         <div className="flex justify-between py-2">
-                            <span className="text-gray-500">Video ID</span>
-                            <span className="font-mono text-xs text-gray-400 truncate max-w-[140px]">{postData.id}</span>
+                            <span className="text-[var(--viralix-muted)]">Video ID</span>
+                            <span className="font-mono text-xs text-[var(--viralix-muted)] truncate max-w-[140px]">{postData.id}</span>
                         </div>
                     </div>
                 </div>
 
-                <div className="lg:col-span-2 space-y-6">
+                <div className="lg:col-span-2 space-y-5">
                     <EngagementMetricGrid metrics={metricCards} columns={4} />
                     <EngagementBreakdownPanel
                         views={views}

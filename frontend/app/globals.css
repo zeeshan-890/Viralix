@@ -85,6 +85,70 @@ body {
         0 8px 24px rgba(47, 62, 70, 0.1);
 }
 
+/* Analytics — dark hero + elevated light panels (matches dashboard) */
+.analytics-hero {
+    background: linear-gradient(135deg, #354F52 0%, #2F3E46 48%, #3d5559 100%);
+    border-radius: 1rem;
+    border: 1px solid rgba(47, 62, 70, 0.35);
+    box-shadow:
+        0 4px 6px rgba(47, 62, 70, 0.12),
+        0 12px 32px rgba(47, 62, 70, 0.18);
+    color: #fff;
+}
+
+.analytics-panel {
+    background-color: var(--viralix-surface);
+    border: 1px solid var(--viralix-border);
+    border-radius: 0.75rem;
+    box-shadow:
+        0 1px 2px rgba(47, 62, 70, 0.06),
+        0 4px 16px rgba(47, 62, 70, 0.08);
+}
+
+.analytics-panel-hover {
+    transition: box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.analytics-panel-hover:hover {
+    box-shadow:
+        0 2px 4px rgba(47, 62, 70, 0.08),
+        0 8px 24px rgba(47, 62, 70, 0.12);
+    border-color: var(--viralix-border-strong);
+}
+
+.analytics-inset {
+    background-color: var(--viralix-inset, #E8EFEB);
+    border: 1px solid var(--viralix-border);
+    border-radius: 0.5rem;
+}
+
+.analytics-table-head {
+    background-color: var(--viralix-inset, #E8EFEB);
+    border-color: var(--viralix-border);
+}
+
+.analytics-stat-pill {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 0.5rem;
+    backdrop-filter: blur(4px);
+}
+
+.analytics-tab-active {
+    background: var(--viralix-surface);
+    color: var(--viralix-accent);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.analytics-tab-inactive {
+    color: rgba(255, 255, 255, 0.75);
+}
+
+.analytics-tab-inactive:hover {
+    background: rgba(255, 255, 255, 0.08);
+    color: #fff;
+}
+
 /* Dashboard-wide: unify legacy gray borders with theme tokens */
 .dashboard-shell .border-gray-100,
 .dashboard-shell .border-gray-200 {

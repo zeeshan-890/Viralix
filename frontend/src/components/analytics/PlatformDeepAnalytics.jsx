@@ -68,9 +68,9 @@ export default function PlatformDeepAnalytics({ platform, accountId: initialAcco
 
     if (loading && !data) {
         return (
-            <div className="flex flex-col items-center justify-center gap-3 py-20">
-                <Loader2 className="h-8 w-8 animate-spin text-[#84A98C]" />
-                <p className="text-sm text-gray-500">Loading {config.label} analytics…</p>
+            <div className="analytics-panel flex flex-col items-center justify-center gap-3 py-20">
+                <Loader2 className="h-8 w-8 animate-spin text-[var(--viralix-primary)]" />
+                <p className="text-sm text-[var(--viralix-muted)]">Loading {config.label} analytics…</p>
             </div>
         );
     }
@@ -81,14 +81,15 @@ export default function PlatformDeepAnalytics({ platform, accountId: initialAcco
     return (
         <div className="space-y-6">
             {/* Toolbar */}
+            <div className="analytics-panel p-4 sm:p-5">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <div className="flex items-center gap-3">
-                    <div className={cn('flex h-11 w-11 items-center justify-center rounded-xl border border-gray-100', config.lightBg)}>
+                    <div className={cn('flex h-11 w-11 items-center justify-center rounded-xl border border-[var(--viralix-border)] bg-[var(--viralix-inset)] shadow-sm', config.lightBg)}>
                         <PlatformIcon platform={platform} size={28} />
                     </div>
                     <div>
-                        <h2 className="text-lg font-semibold text-[#354F52]">{config.label} Analytics</h2>
-                        <p className="text-xs text-gray-500">Native content synced from {config.label}</p>
+                        <h2 className="text-lg font-semibold text-[var(--viralix-accent)]">{config.label} Analytics</h2>
+                        <p className="text-xs text-[var(--viralix-muted)]">Native content synced from {config.label}</p>
                     </div>
                 </div>
                 <div className="flex flex-wrap items-center gap-2">
@@ -96,7 +97,7 @@ export default function PlatformDeepAnalytics({ platform, accountId: initialAcco
                         <select
                             value={accountId}
                             onChange={(e) => setAccountId(e.target.value)}
-                            className="rounded-lg border border-[var(--viralix-border)] bg-white px-3 py-2 text-sm"
+                            className="rounded-lg border border-[var(--viralix-border)] bg-[var(--viralix-surface)] px-3 py-2 text-sm text-[var(--viralix-accent)] shadow-sm"
                         >
                             <option value="">All accounts</option>
                             {accounts.map((a) => (
@@ -104,15 +105,17 @@ export default function PlatformDeepAnalytics({ platform, accountId: initialAcco
                             ))}
                         </select>
                     )}
-                    <div className="flex rounded-lg border border-[var(--viralix-border)] bg-[var(--viralix-bg)] p-0.5">
+                    <div className="flex rounded-lg border border-[var(--viralix-border)] bg-[var(--viralix-inset)] p-0.5">
                         {PERIODS.map((p) => (
                             <button
                                 key={p.id}
                                 type="button"
                                 onClick={() => setPeriod(p.id)}
                                 className={cn(
-                                    'rounded-md px-2.5 py-1.5 text-xs font-medium transition-colors',
-                                    period === p.id ? 'bg-white text-[#354F52] shadow-sm' : 'text-gray-500 hover:text-gray-800'
+                                    'rounded-md px-2.5 py-1.5 text-xs font-medium transition-all',
+                                    period === p.id
+                                        ? 'bg-[var(--viralix-surface)] text-[var(--viralix-accent)] shadow-sm'
+                                        : 'text-[var(--viralix-muted)] hover:text-[var(--viralix-accent)]'
                                 )}
                             >
                                 {p.label}
@@ -123,30 +126,28 @@ export default function PlatformDeepAnalytics({ platform, accountId: initialAcco
                         type="button"
                         onClick={handleSync}
                         disabled={syncing}
-                        className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--viralix-border)] bg-white px-3 py-2 text-xs font-medium hover:bg-gray-50 disabled:opacity-50"
+                        className="btn-secondary btn-sm shadow-sm"
                     >
                         <RefreshCw className={cn('h-3.5 w-3.5', syncing && 'animate-spin')} />
                         Sync
                     </button>
-                    <Link
-                        href={`/dashboard/platforms/${platform}`}
-                        className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--viralix-border)] bg-white px-3 py-2 text-xs font-medium hover:bg-gray-50"
-                    >
+                    <Link href={`/dashboard/platforms/${platform}`} className="btn-secondary btn-sm shadow-sm">
                         <ExternalLink className="h-3.5 w-3.5" />
                         Platform
                     </Link>
                 </div>
             </div>
+            </div>
 
             {error && (
-                <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">{error}</div>
+                <div className="analytics-panel border-amber-200/80 bg-amber-50/90 px-4 py-3 text-sm text-amber-900">{error}</div>
             )}
 
             {/* Account cards */}
             {accounts.length > 0 && (
                 <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                     {accounts.map((acc) => (
-                        <div key={acc.accountId} className="rounded-xl border border-[var(--viralix-border)] bg-[var(--viralix-surface)] p-4">
+                        <div key={acc.accountId} className="analytics-panel analytics-panel-hover p-5">
                             <div className="flex items-center gap-3 mb-3">
                                 {acc.avatarUrl ? (
                                     <img src={acc.avatarUrl} alt="" className="h-12 w-12 rounded-full object-cover border border-gray-100" />
@@ -156,26 +157,26 @@ export default function PlatformDeepAnalytics({ platform, accountId: initialAcco
                                     </div>
                                 )}
                                 <div className="min-w-0">
-                                    <p className="font-semibold text-[#354F52] truncate">{acc.accountName}</p>
-                                    {acc.username && <p className="text-xs text-gray-500">@{acc.username}</p>}
+                                    <p className="font-semibold text-[var(--viralix-accent)] truncate">{acc.accountName}</p>
+                                    {acc.username && <p className="text-xs text-[var(--viralix-muted)]">@{acc.username}</p>}
                                 </div>
                             </div>
-                            <dl className="grid grid-cols-2 gap-2 text-sm">
-                                <div>
-                                    <dt className="text-xs text-gray-500">Followers</dt>
-                                    <dd className="font-bold tabular-nums">{formatNumber(acc.followers)}</dd>
+                            <dl className="grid grid-cols-2 gap-3 text-sm">
+                                <div className="analytics-inset p-2.5">
+                                    <dt className="text-[0.625rem] uppercase tracking-wide text-[var(--viralix-muted)]">Followers</dt>
+                                    <dd className="font-bold tabular-nums text-[var(--viralix-accent)] mt-0.5">{formatNumber(acc.followers)}</dd>
                                 </div>
-                                <div>
-                                    <dt className="text-xs text-gray-500">Synced posts</dt>
-                                    <dd className="font-bold tabular-nums">{formatNumber(acc.contentStats?.posts)}</dd>
+                                <div className="analytics-inset p-2.5">
+                                    <dt className="text-[0.625rem] uppercase tracking-wide text-[var(--viralix-muted)]">Synced posts</dt>
+                                    <dd className="font-bold tabular-nums text-[var(--viralix-accent)] mt-0.5">{formatNumber(acc.contentStats?.posts)}</dd>
                                 </div>
-                                <div>
-                                    <dt className="text-xs text-gray-500">Avg views/post</dt>
-                                    <dd className="font-bold tabular-nums">{formatNumber(acc.avgViewsPerPost)}</dd>
+                                <div className="analytics-inset p-2.5">
+                                    <dt className="text-[0.625rem] uppercase tracking-wide text-[var(--viralix-muted)]">Avg views</dt>
+                                    <dd className="font-bold tabular-nums text-[var(--viralix-accent)] mt-0.5">{formatNumber(acc.avgViewsPerPost)}</dd>
                                 </div>
-                                <div>
-                                    <dt className="text-xs text-gray-500">Avg engagement</dt>
-                                    <dd className="font-bold tabular-nums">{formatNumber(acc.avgEngagementPerPost)}</dd>
+                                <div className="analytics-inset p-2.5">
+                                    <dt className="text-[0.625rem] uppercase tracking-wide text-[var(--viralix-muted)]">Avg engagement</dt>
+                                    <dd className="font-bold tabular-nums text-[var(--viralix-accent)] mt-0.5">{formatNumber(acc.avgEngagementPerPost)}</dd>
                                 </div>
                             </dl>
                             {platform === 'instagram' && acc.accountInsights && Object.keys(acc.accountInsights).length > 0 && (
@@ -198,12 +199,12 @@ export default function PlatformDeepAnalytics({ platform, accountId: initialAcco
 
             {/* Summary metrics */}
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
-                <MetricCard label="Total views" value={formatNumber(s.totalViews)} icon={Eye} tone="accent" />
-                <MetricCard label="Engagement rate" value={`${s.engagementRate || 0}%`} icon={TrendingUp} tone="purple" sub="All interactions / views" />
-                <MetricCard label="Likes" value={formatNumber(s.totalLikes)} icon={Heart} tone="pink" />
-                <MetricCard label="Comments" value={formatNumber(s.totalComments)} icon={MessageCircle} tone="blue" />
-                <MetricCard label="Shares" value={formatNumber(s.totalShares)} icon={Share2} tone="default" />
-                <MetricCard label="Posts" value={formatNumber(s.totalPosts)} icon={BarChart3} tone="default" />
+                <MetricCard label="Total views" value={formatNumber(s.totalViews)} icon={Eye} accent="mint" />
+                <MetricCard label="Engagement rate" value={`${s.engagementRate || 0}%`} icon={TrendingUp} accent="purple" sub="All interactions / views" />
+                <MetricCard label="Likes" value={formatNumber(s.totalLikes)} icon={Heart} accent="pink" />
+                <MetricCard label="Comments" value={formatNumber(s.totalComments)} icon={MessageCircle} accent="blue" />
+                <MetricCard label="Shares" value={formatNumber(s.totalShares)} icon={Share2} accent="sage" />
+                <MetricCard label="Posts" value={formatNumber(s.totalPosts)} icon={BarChart3} accent="forest" />
             </div>
 
             {/* Secondary rates */}
@@ -215,15 +216,17 @@ export default function PlatformDeepAnalytics({ platform, accountId: initialAcco
             </div>
 
             {platform === 'instagram' && (s.totalSaves > 0) && (
-                <MetricCard label="Total saves" value={formatNumber(s.totalSaves)} icon={Bookmark} className="max-w-xs" />
+                <MetricCard label="Total saves" value={formatNumber(s.totalSaves)} icon={Bookmark} accent="forest" className="max-w-xs" />
             )}
 
-            {/* Charts — area, line, pie, bar */}
+            {/* Charts */}
             <div className="space-y-5">
-                <h3 className="text-sm font-semibold text-[#354F52] flex items-center gap-2">
-                    <BarChart3 className="h-4 w-4 text-[#84A98C]" />
-                    Visual analytics
-                </h3>
+                <div className="analytics-panel px-4 py-3 flex items-center gap-2">
+                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[var(--viralix-inset)]">
+                        <BarChart3 className="h-4 w-4 text-[var(--viralix-primary-dark)]" />
+                    </div>
+                    <h3 className="text-sm font-semibold text-[var(--viralix-accent)]">Visual analytics</h3>
+                </div>
 
                 <div className="grid gap-5 lg:grid-cols-2">
                     <DeepTimelineChart
@@ -304,18 +307,18 @@ export default function PlatformDeepAnalytics({ platform, accountId: initialAcco
 
             {/* Media type breakdown cards (Instagram) */}
             {platform === 'instagram' && (data?.mediaTypeBreakdown?.length > 0) && (
-                <div className="rounded-xl border border-[var(--viralix-border)] bg-[var(--viralix-surface)] p-4">
-                    <h3 className="text-sm font-semibold text-[#354F52] mb-4">Content by type</h3>
+                <div className="analytics-panel p-4 sm:p-5">
+                    <h3 className="text-sm font-semibold text-[var(--viralix-accent)] mb-4 pb-3 border-b border-[var(--viralix-border)]">Content by type</h3>
                     <div className="grid gap-3 sm:grid-cols-3">
                         {data.mediaTypeBreakdown.map((mt) => (
-                            <div key={mt.type} className="rounded-lg border border-gray-100 bg-gray-50 p-4">
+                            <div key={mt.type} className="analytics-inset p-4">
                                 <div className="flex items-center gap-2 mb-2">
-                                    {mt.type === 'video' ? <Video className="h-4 w-4" /> : <ImageIcon className="h-4 w-4" />}
-                                    <span className="text-sm font-medium capitalize">{mt.type}</span>
-                                    <span className="text-xs text-gray-500">({mt.count})</span>
+                                    {mt.type === 'video' ? <Video className="h-4 w-4 text-[var(--viralix-primary-dark)]" /> : <ImageIcon className="h-4 w-4 text-[var(--viralix-primary-dark)]" />}
+                                    <span className="text-sm font-medium capitalize text-[var(--viralix-accent)]">{mt.type}</span>
+                                    <span className="text-xs text-[var(--viralix-muted)]">({mt.count})</span>
                                 </div>
-                                <p className="text-lg font-bold">{formatNumber(mt.views)} views</p>
-                                <p className="text-xs text-gray-500">{formatNumber(mt.engagement)} total engagement</p>
+                                <p className="text-lg font-bold text-[var(--viralix-accent)]">{formatNumber(mt.views)} views</p>
+                                <p className="text-xs text-[var(--viralix-muted)]">{formatNumber(mt.engagement)} engagement</p>
                             </div>
                         ))}
                     </div>
@@ -337,14 +340,16 @@ export default function PlatformDeepAnalytics({ platform, accountId: initialAcco
 
             {/* All posts grid */}
             {(data?.allPosts?.length > 0) && (
-                <div className="rounded-xl border border-[var(--viralix-border)] bg-[var(--viralix-surface)] p-4">
-                    <h3 className="text-sm font-semibold text-[#354F52] mb-4">All content — click for post analytics</h3>
+                <div className="analytics-panel p-4 sm:p-5">
+                    <h3 className="text-sm font-semibold text-[var(--viralix-accent)] mb-4 pb-3 border-b border-[var(--viralix-border)]">
+                        All content — click for post analytics
+                    </h3>
                     <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
                         {data.allPosts.map((post) => (
                             <Link
                                 key={post.id}
                                 href={post.detailUrl}
-                                className="group relative aspect-square overflow-hidden rounded-xl border border-gray-200 bg-gray-100"
+                                className="group relative aspect-square overflow-hidden rounded-xl border border-[var(--viralix-border)] bg-[var(--viralix-inset)] shadow-sm analytics-panel-hover"
                             >
                                 {post.thumbnail ? (
                                     <img src={post.thumbnail} alt="" className="absolute inset-0 h-full w-full object-cover group-hover:scale-105 transition-transform" />

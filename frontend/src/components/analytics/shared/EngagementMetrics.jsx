@@ -2,6 +2,7 @@
 
 import { formatNumber } from '@/lib/utils';
 import EngagementPieChart from './EngagementPieChart';
+import { cn } from '@/lib/utils';
 
 export default function EngagementMetricGrid({ metrics = [], columns = 4 }) {
     const gridClass = {
@@ -12,22 +13,22 @@ export default function EngagementMetricGrid({ metrics = [], columns = 4 }) {
     }[columns] || 'grid-cols-2 sm:grid-cols-4';
 
     return (
-        <div className={`grid gap-4 ${gridClass}`}>
+        <div className={cn('grid gap-4', gridClass)}>
             {metrics.map((m) => (
-                <div key={m.label} className="dash-card rounded-2xl border border-[var(--viralix-border)] p-5">
+                <article key={m.label} className="analytics-panel analytics-panel-hover p-4">
                     <div className="flex items-center gap-3 mb-2">
                         {m.icon && (
-                            <div className={`p-2 rounded-lg ${m.iconBg || 'bg-gray-100 text-gray-600'}`}>
-                                <m.icon className="w-5 h-5" />
+                            <div className={cn('p-2 rounded-lg', m.iconBg || 'bg-[var(--viralix-inset)]')}>
+                                <m.icon className={cn('w-5 h-5', m.iconColor || 'text-[var(--viralix-primary-dark)]')} />
                             </div>
                         )}
-                        <span className="text-sm font-medium text-gray-500">{m.label}</span>
+                        <span className="text-sm font-medium text-[var(--viralix-muted)]">{m.label}</span>
                     </div>
-                    <div className="text-2xl font-bold text-gray-900 tabular-nums">{formatNumber(m.value)}</div>
+                    <div className="text-2xl font-semibold tabular-nums text-[var(--viralix-accent)]">{formatNumber(m.value)}</div>
                     {m.rate != null && (
-                        <p className="text-xs text-gray-500 mt-1">{m.rate}% of views</p>
+                        <p className="text-xs text-[var(--viralix-muted)] mt-1">{m.rate}% of views</p>
                     )}
-                </div>
+                </article>
             ))}
         </div>
     );
@@ -39,23 +40,25 @@ export function EngagementBreakdownPanel({ views = 0, likes = 0, comments = 0, s
     const bars = [
         { label: 'Likes', value: likes, color: 'bg-pink-500', pct: views ? (likes / views) * 100 : 0 },
         { label: 'Comments', value: comments, color: 'bg-blue-500', pct: views ? (comments / views) * 100 : 0 },
-        { label: 'Shares', value: shares, color: 'bg-green-500', pct: views ? (shares / views) * 100 : 0 },
+        { label: 'Shares', value: shares, color: 'bg-emerald-500', pct: views ? (shares / views) * 100 : 0 },
     ];
     if (saves) bars.push({ label: 'Saves', value: saves, color: 'bg-orange-500', pct: views ? (saves / views) * 100 : 0 });
 
     return (
-        <div className="dash-card rounded-2xl border border-[var(--viralix-border)] p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-6">Engagement breakdown</h3>
+        <div className="analytics-panel p-5 sm:p-6">
+            <h3 className="text-base font-semibold text-[var(--viralix-accent)] mb-6 pb-3 border-b border-[var(--viralix-border)]">
+                Engagement breakdown
+            </h3>
             <div className="grid gap-6 lg:grid-cols-2">
                 <div>
                     <div className="mb-6">
                         <div className="flex justify-between mb-2">
-                            <span className="text-sm font-medium text-gray-600">Overall engagement rate</span>
-                            <span className="text-sm font-bold text-gray-900">{engagementRate}%</span>
+                            <span className="text-sm font-medium text-[var(--viralix-muted)]">Overall engagement rate</span>
+                            <span className="text-sm font-bold text-[var(--viralix-accent)]">{engagementRate}%</span>
                         </div>
-                        <div className="h-2.5 bg-gray-100 rounded-full overflow-hidden">
+                        <div className="h-2.5 analytics-inset overflow-hidden p-px">
                             <div
-                                className="h-full bg-gradient-to-r from-[#84A98C] to-emerald-600 rounded-full transition-all"
+                                className="h-full bg-gradient-to-r from-[var(--viralix-primary)] to-[var(--viralix-primary-dark)] rounded-[3px] transition-all"
                                 style={{ width: `${Math.min(parseFloat(engagementRate), 100)}%` }}
                             />
                         </div>
@@ -64,39 +67,36 @@ export function EngagementBreakdownPanel({ views = 0, likes = 0, comments = 0, s
                         {bars.map((b) => (
                             <div key={b.label}>
                                 <div className="flex justify-between text-sm mb-1">
-                                    <span className="text-gray-600">{b.label}</span>
-                                    <span className="font-medium tabular-nums">{formatNumber(b.value)} <span className="text-gray-400">({b.pct.toFixed(2)}%)</span></span>
+                                    <span className="text-[var(--viralix-muted)]">{b.label}</span>
+                                    <span className="font-medium tabular-nums text-[var(--viralix-accent)]">
+                                        {formatNumber(b.value)}{' '}
+                                        <span className="text-[var(--viralix-muted)] font-normal">({b.pct.toFixed(2)}%)</span>
+                                    </span>
                                 </div>
-                                <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
-                                    <div className={`h-full ${b.color} rounded-full`} style={{ width: `${Math.min(b.pct * 10, 100)}%` }} />
+                                <div className="h-1.5 analytics-inset overflow-hidden p-px">
+                                    <div className={cn('h-full rounded-[2px]', b.color)} style={{ width: `${Math.min(b.pct * 10, 100)}%` }} />
                                 </div>
                             </div>
                         ))}
                     </div>
                     {(reach > 0 || totalInteractions > 0) && (
-                        <dl className="mt-6 pt-6 border-t border-gray-100 grid grid-cols-2 gap-4 text-sm">
+                        <dl className="mt-6 pt-6 border-t border-[var(--viralix-border)] grid grid-cols-2 gap-4 text-sm">
                             {reach > 0 && (
-                                <div>
-                                    <dt className="text-gray-500">Reach</dt>
-                                    <dd className="text-xl font-bold text-[#354F52]">{formatNumber(reach)}</dd>
+                                <div className="analytics-inset p-3">
+                                    <dt className="text-[var(--viralix-muted)] text-xs uppercase tracking-wide">Reach</dt>
+                                    <dd className="text-xl font-bold text-[var(--viralix-accent)] mt-1">{formatNumber(reach)}</dd>
                                 </div>
                             )}
                             {totalInteractions > 0 && (
-                                <div>
-                                    <dt className="text-gray-500">Total interactions</dt>
-                                    <dd className="text-xl font-bold text-[#354F52]">{formatNumber(totalInteractions)}</dd>
+                                <div className="analytics-inset p-3">
+                                    <dt className="text-[var(--viralix-muted)] text-xs uppercase tracking-wide">Total interactions</dt>
+                                    <dd className="text-xl font-bold text-[var(--viralix-accent)] mt-1">{formatNumber(totalInteractions)}</dd>
                                 </div>
                             )}
                         </dl>
                     )}
                 </div>
-                <EngagementPieChart
-                    embedded
-                    likes={likes}
-                    comments={comments}
-                    shares={shares}
-                    saves={saves}
-                />
+                <EngagementPieChart embedded likes={likes} comments={comments} shares={shares} saves={saves} />
             </div>
         </div>
     );
