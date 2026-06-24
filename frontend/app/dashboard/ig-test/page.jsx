@@ -152,7 +152,7 @@ export default function IgTestPage() {
         try {
             const uploaded = [];
             for (const file of files) {
-                const res = await uploadAPI.uploadFile(file, undefined, { forInstagram: true });
+                const res = await uploadAPI.uploadFile(file, undefined, { forInstagram: true, mediaType });
                 const url = res.data?.files?.[0]?.url;
                 if (!url) throw new Error('Upload failed');
                 const type = file.type.startsWith('video') ? 'video' : 'image';

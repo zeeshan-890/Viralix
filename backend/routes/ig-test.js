@@ -153,7 +153,7 @@ async function runCarouselPublishJob({
                 childPayload.media_type = 'VIDEO';
                 childPayload.video_url = child.url;
             } else {
-                childPayload.image_url = igTest.ensureInstagramImageUrl(child.url);
+                childPayload.image_url = igTest.ensureInstagramImageUrl(child.url, 'IMAGE');
                 if (child.altText) childPayload.alt_text = child.altText;
             }
             const created = await igTest.createMediaContainer(igUserId, token, childPayload);
@@ -215,7 +215,7 @@ router.post('/publish', auth, async (req, res) => {
         } else if (type === 'IMAGE' || isStoryImage) {
             const sourceUrl = imageUrl;
             if (!sourceUrl) throw new Error('imageUrl is required for IMAGE/STORY image');
-            const preparedImageUrl = igTest.ensureInstagramImageUrl(sourceUrl);
+            const preparedImageUrl = igTest.ensureInstagramImageUrl(sourceUrl, isStoryImage ? 'STORIES' : 'IMAGE');
             await igTest.verifyInstagramImageUrl(preparedImageUrl);
             console.log('[igTest] Publishing image URL:', preparedImageUrl);
             mediaUrls.push(preparedImageUrl);
@@ -270,7 +270,7 @@ router.post('/publish', auth, async (req, res) => {
                     childPayload.media_type = 'VIDEO';
                     childPayload.video_url = child.url;
                 } else {
-                    childPayload.image_url = igTest.ensureInstagramImageUrl(child.url);
+                    childPayload.image_url = igTest.ensureInstagramImageUrl(child.url, 'IMAGE');
                     if (child.altText) childPayload.alt_text = child.altText;
                 }
                 const created = await igTest.createMediaContainer(igUserId, token, childPayload);

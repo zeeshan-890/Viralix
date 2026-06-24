@@ -1,5 +1,6 @@
 const axios = require('axios');
 const crypto = require('crypto');
+const cloudinary = require('cloudinary').v2;
 
 // Isolated Instagram Publishing Test service.
 // Uses pure "Instagram API with Instagram Login" (graph.instagram.com /
@@ -193,25 +194,94 @@ async function getGraph(paths, token, params) {
     throw lastErr;
 }
 
+function configureCloudinary() {
+    if (!process.env.CLOUDINARY_CLOUD_NAME) return false;
+    cloudinary.config({
+        cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+        api_key: process.env.CLOUDINARY_API_KEY,
+        api_secret: process.env.CLOUDINARY_API_SECRET
+    });
+    return true;
+}
+
+// Instagram feed images: 1:1 crop (always within 4:5 – 1.91:1), JPEG, max 1440px.
+const IG_FEED_TRANSFORM = 'c_fill,g_auto,w_1080,h_1080,f_jpg,q_auto:good,fl_progressive';
+// Instagram story images: 9:16 crop, JPEG.
+const IG_STORY_TRANSFORM = 'c_fill,g_auto,ar_9:16,w_1080,f_jpg,q_auto:good,fl_progressive';
+
+function instagramTransformChain(mediaType) {
+    return String(mediaType || 'IMAGE').toUpperCase() === 'STORIES'
+        ? IG_STORY_TRANSFORM
+        : IG_FEED_TRANSFORM;
+}
+
+function extractCloudinaryPathAfterUpload(url) {
+    const withoutQuery = url.split('?')[0];
+    const marker = '/image/upload/';
+    const idx = withoutQuery.indexOf(marker);
+    if (idx === -1) return null;
+
+    const segments = withoutQuery.slice(idx + marker.length).split('/');
+    let versionIndex = segments.findIndex((part) => /^v\d+$/.test(part));
+    if (versionIndex === -1) {
+        // No version segment — keep everything after any transform prefix.
+        return segments.join('/');
+    }
+    return segments.slice(versionIndex).join('/');
+}
+
+function buildCloudinaryInstagramUrl(url, mediaType) {
+    const withoutQuery = url.split('?')[0];
+    const marker = '/image/upload/';
+    const idx = withoutQuery.indexOf(marker);
+    if (idx === -1) return null;
+
+    const prefix = withoutQuery.slice(0, idx + marker.length);
+    const tail = extractCloudinaryPathAfterUpload(url);
+    if (!tail) return null;
+
+    const transform = instagramTransformChain(mediaType);
+    const rebuilt = `${prefix}${transform}/${tail}`;
+    return appendJpgExtension(rebuilt);
+}
+
 function appendJpgExtension(url) {
     const [path, query] = url.split('?');
     if (/\.jpe?g$/i.test(path)) return url;
-    const base = path.replace(/\.(webp|png|gif|avif)$/i, '');
+    const base = path.replace(/\.(webp|png|gif|avif|mp4|mov)$/i, '');
     return `${base}.jpg${query ? `?${query}` : ''}`;
 }
 
-function ensureInstagramImageUrl(url) {
+function publicIdFromCloudinaryUrl(url) {
+    const tail = extractCloudinaryPathAfterUpload(url);
+    if (!tail) return null;
+    return tail.replace(/^v\d+\//, '').replace(/\.[^/.]+$/, '');
+}
+
+function ensureInstagramImageUrl(url, mediaType = 'IMAGE') {
     if (!url) return url;
 
     if (url.includes('res.cloudinary.com') && url.includes('/image/upload/')) {
-        let transformed = url;
-        if (!/\/f_jpg|,f_jpg,/.test(url)) {
-            transformed = url.replace('/image/upload/', '/image/upload/f_jpg,q_auto:good,fl_progressive/');
+        const rebuilt = buildCloudinaryInstagramUrl(url, mediaType);
+        if (rebuilt && configureCloudinary()) {
+            try {
+                const publicId = publicIdFromCloudinaryUrl(url);
+                if (publicId) {
+                    const type = String(mediaType || 'IMAGE').toUpperCase();
+                    const transform = type === 'STORIES'
+                        ? { width: 1080, height: 1920, crop: 'fill', gravity: 'auto', aspect_ratio: '9:16', fetch_format: 'jpg', quality: 'auto:good', flags: 'progressive' }
+                        : { width: 1080, height: 1080, crop: 'fill', gravity: 'auto', fetch_format: 'jpg', quality: 'auto:good', flags: 'progressive' };
+                    return appendJpgExtension(cloudinary.url(publicId, { secure: true, transformation: [transform] }));
+                }
+            } catch (e) {
+                console.warn('[igTest] Cloudinary SDK URL build failed, using manual transform:', e.message);
+            }
+            return rebuilt;
         }
-        return appendJpgExtension(transformed);
+        if (rebuilt) return rebuilt;
     }
 
-    return url;
+    return appendJpgExtension(url);
 }
 
 const CONTAINER_STATUS_HINTS = {
@@ -235,24 +305,26 @@ function describeContainerFailure(data) {
 
 async function verifyInstagramImageUrl(url) {
     try {
-        const res = await axios.head(url, {
-            timeout: 15000,
+        const res = await axios.get(url, {
+            timeout: 20000,
             maxRedirects: 5,
+            responseType: 'arraybuffer',
+            maxContentLength: 8 * 1024 * 1024,
+            headers: { Accept: 'image/jpeg' },
             validateStatus: (status) => status >= 200 && status < 400,
         });
         const contentType = (res.headers['content-type'] || '').toLowerCase();
-        const contentLength = Number(res.headers['content-length'] || 0);
-        if (contentLength > 8 * 1024 * 1024) {
-            throw new Error('Image is larger than 8 MB');
-        }
         if (contentType && !contentType.includes('jpeg') && !contentType.includes('jpg')) {
-            throw new Error(`URL returns ${contentType}, but Instagram requires image/jpeg`);
+            throw new Error(`Processed image returns ${contentType}, expected image/jpeg`);
+        }
+        if (res.data?.length > 8 * 1024 * 1024) {
+            throw new Error('Processed image is larger than 8 MB');
         }
     } catch (error) {
-        if (error.message?.includes('Instagram requires') || error.message?.includes('larger than')) {
+        if (error.message?.includes('expected image/jpeg') || error.message?.includes('larger than')) {
             throw error;
         }
-        throw new Error(`Image URL is not publicly reachable (${error.message})`);
+        throw new Error(`Processed image URL is not reachable (${error.message})`);
     }
 }
 

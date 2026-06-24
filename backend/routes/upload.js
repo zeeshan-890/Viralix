@@ -44,6 +44,7 @@ router.post('/media', auth, upload.array('files', 10), async (req, res) => {
                 const publicId = `autoreach/${req.user.id}/${uuidv4()}`;
                 const forInstagram = req.query.for === 'instagram';
                 const isImage = file.mimetype.startsWith('image/');
+                const igMediaType = String(req.query.mediaType || 'IMAGE').toUpperCase();
 
                 const uploadOptions = forInstagram && isImage
                     ? {
@@ -51,7 +52,11 @@ router.post('/media', auth, upload.array('files', 10), async (req, res) => {
                         resource_type: 'image',
                         folder: 'autoreach-ai',
                         format: 'jpg',
-                        transformation: [{ quality: 'auto:good' }]
+                        transformation: [
+                            igMediaType === 'STORIES'
+                                ? { width: 1080, height: 1920, crop: 'fill', gravity: 'auto', aspect_ratio: '9:16', quality: 'auto:good' }
+                                : { width: 1080, height: 1080, crop: 'fill', gravity: 'auto', quality: 'auto:good' }
+                        ]
                     }
                     : {
                         public_id: publicId,

@@ -359,7 +359,10 @@ export const uploadAPI = {
     uploadFile: (file, onProgress, options = {}) => {
         const formData = new FormData();
         formData.append('files', file);
-        const query = options.forInstagram ? '?for=instagram' : '';
+        const params = new URLSearchParams();
+        if (options.forInstagram) params.set('for', 'instagram');
+        if (options.mediaType) params.set('mediaType', options.mediaType);
+        const query = params.toString() ? `?${params.toString()}` : '';
         return api.post(`/upload/media${query}`, formData, {
             headers: {
                 'Content-Type': 'multipart/form-data',
