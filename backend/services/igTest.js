@@ -14,8 +14,7 @@ const IG_TEST_APP_ID = process.env.IG_TEST_APP_ID
 const IG_TEST_APP_SECRET = process.env.IG_TEST_APP_SECRET
     || process.env.INSTAGRAM_APP_SECRET
     || process.env.INSTAGRAM_CLIENT_SECRET;
-const IG_TEST_REDIRECT_URI = process.env.IG_TEST_REDIRECT_URI
-    || process.env.INSTAGRAM_REDIRECT_URI;
+const IG_TEST_REDIRECT_URI = process.env.IG_TEST_REDIRECT_URI?.trim();
 const GRAPH_VERSION = process.env.IG_TEST_GRAPH_VERSION || 'v21.0';
 
 const OAUTH_AUTHORIZE_URL = 'https://www.instagram.com/oauth/authorize';
