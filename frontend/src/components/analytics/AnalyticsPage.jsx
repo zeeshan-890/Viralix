@@ -3,16 +3,15 @@
 import { useEffect, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { analyticsAPI } from '@/lib/api';
+import { useAccounts } from '@/hooks/useAccounts';
 import PerformanceChart from '@/components/dashboard/PerformanceChart';
 import PlatformBreakdown from './PlatformBreakdown';
 import TopPostsTable from './TopPostsTable';
 import BestTimesPanel from './BestTimesPanel';
 import AnalyticsTools from './AnalyticsTools';
 import PlatformDeepAnalytics from './PlatformDeepAnalytics';
-import PlatformIcon from '@/components/ui/PlatformIcon';
-import { RefreshCw, Loader2, ChevronRight } from 'lucide-react';
-import Link from 'next/link';
-import { cn } from '@/lib/utils';
+import OverviewAnalyticsBanner from './shared/OverviewAnalyticsBanner';
+import { Loader2 } from 'lucide-react';
 
 export default function AnalyticsPage() {
     const searchParams = useSearchParams();
@@ -25,6 +24,7 @@ export default function AnalyticsPage() {
     const [error, setError] = useState('');
     const [analytics, setAnalytics] = useState(null);
     const [refreshing, setRefreshing] = useState(false);
+    const { accounts } = useAccounts();
 
     const load = async () => {
         setLoading(true);
@@ -53,34 +53,10 @@ export default function AnalyticsPage() {
     };
 
     const o = analytics?.overview || {};
+    const platformBreakdown = analytics?.platformBreakdown || {};
 
     return (
         <div className="space-y-5 pb-2">
-            {activeTab === 'overview' && (
-                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                    <p className="text-sm text-[var(--viralix-muted)]">
-                        {!loading && (
-                            <>
-                                <span className="font-medium text-[var(--viralix-accent)]">{o.publishedPosts || 0} published</span>
-                                {' · '}
-                                <span>{o.scheduledPosts || 0} scheduled</span>
-                            </>
-                        )}
-                    </p>
-                    {!loading && (
-                        <button
-                            type="button"
-                            onClick={handleRefresh}
-                            disabled={refreshing}
-                            className="btn-secondary btn-sm shadow-sm self-start sm:self-auto"
-                        >
-                            <RefreshCw className={cn('h-3.5 w-3.5', refreshing && 'animate-spin')} />
-                            Refresh
-                        </button>
-                    )}
-                </div>
-            )}
-
             <div className="space-y-5">
                 {activeTab === 'overview' && (
                     <>
@@ -93,34 +69,13 @@ export default function AnalyticsPage() {
                             <div className="analytics-panel border-red-200 bg-red-50/80 px-4 py-3 text-sm text-red-700">{error}</div>
                         ) : (
                             <>
-                                <div className="grid gap-4 sm:grid-cols-2">
-                                    <Link
-                                        href="/dashboard/analytics?platform=tiktok"
-                                        className="analytics-panel analytics-panel-hover flex items-center gap-4 p-5 group"
-                                    >
-                                        <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-[var(--viralix-inset)] border border-[var(--viralix-border)] shadow-sm">
-                                            <PlatformIcon platform="tiktok" size={32} />
-                                        </div>
-                                        <div className="flex-1 min-w-0">
-                                            <p className="font-semibold text-[var(--viralix-accent)] group-hover:text-[var(--viralix-primary-dark)]">TikTok deep analytics</p>
-                                            <p className="text-xs text-[var(--viralix-muted)] mt-0.5">Views, charts, top videos, account stats</p>
-                                        </div>
-                                        <ChevronRight className="h-5 w-5 text-[var(--viralix-muted)] group-hover:text-[var(--viralix-accent)] shrink-0" />
-                                    </Link>
-                                    <Link
-                                        href="/dashboard/analytics?platform=instagram"
-                                        className="analytics-panel analytics-panel-hover flex items-center gap-4 p-5 group"
-                                    >
-                                        <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-[var(--viralix-inset)] border border-[var(--viralix-border)] shadow-sm">
-                                            <PlatformIcon platform="instagram" size={32} />
-                                        </div>
-                                        <div className="flex-1 min-w-0">
-                                            <p className="font-semibold text-[var(--viralix-accent)] group-hover:text-[var(--viralix-primary-dark)]">Instagram deep analytics</p>
-                                            <p className="text-xs text-[var(--viralix-muted)] mt-0.5">Reach, saves, reels, account insights</p>
-                                        </div>
-                                        <ChevronRight className="h-5 w-5 text-[var(--viralix-muted)] group-hover:text-[var(--viralix-accent)] shrink-0" />
-                                    </Link>
-                                </div>
+                                <OverviewAnalyticsBanner
+                                    overview={o}
+                                    platformBreakdown={platformBreakdown}
+                                    accounts={accounts}
+                                    onRefresh={handleRefresh}
+                                    refreshing={refreshing}
+                                />
 
                                 <PerformanceChart />
 

@@ -166,6 +166,29 @@ body {
         0 2px 6px rgba(47, 62, 70, 0.08);
 }
 
+.analytics-platform-banner {
+    background: linear-gradient(135deg, #354F52 0%, #2F3E46 52%, #3a4f54 100%);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 0.75rem;
+    box-shadow:
+        0 4px 6px rgba(47, 62, 70, 0.12),
+        0 12px 32px rgba(47, 62, 70, 0.18);
+    color: #fff;
+}
+
+.analytics-metric-tile-dark {
+    background: rgba(0, 0, 0, 0.22);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 0.5rem;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+    transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.analytics-metric-tile-dark:hover {
+    background: rgba(0, 0, 0, 0.32);
+    border-color: rgba(255, 255, 255, 0.16);
+}
+
 /* Dashboard-wide: unify legacy gray borders with theme tokens */
 .dashboard-shell .border-gray-100,
 .dashboard-shell .border-gray-200 {

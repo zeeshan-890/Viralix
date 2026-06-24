@@ -53,23 +53,7 @@ export const NAV_SECTIONS = [
         items: [
             { name: 'Overview', href: '/dashboard/analytics', icon: BarChart3 },
         ],
-        topLinks: [
-            {
-                name: 'Overview',
-                href: '/dashboard/analytics',
-                match: (path, sp) => path.startsWith('/dashboard/analytics') && !sp.get('platform'),
-            },
-            {
-                name: 'TikTok',
-                href: '/dashboard/analytics?platform=tiktok',
-                match: (path, sp) => path.startsWith('/dashboard/analytics') && sp.get('platform') === 'tiktok',
-            },
-            {
-                name: 'Instagram',
-                href: '/dashboard/analytics?platform=instagram',
-                match: (path, sp) => path.startsWith('/dashboard/analytics') && sp.get('platform') === 'instagram',
-            },
-        ],
+        topLinks: [],
         match: (path) => path.startsWith('/dashboard/analytics'),
     },
     {
