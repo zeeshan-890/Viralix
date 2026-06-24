@@ -52,9 +52,13 @@ export default function TikTokSettings({ accountId, settings, onSettingsChange, 
             setError(null);
             try {
                 const response = await tiktokAPI.creatorInfo(accountId);
-                setCreatorInfo(response.data);
-                // Pass creator info up to parent
-                onSettingsChange({ ...settings, creatorInfo: response.data });
+                const info = response.data;
+                setCreatorInfo(info);
+                onSettingsChange({
+                    ...settings,
+                    creatorInfo: info,
+                    ...(info.isPrivateAccount ? { privacyLevel: 'SELF_ONLY' } : {}),
+                });
             } catch (err) {
                 console.error('Failed to fetch creator info:', err);
                 setError(err.response?.data?.message || 'Failed to load TikTok account info');
@@ -202,6 +206,22 @@ export default function TikTokSettings({ accountId, settings, onSettingsChange, 
                     <div className="mt-3 bg-yellow-100 text-yellow-800 text-sm px-3 py-2 rounded-lg flex items-center gap-2">
                         <AlertCircle className="w-4 h-4" />
                         You've reached the daily posting limit. Please try again later.
+                    </div>
+                )}
+                {creatorInfo.isPrivateAccount && (
+                    <div className="mt-3 bg-amber-50 border border-amber-200 text-amber-800 text-sm px-3 py-2 rounded-lg flex items-start gap-2">
+                        <Info className="w-4 h-4 flex-shrink-0 mt-0.5" />
+                        <span>
+                            Private TikTok account — only <strong>Only Me</strong> visibility is available.
+                        </span>
+                    </div>
+                )}
+                {creatorInfo.isUnaudited && !creatorInfo.isPrivateAccount && (
+                    <div className="mt-3 bg-amber-50 border border-amber-200 text-amber-800 text-sm px-3 py-2 rounded-lg flex items-start gap-2">
+                        <Info className="w-4 h-4 flex-shrink-0 mt-0.5" />
+                        <span>
+                            App sandbox mode — posts are limited to <strong>Only Me</strong> until TikTok audit is complete.
+                        </span>
                     </div>
                 )}
             </div>

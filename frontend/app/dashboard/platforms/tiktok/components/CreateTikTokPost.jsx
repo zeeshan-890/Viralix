@@ -66,10 +66,10 @@ export default function CreateTikTokPost({ isOpen, onClose, accounts = [], onSuc
                 // Reset form settings that depend on creator info
                 setSettings(prev => ({
                     ...prev,
-                    privacyLevel: '', // Must have no default
-                    allowComment: false, // Must be manual turn on
-                    allowDuet: false, // Must be manual turn on
-                    allowStitch: false // Must be manual turn on
+                    privacyLevel: info.isPrivateAccount ? 'SELF_ONLY' : '',
+                    allowComment: false,
+                    allowDuet: false,
+                    allowStitch: false
                 }));
             } catch (err) {
                 console.error('Failed to fetch creator info:', err);
@@ -261,7 +261,8 @@ export default function CreateTikTokPost({ isOpen, onClose, accounts = [], onSuc
                     disableDuet: !settings.allowDuet,
                     disableStitch: !settings.allowStitch,
                     brandOrganic: settings.commercialDisclosure ? settings.brandOrganic : false,
-                    brandedContent: settings.commercialDisclosure ? settings.brandedContent : false
+                    brandedContent: settings.commercialDisclosure ? settings.brandedContent : false,
+                    isPrivateAccount: !!creatorInfo?.isPrivateAccount,
                 }
             };
 
@@ -489,6 +490,22 @@ export default function CreateTikTokPost({ isOpen, onClose, accounts = [], onSuc
                                         You cannot make more posts right now based on TikTok limits.
                                     </div>
                                 )}
+                                {creatorInfo?.isPrivateAccount && (
+                                    <div className="mt-2 text-amber-800 text-sm flex items-start gap-2 font-medium bg-amber-50 border border-amber-200 p-3 rounded-lg">
+                                        <Info className="w-4 h-4 flex-shrink-0 mt-0.5" />
+                                        <span>
+                                            Your TikTok account is <strong>private</strong> — posts can only use <strong>Only Me</strong> visibility.
+                                        </span>
+                                    </div>
+                                )}
+                                {creatorInfo?.isUnaudited && !creatorInfo?.isPrivateAccount && (
+                                    <div className="mt-2 text-amber-800 text-sm flex items-start gap-2 font-medium bg-amber-50 border border-amber-200 p-3 rounded-lg">
+                                        <Info className="w-4 h-4 flex-shrink-0 mt-0.5" />
+                                        <span>
+                                            TikTok sandbox mode: until Viralix passes app audit, posts are limited to <strong>Only Me</strong> even on public accounts.
+                                        </span>
+                                    </div>
+                                )}
                             </div>
 
                             {/* Caption */}
@@ -519,7 +536,7 @@ export default function CreateTikTokPost({ isOpen, onClose, accounts = [], onSuc
                                         className="w-full p-4 pl-10 pr-10 border border-gray-200 rounded-xl appearance-none bg-gray-50 hover:bg-gray-100 transition-colors font-medium text-gray-900 outline-none focus:ring-2 focus:ring-[#FE2C55]/20 focus:border-[#FE2C55]"
                                     >
                                         <option value="" disabled>Select visibility...</option>
-                                        {(creatorInfo?.privacyLevelOptions || ['PUBLIC_TO_EVERYONE', 'MUTUAL_FOLLOW_FRIENDS', 'SELF_ONLY']).map((level, idx) => {
+                                        {(creatorInfo?.privacyLevelOptions || []).map((level, idx) => {
                                             const value = typeof level === 'string' ? level : (level.value ?? `option-${idx}`);
                                             const label = typeof level === 'string' ? (privacyLabels[value] || value) : (level.label ?? privacyLabels[value] ?? value);
                                             const isDisabled = value === 'SELF_ONLY' && settings.brandedContent;

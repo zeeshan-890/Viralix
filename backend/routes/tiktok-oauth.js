@@ -148,13 +148,21 @@ router.get('/creator-info/:accountId', auth, async (req, res) => {
         // Get user info for display name
         const userInfo = await tiktokService.getUserInfo(account.accessToken);
 
+        const apiPrivacyOptions = creatorInfo.privacy_level_options || ['SELF_ONLY'];
+        const isPrivateAccount = tiktokService.isPrivateTikTokAccount(apiPrivacyOptions);
+        const isUnaudited = tiktokService.isTikTokUnaudited();
+        const privacyLevelOptions = tiktokService.resolvePrivacyLevelOptions(apiPrivacyOptions);
+
         res.json({
             accountId: account.platformAccountId,
             accountName: account.accountName,
             creatorNickname: userInfo?.display_name || account.accountName,
             avatarUrl: userInfo?.avatar_url || account.metadata?.avatarUrl,
+            isUnaudited,
+            isPrivateAccount,
+            requiresSelfOnly: isPrivateAccount || isUnaudited,
             // Creator posting capabilities
-            privacyLevelOptions: creatorInfo.privacy_level_options || ['SELF_ONLY'],
+            privacyLevelOptions,
             maxVideoPostDurationSec: creatorInfo.max_video_post_duration_sec || 60,
             // Interaction settings (true = disabled in app settings)
             commentDisabled: creatorInfo.comment_disabled || false,

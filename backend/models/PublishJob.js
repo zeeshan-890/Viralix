@@ -42,7 +42,8 @@ const PublishJobSchema = new mongoose.Schema({
             disableDuet: Boolean,
             disableStitch: Boolean,
             brandOrganic: Boolean,
-            brandedContent: Boolean
+            brandedContent: Boolean,
+            isPrivateAccount: Boolean
         }
     },
     status: {

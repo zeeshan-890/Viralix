@@ -1,5 +1,5 @@
 const BasePublisher = require('./base.publisher');
-const { uploadVideoFromUrl, refreshAccessToken } = require('../tiktok');
+const { uploadVideoFromUrl, refreshAccessToken, resolveDirectPostOptions, getCreatorInfo, isPrivateTikTokAccount } = require('../tiktok');
 const AccountService = require('../account.service');
 
 // TikTok App Credentials from Env
@@ -84,19 +84,27 @@ class TikTokPublisher extends BasePublisher {
         if (tiktokSettings && tiktokSettings.privacyLevel) {
             console.log('[TikTokPublisher] Publishing with custom settings:', tiktokSettings);
 
-            // Use direct publish with all settings
-            const { uploadVideoFromUrl } = require('../tiktok');
-            const result = await uploadVideoFromUrl(auth.accessToken, video.url, {
+            let isPrivateAccount = tiktokSettings.isPrivateAccount;
+            if (isPrivateAccount === undefined) {
+                try {
+                    const info = await getCreatorInfo(auth.accessToken);
+                    isPrivateAccount = isPrivateTikTokAccount(info.privacy_level_options || []);
+                } catch (err) {
+                    console.warn('[TikTokPublisher] Could not fetch creator info for privacy check:', err.message);
+                    isPrivateAccount = true;
+                }
+            }
+
+            const result = await uploadVideoFromUrl(auth.accessToken, video.url, resolveDirectPostOptions({
                 caption: content || title || '',
                 privacy_level: tiktokSettings.privacyLevel,
                 disable_comment: tiktokSettings.disableComment || false,
                 disable_duet: tiktokSettings.disableDuet || false,
                 disable_stitch: tiktokSettings.disableStitch || false,
-                // Commercial content disclosure
                 brand_content_toggle: tiktokSettings.brandOrganic || tiktokSettings.brandedContent || false,
                 brand_organic_toggle: tiktokSettings.brandOrganic || false,
                 is_branded_content: tiktokSettings.brandedContent || false
-            });
+            }, { isPrivateAccount: !!isPrivateAccount }));
 
             return this.formatResponse(result.publish_id, 'processing', {
                 message: 'Video publish initiated with custom settings',

@@ -12,6 +12,55 @@ const TIKTOK_SCOPES = [
     'video.list'
 ].join(',');
 
+/** @returns {boolean} True while TikTok app has not passed Content Posting API audit */
+function isTikTokUnaudited() {
+    const v = process.env.TIKTOK_UNAUDITED;
+    if (v === 'false' || v === '0') return false;
+    if (v === 'true' || v === '1') return true;
+    // Default sandbox — set TIKTOK_UNAUDITED=false on Heroku after TikTok audit approval
+    return true;
+}
+
+function formatTikTokApiError(error) {
+    const apiError = error.response?.data?.error;
+    const code = apiError?.code;
+    const message = apiError?.message;
+    if (code === 'unaudited_client_can_only_post_to_private_accounts') {
+        return 'Your TikTok app is in sandbox mode. The connected account must be private and posts must use "Only Me" until the app passes TikTok\'s Content Posting API audit.';
+    }
+    if (message) return message;
+    return error.message || 'TikTok API request failed';
+}
+
+/** Public accounts include PUBLIC_TO_EVERYONE in creator_info privacy_level_options */
+function isPrivateTikTokAccount(privacyLevelOptions = []) {
+    return !privacyLevelOptions.includes('PUBLIC_TO_EVERYONE');
+}
+
+function resolvePrivacyLevelOptions(privacyLevelOptions = []) {
+    const options = privacyLevelOptions.length ? privacyLevelOptions : ['SELF_ONLY'];
+    return isPrivateTikTokAccount(options) ? ['SELF_ONLY'] : options;
+}
+
+function clampPrivacyLevel(privacyLevel, { isPrivateAccount } = {}) {
+    const needsSelfOnly = isPrivateAccount || isTikTokUnaudited();
+    if (needsSelfOnly) {
+        if (privacyLevel && privacyLevel !== 'SELF_ONLY') {
+            const reason = isPrivateAccount ? 'private TikTok account' : 'unaudited app';
+            console.warn(`[TikTok] Clamping privacy ${privacyLevel} → SELF_ONLY (${reason})`);
+        }
+        return 'SELF_ONLY';
+    }
+    return privacyLevel || 'PUBLIC_TO_EVERYONE';
+}
+
+function resolveDirectPostOptions(options = {}, context = {}) {
+    return {
+        ...options,
+        privacy_level: clampPrivacyLevel(options.privacy_level, context),
+    };
+}
+
 /**
  * Generate TikTok OAuth authorization URL
  * @param {string} clientKey - TikTok app client key
@@ -233,13 +282,15 @@ async function getCreatorInfo(accessToken) {
 async function initializeVideoUploadFromUrl(accessToken, videoUrl, options = {}) {
     console.log('[TikTok] Initializing video upload from URL:', videoUrl);
 
+    const resolved = resolveDirectPostOptions(options);
+
     const payload = {
         post_info: {
-            title: options.caption || '',
-            privacy_level: options.privacy_level || 'PUBLIC_TO_EVERYONE',
-            disable_comment: options.disable_comment || false,
-            disable_duet: options.disable_duet || false,
-            disable_stitch: options.disable_stitch || false
+            title: resolved.caption || options.caption || '',
+            privacy_level: resolved.privacy_level,
+            disable_comment: resolved.disable_comment ?? options.disable_comment ?? false,
+            disable_duet: resolved.disable_duet ?? options.disable_duet ?? false,
+            disable_stitch: resolved.disable_stitch ?? options.disable_stitch ?? false
         },
         source_info: {
             source: 'PULL_FROM_URL',
@@ -525,14 +576,15 @@ async function initializeDirectFileUpload(accessToken, videoSize, chunkSize = 10
     console.log(`[TikTok] Initializing DIRECT FILE_UPLOAD - size: ${videoSize} bytes`);
 
     const totalChunkCount = Math.ceil(videoSize / chunkSize);
+    const resolved = resolveDirectPostOptions(options);
 
     const payload = {
         post_info: {
-            title: options.caption || '',
-            privacy_level: options.privacy_level || 'PUBLIC_TO_EVERYONE',
-            disable_comment: options.disable_comment || false,
-            disable_duet: options.disable_duet || false,
-            disable_stitch: options.disable_stitch || false
+            title: resolved.caption || options.caption || '',
+            privacy_level: resolved.privacy_level,
+            disable_comment: resolved.disable_comment ?? options.disable_comment ?? false,
+            disable_duet: resolved.disable_duet ?? options.disable_duet ?? false,
+            disable_stitch: resolved.disable_stitch ?? options.disable_stitch ?? false
         },
         source_info: {
             source: 'FILE_UPLOAD',
@@ -565,7 +617,7 @@ async function initializeDirectFileUpload(accessToken, videoSize, chunkSize = 10
         if (error.response?.data) {
             console.error('[TikTok] Init failed response:', JSON.stringify(error.response.data, null, 2));
         }
-        throw error;
+        throw new Error(formatTikTokApiError(error));
     }
 }
 
@@ -656,5 +708,10 @@ module.exports = {
     queryVideos,
 
     // Constants
-    TIKTOK_SCOPES
+    TIKTOK_SCOPES,
+    isTikTokUnaudited,
+    isPrivateTikTokAccount,
+    resolvePrivacyLevelOptions,
+    formatTikTokApiError,
+    resolveDirectPostOptions
 };

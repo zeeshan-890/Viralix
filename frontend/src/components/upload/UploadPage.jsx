@@ -180,6 +180,7 @@ export default function UploadPage() {
               disableStitch: !tiktokSettings.allowStitch,
               brandOrganic: tiktokSettings.brandOrganic,
               brandedContent: tiktokSettings.brandedContent,
+              isPrivateAccount: !!tiktokSettings.creatorInfo?.isPrivateAccount,
           }
         : undefined;
 
