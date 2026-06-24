@@ -108,9 +108,24 @@ async function getLongLivedToken(shortLivedToken) {
     return { accessToken: shortLivedToken, expiresAt: new Date(Date.now() + 3600 * 1000) };
 }
 
+async function getMeProfile(token) {
+    const { data } = await axios.get(buildGraphUrl('/me'), {
+        params: {
+            fields: 'user_id,username,account_type,profile_picture_url',
+            access_token: token
+        }
+    });
+    return data;
+}
+
 async function getProfile(igUserId, token) {
     try {
-        const { data } = await axios.get(`${GRAPH_BASE}/${igUserId}`, {
+        return await getMeProfile(token);
+    } catch (e) {
+        console.warn('[igTest] /me profile fetch failed, falling back to user id:', e.response?.data?.error?.message || e.message);
+    }
+    try {
+        const { data } = await axios.get(buildGraphUrl(`/${igUserId}`), {
             params: {
                 fields: 'user_id,username,account_type,profile_picture_url',
                 access_token: token
@@ -119,8 +134,44 @@ async function getProfile(igUserId, token) {
         return data;
     } catch (e) {
         console.warn('[igTest] Profile fetch failed:', e.response?.data?.error?.message || e.message);
-        return { username: String(igUserId) };
+        return { user_id: igUserId, username: String(igUserId) };
     }
+}
+
+async function postGraph(paths, token, params) {
+    let lastErr;
+    for (const path of paths) {
+        try {
+            const { data } = await axios.post(buildGraphUrl(path), null, {
+                params: { ...params, access_token: token }
+            });
+            return data;
+        } catch (error) {
+            lastErr = error;
+            const code = error.response?.data?.error?.code;
+            console.warn(`[igTest] POST ${path} failed (${code}):`, error.response?.data?.error?.message || error.message);
+            if ([10, 190, 200].includes(code)) break;
+        }
+    }
+    throw lastErr;
+}
+
+async function getGraph(paths, token, params) {
+    let lastErr;
+    for (const path of paths) {
+        try {
+            const { data } = await axios.get(buildGraphUrl(path), {
+                params: { ...params, access_token: token }
+            });
+            return data;
+        } catch (error) {
+            lastErr = error;
+            const code = error.response?.data?.error?.code;
+            console.warn(`[igTest] GET ${path} failed (${code}):`, error.response?.data?.error?.message || error.message);
+            if ([10, 190, 200].includes(code)) break;
+        }
+    }
+    throw lastErr;
 }
 
 // ─── Publishing ───
@@ -128,10 +179,7 @@ async function getProfile(igUserId, token) {
 // Create a media container. `payload` may include image_url, video_url,
 // media_type, caption, alt_text, is_carousel_item, children, is_ai_generated.
 async function createMediaContainer(igUserId, token, payload) {
-    const { data } = await axios.post(buildGraphUrl(`/${igUserId}/media`), null, {
-        params: { ...payload, access_token: token }
-    });
-    return data; // { id: <IG_CONTAINER_ID> }
+    return postGraph([`/me/media`, `/${igUserId}/media`], token, payload);
 }
 
 async function getContainerStatus(containerId, token) {
@@ -156,17 +204,15 @@ async function waitForContainer(containerId, token, { intervalMs = 5000, maxAtte
 }
 
 async function publishContainer(igUserId, token, creationId) {
-    const { data } = await axios.post(buildGraphUrl(`/${igUserId}/media_publish`), null, {
-        params: { creation_id: creationId, access_token: token }
-    });
-    return data; // { id: <IG_MEDIA_ID> }
+    return postGraph([`/me/media_publish`, `/${igUserId}/media_publish`], token, { creation_id: creationId });
 }
 
 async function getPublishingLimit(igUserId, token) {
-    const { data } = await axios.get(buildGraphUrl(`/${igUserId}/content_publishing_limit`), {
-        params: { fields: 'config,quota_usage', access_token: token }
-    });
-    return data;
+    return getGraph(
+        [`/me/content_publishing_limit`, `/${igUserId}/content_publishing_limit`],
+        token,
+        { fields: 'config,quota_usage' }
+    );
 }
 
 module.exports = {
@@ -176,6 +222,7 @@ module.exports = {
     buildAuthUrl,
     exchangeCodeForToken,
     getLongLivedToken,
+    getMeProfile,
     getProfile,
     createMediaContainer,
     getContainerStatus,

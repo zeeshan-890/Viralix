@@ -35,9 +35,10 @@ router.get('/callback', async (req, res) => {
     try {
         const userId = igTest.verifyState(state);
 
-        const { shortLivedToken, igUserId } = await igTest.exchangeCodeForToken(code);
+        const { shortLivedToken, igUserId: oauthUserId } = await igTest.exchangeCodeForToken(code);
         const { accessToken, expiresAt } = await igTest.getLongLivedToken(shortLivedToken);
-        const profile = await igTest.getProfile(igUserId, accessToken);
+        const profile = await igTest.getProfile(oauthUserId, accessToken);
+        const igUserId = String(profile.user_id || oauthUserId);
 
         await IgTestAccount.findOneAndUpdate(
             { userId, igUserId },
