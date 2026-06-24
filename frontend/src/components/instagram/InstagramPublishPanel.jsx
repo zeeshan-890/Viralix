@@ -45,6 +45,12 @@ export default function InstagramPublishPanel({
     accountsTitle = 'Connected Accounts',
     unavailableMessage,
     disconnectConfirm = 'Disconnect this Instagram account?',
+    isOpen,
+    onClose,
+    onSuccess,
+    showLogs = true,
+    showAccountsCard = true,
+    modal = false,
 }) {
     const [accounts, setAccounts] = useState([]);
     const [loadingAccounts, setLoadingAccounts] = useState(true);
@@ -96,8 +102,9 @@ export default function InstagramPublishPanel({
 
     useEffect(() => {
         loadAccounts();
-        loadLogs();
+        if (showLogs) loadLogs();
 
+        if (modal) return;
         const params = new URLSearchParams(window.location.search);
         const success = params.get('success');
         const error = params.get('error');
@@ -109,7 +116,7 @@ export default function InstagramPublishPanel({
             notify.error(decodeURIComponent(error));
             window.history.replaceState({}, '', window.location.pathname);
         }
-    }, [loadAccounts, loadLogs]);
+    }, [loadAccounts, loadLogs, modal, showLogs]);
 
     const handleConnect = async () => {
         if (!apiAvailable) {
@@ -248,9 +255,11 @@ export default function InstagramPublishPanel({
                 const polled = await pollPublishStatus(res.data.logId);
                 setResult({ ok: true, mediaId: polled.mediaId, async: true });
                 notify.success('Published to Instagram');
+                onSuccess?.();
             } else {
                 setResult({ ok: true, ...res.data });
                 notify.success('Published to Instagram');
+                onSuccess?.();
             }
             setMedia([]);
             setCaption('');
@@ -268,18 +277,21 @@ export default function InstagramPublishPanel({
 
     const activeType = MEDIA_TYPES.find((t) => t.id === mediaType);
 
-    return (
-        <div className="max-w-4xl mx-auto">
-            {/* Header */}
-            <div className="mb-8">
-                <div className="flex items-center gap-3 mb-3">
-                    <PlatformBadge platform="instagram" size="md" />
-                    <div>
-                        <h1 className="text-3xl font-bold text-[var(--viralix-accent)]">{title}</h1>
-                        <p className="text-gray-600">{subtitle}</p>
+    if (modal && isOpen === false) return null;
+
+    const panelBody = (
+        <>
+            {!modal && (
+                <div className="mb-8">
+                    <div className="flex items-center gap-3 mb-3">
+                        <PlatformBadge platform="instagram" size="md" />
+                        <div>
+                            <h1 className="text-3xl font-bold text-[var(--viralix-accent)]">{title}</h1>
+                            <p className="text-gray-600">{subtitle}</p>
+                        </div>
                     </div>
                 </div>
-            </div>
+            )}
 
             {!apiAvailable && unavailableMessage && (
                 <div className="mb-6 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
@@ -287,7 +299,7 @@ export default function InstagramPublishPanel({
                 </div>
             )}
 
-            {/* Connected accounts */}
+            {showAccountsCard && (
             <div className="dash-card dash-card-hover rounded-xl border border-[var(--viralix-border)] p-6 mb-6">
                 <div className="flex items-center justify-between mb-4">
                     <h2 className="text-lg font-semibold text-[var(--viralix-accent)]">{accountsTitle}</h2>
@@ -354,6 +366,7 @@ export default function InstagramPublishPanel({
                 </button>
                 )}
             </div>
+            )}
 
             {/* Publish */}
             <div className="dash-card dash-card-hover rounded-xl border border-[var(--viralix-border)] p-6 mb-6">
@@ -520,7 +533,7 @@ export default function InstagramPublishPanel({
                 )}
             </div>
 
-            {/* Recent logs */}
+            {showLogs && (
             <div className="dash-card dash-card-hover rounded-xl border border-[var(--viralix-border)] p-6">
                 <div className="flex items-center justify-between mb-4">
                     <h2 className="text-lg font-semibold text-[var(--viralix-accent)]">Recent attempts</h2>
@@ -560,6 +573,33 @@ export default function InstagramPublishPanel({
                     </div>
                 )}
             </div>
-        </div>
+            )}
+        </>
     );
+
+    if (modal) {
+        return (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+                <div className="dash-card bg-[var(--viralix-surface)] rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col">
+                    <div className="flex items-center justify-between p-5 border-b border-[var(--viralix-border)] shrink-0">
+                        <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 bg-pink-50 rounded-xl flex items-center justify-center">
+                                <PlatformIcon platform="instagram" size={24} />
+                            </div>
+                            <div>
+                                <h2 className="text-xl font-bold text-[var(--viralix-accent)]">Create Instagram Post</h2>
+                                <p className="text-sm text-gray-500">Images, reels, stories & carousels</p>
+                            </div>
+                        </div>
+                        <button type="button" onClick={onClose} className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
+                            <X className="w-5 h-5 text-gray-500" />
+                        </button>
+                    </div>
+                    <div className="flex-1 overflow-y-auto p-5">{panelBody}</div>
+                </div>
+            </div>
+        );
+    }
+
+    return <div className="max-w-4xl mx-auto">{panelBody}</div>;
 }

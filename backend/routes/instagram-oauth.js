@@ -60,8 +60,8 @@ router.get('/connect', auth, async (req, res) => {
 // GET /callback
 router.get('/callback', async (req, res) => {
     const { code, state, error, error_description } = req.query;
-    if (error) return res.redirect(`${CLIENT_URL}/dashboard/platforms/instagram/upload?error=${encodeURIComponent(error_description || error)}`);
-    if (!code || !state) return res.redirect(`${CLIENT_URL}/dashboard/platforms/instagram/upload?error=missing_code_or_state`);
+    if (error) return res.redirect(`${CLIENT_URL}/dashboard/platforms/instagram?error=${encodeURIComponent(error_description || error)}`);
+    if (!code || !state) return res.redirect(`${CLIENT_URL}/dashboard/platforms/instagram?error=missing_code_or_state`);
 
     try {
         const userId = verifyState(state);
@@ -141,10 +141,10 @@ router.get('/callback', async (req, res) => {
             }
         });
 
-        res.redirect(`${CLIENT_URL}/dashboard/platforms/instagram/upload?success=instagram_connected&username=${profile.username}`);
+        res.redirect(`${CLIENT_URL}/dashboard/platforms/instagram?success=instagram_connected&username=${profile.username}`);
     } catch (error) {
         console.error('Instagram callback error:', error);
-        res.redirect(`${CLIENT_URL}/dashboard/platforms/instagram/upload?error=${encodeURIComponent(error.message)}`);
+        res.redirect(`${CLIENT_URL}/dashboard/platforms/instagram?error=${encodeURIComponent(error.message)}`);
     }
 });
 

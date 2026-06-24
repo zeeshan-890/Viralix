@@ -84,7 +84,6 @@ export const NAV_SECTIONS = [
         items: [
             { name: 'All Platforms', href: '/dashboard/platforms', icon: Layers, exact: true },
             { name: 'Instagram', href: '/dashboard/platforms/instagram', platform: 'instagram' },
-            { name: 'Instagram Upload', href: '/dashboard/platforms/instagram/upload', platform: 'instagram' },
             { name: 'TikTok', href: '/dashboard/platforms/tiktok', platform: 'tiktok' },
             { name: 'YouTube', href: '/dashboard/platforms/youtube', platform: 'youtube' },
             { name: 'Facebook', href: '/dashboard/platforms/facebook', platform: 'facebook' },
@@ -93,7 +92,6 @@ export const NAV_SECTIONS = [
         topLinks: [
             { name: 'All', href: '/dashboard/platforms', exact: true },
             { name: 'Instagram', href: '/dashboard/platforms/instagram' },
-            { name: 'IG Upload', href: '/dashboard/platforms/instagram/upload' },
             { name: 'TikTok', href: '/dashboard/platforms/tiktok' },
             { name: 'YouTube', href: '/dashboard/platforms/youtube' },
             { name: 'Facebook', href: '/dashboard/platforms/facebook' },

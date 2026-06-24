@@ -1,32 +1,25 @@
 'use client';
 
-import InstagramPublishPanel from '@/components/instagram/InstagramPublishPanel';
-import { instagramPublishAPI, instagramOAuthAPI } from '@/lib/api';
+import { Suspense, useEffect } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 
-const productionInstagramAPI = {
-    accounts: instagramPublishAPI.accounts,
-    disconnect: instagramPublishAPI.disconnect,
-    connect: instagramOAuthAPI.connect,
-    publish: instagramPublishAPI.publish,
-    publishStatus: instagramPublishAPI.publishStatus,
-    publishLimit: instagramPublishAPI.publishLimit,
-    logs: instagramPublishAPI.logs,
-};
+function InstagramUploadRedirectInner() {
+    const router = useRouter();
+    const searchParams = useSearchParams();
 
-export default function InstagramUploadPage() {
+    useEffect(() => {
+        const qs = searchParams.toString();
+        router.replace(qs ? `/dashboard/platforms/instagram?${qs}` : '/dashboard/platforms/instagram?create=1');
+    }, [router, searchParams]);
+
+    return null;
+}
+
+/** Legacy route — Instagram upload now opens as a modal on the platform page. */
+export default function InstagramUploadRedirect() {
     return (
-        <InstagramPublishPanel
-            api={productionInstagramAPI}
-            title="Instagram Upload"
-            subtitle="Publish with Instagram Login — no Facebook Page required"
-            accountsTitle="Connected Accounts"
-            unavailableMessage={
-                <>
-                    Instagram publish API unavailable (
-                    <code className="mx-1 rounded bg-amber-100 px-1.5 py-0.5 text-xs">/api/instagram-publish/*</code>
-                    ). Deploy the latest backend.
-                </>
-            }
-        />
+        <Suspense fallback={null}>
+            <InstagramUploadRedirectInner />
+        </Suspense>
     );
 }

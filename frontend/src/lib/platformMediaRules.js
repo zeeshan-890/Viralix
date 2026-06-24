@@ -18,8 +18,7 @@ export const PLATFORM_MEDIA_RULES = {
         video: true,
         requiresMedia: true,
         maxFiles: 1,
-        notes: 'Queue publishes feed images or Reels. Use Instagram Upload for Stories & carousels.',
-        advancedUploadPath: '/dashboard/platforms/instagram/upload',
+        notes: 'Supports feed images, Reels, Stories, and carousels from the platform page.',
     },
     tiktok: {
         label: 'TikTok',
