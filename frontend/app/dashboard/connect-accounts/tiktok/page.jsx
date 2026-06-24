@@ -5,6 +5,8 @@ import Link from "next/link";
 import { Video, CheckCircle2, AlertCircle, Loader2, ArrowLeft, RefreshCw, Trash2, Eye, Heart, MessageCircle, Share2, Users } from "lucide-react";
 import PlatformIcon from '@/components/ui/PlatformIcon';
 import PlatformBadge from '@/components/ui/PlatformBadge';
+import TikTokPublishingStatus from '@/components/tiktok/TikTokPublishingStatus';
+import TikTokAccountTypeBadge from '@/components/tiktok/TikTokAccountTypeBadge';
 import { platformButtonClass } from '@/config/platforms';
 import { cn } from '@/lib/utils';
 
@@ -196,11 +198,12 @@ export default function TikTokManagePage() {
                                                 <div className="font-medium text-gray-900 truncate">
                                                     {account.accountName}
                                                 </div>
-                                                <div className="text-xs text-gray-500">
+                                                <div className="flex flex-wrap items-center gap-1.5 mt-1">
+                                                    <TikTokAccountTypeBadge accountId={account.platformAccountId} size="sm" />
                                                     {account.isExpired ? (
-                                                        <span className="text-amber-600">Token Expired</span>
+                                                        <span className="text-xs text-amber-600">Token expired</span>
                                                     ) : (
-                                                        <span className="text-green-600">Active</span>
+                                                        <span className="text-xs text-green-600">Connected</span>
                                                     )}
                                                 </div>
                                             </div>
@@ -244,7 +247,11 @@ export default function TikTokManagePage() {
                                                 {accountDetails?.profile?.username && (
                                                     <p className="text-gray-600">@{accountDetails.profile.username}</p>
                                                 )}
-                                                <div className="flex items-center gap-2 mt-1">
+                                                <div className="flex flex-wrap items-center gap-2 mt-1">
+                                                    <TikTokAccountTypeBadge
+                                                        accountId={selectedAccount.platformAccountId}
+                                                        size="md"
+                                                    />
                                                     {selectedAccount.isExpired ? (
                                                         <span className="px-2 py-0.5 text-xs rounded-full bg-amber-100 text-amber-700 border border-amber-200">
                                                             Token Expired
@@ -307,6 +314,13 @@ export default function TikTokManagePage() {
                                     )}
                                 </div>
 
+                                <TikTokPublishingStatus
+                                    accountId={selectedAccount.platformAccountId}
+                                    accountName={selectedAccount.accountName}
+                                    tokenExpired={selectedAccount.isExpired}
+                                    variant="full"
+                                />
+
                                 {/* Recent Videos */}
                                 <div className="dash-card dash-card-hover rounded-xl border border-[var(--viralix-border)] p-6">
                                     <h3 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
@@ -356,17 +370,6 @@ export default function TikTokManagePage() {
                                             ))}
                                         </div>
                                     )}
-                                </div>
-
-                                {/* Info Box */}
-                                <div className="p-4 rounded-lg border border-blue-200 bg-blue-50">
-                                    <div className="flex items-start gap-2">
-                                        <Video className="w-4 h-4 text-blue-600 flex-shrink-0 mt-0.5" />
-                                        <div className="text-sm text-blue-800">
-                                            <p className="font-medium mb-1">Publishing to TikTok</p>
-                                            <p>Videos published through Viralix will be posted as private by default until your TikTok app is reviewed. You can change the privacy setting in the TikTok app after posting.</p>
-                                        </div>
-                                    </div>
                                 </div>
                             </div>
                         ) : (

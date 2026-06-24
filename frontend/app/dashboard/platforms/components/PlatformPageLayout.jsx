@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { RefreshCw, ExternalLink, ArrowLeft } from 'lucide-react';
 import { getPlatform, platformButtonClass } from '@/config/platforms';
 import PlatformIcon from '@/components/ui/PlatformIcon';
+import TikTokAccountTypeBadge from '@/components/tiktok/TikTokAccountTypeBadge';
 import { cn } from '@/lib/utils';
 
 /** @deprecated Use getPlatform() from @/config/platforms */
@@ -139,6 +140,13 @@ export default function PlatformPageLayout({
                                         <p className="text-sm text-gray-500">
                                             {formatNumber(account.followerCount || 0)} followers
                                         </p>
+                                        {platform === 'tiktok' && account.platformAccountId && (
+                                            <TikTokAccountTypeBadge
+                                                accountId={account.platformAccountId}
+                                                size="sm"
+                                                className="mt-1.5"
+                                            />
+                                        )}
                                     </div>
                                     {account.profileUrl && (
                                         <a

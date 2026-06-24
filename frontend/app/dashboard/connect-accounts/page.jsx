@@ -7,6 +7,8 @@ import { CheckCircle2, ExternalLink, Loader2, AlertCircle, HelpCircle, BookOpen 
 import { useAccounts } from "@/hooks/useAccounts";
 import { platformButtonClass } from '@/config/platforms';
 import PlatformIcon from '@/components/ui/PlatformIcon';
+import TikTokPublishingStatus from '@/components/tiktok/TikTokPublishingStatus';
+import TikTokAccountTypeBadge from '@/components/tiktok/TikTokAccountTypeBadge';
 import { cn } from '@/lib/utils';
 
 export default function ConnectAccountsPage() {
@@ -244,14 +246,25 @@ export default function ConnectAccountsPage() {
                         {ttAccounts.length > 0 && (
                             <div className="mt-6 pt-6 border-t border-gray-200 space-y-3">
                                 {ttAccounts.map(acc => (
-                                    <div key={acc.platformAccountId} className="flex items-center justify-between p-3 border rounded-lg">
-                                        <div className="flex items-center gap-3">
-                                            <div className="w-10 h-10 rounded-full flex items-center justify-center">
+                                    <div key={acc.platformAccountId} className="flex items-center justify-between p-3 border rounded-lg gap-3">
+                                        <div className="flex items-center gap-3 min-w-0 flex-1">
+                                            <div className="w-10 h-10 rounded-full flex items-center justify-center shrink-0">
                                                 <PlatformIcon platform="tiktok" size={20} />
                                             </div>
-                                            <div className="font-medium">{acc.accountName}</div>
+                                            <div className="min-w-0 flex-1">
+                                                <div className="font-medium truncate">{acc.accountName}</div>
+                                                <div className="flex flex-wrap items-center gap-2 mt-1">
+                                                    <TikTokAccountTypeBadge accountId={acc.platformAccountId} size="sm" />
+                                                    <TikTokPublishingStatus
+                                                        accountId={acc.platformAccountId}
+                                                        tokenExpired={acc.isExpired}
+                                                        variant="compact"
+                                                        className="hidden sm:block"
+                                                    />
+                                                </div>
+                                            </div>
                                         </div>
-                                        <button onClick={() => handleDisconnect('tiktok', acc.platformAccountId)} className="text-xs text-red-600 hover:text-red-800">Disconnect</button>
+                                        <button onClick={() => handleDisconnect('tiktok', acc.platformAccountId)} className="text-xs text-red-600 hover:text-red-800 shrink-0">Disconnect</button>
                                     </div>
                                 ))}
                             </div>

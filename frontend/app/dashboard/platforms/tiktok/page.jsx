@@ -4,6 +4,7 @@ import { useAccounts } from '@/hooks/useAccounts';
 import { platformSyncAPI } from '@/lib/api';
 import PlatformPageLayout from '../components/PlatformPageLayout';
 import CreateTikTokPost from './components/CreateTikTokPost';
+import TikTokPublishingStatus from '@/components/tiktok/TikTokPublishingStatus';
 import { Plus } from 'lucide-react';
 
 export default function TikTokPage() {
@@ -92,6 +93,19 @@ export default function TikTokPage() {
                 refreshing={refreshing}
                 onRefresh={handleRefresh}
             >
+                {ttAccounts.length > 0 && (
+                    <div className="mb-6 space-y-4">
+                        {ttAccounts.map((acc) => (
+                            <TikTokPublishingStatus
+                                key={acc.platformAccountId}
+                                accountId={acc.platformAccountId}
+                                accountName={acc.accountName}
+                                tokenExpired={acc.isExpired}
+                                variant={ttAccounts.length === 1 ? 'full' : 'compact'}
+                            />
+                        ))}
+                    </div>
+                )}
                 {/* Create Post Button */}
                 {ttAccounts.length > 0 && (
                     <div className="mb-6">
