@@ -55,15 +55,21 @@ export default function IgTestPage() {
 
     const [logs, setLogs] = useState([]);
     const [limit, setLimit] = useState(null);
+    const [igTestAvailable, setIgTestAvailable] = useState(true);
 
     const loadAccounts = useCallback(async () => {
         setLoadingAccounts(true);
         try {
             const res = await igTestAPI.accounts();
             const list = res.data.accounts || [];
+            setIgTestAvailable(true);
             setAccounts(list);
             setSelectedAccount((prev) => prev || (list[0]?.id ?? ''));
         } catch (error) {
+            if (error?.response?.status === 404) {
+                setIgTestAvailable(false);
+                return;
+            }
             notify.error(error.response?.data?.message || 'Failed to load test accounts');
         } finally {
             setLoadingAccounts(false);
@@ -71,13 +77,14 @@ export default function IgTestPage() {
     }, []);
 
     const loadLogs = useCallback(async () => {
+        if (!igTestAvailable) return;
         try {
             const res = await igTestAPI.logs();
             setLogs(res.data.logs || []);
         } catch {
             /* logs are best-effort */
         }
-    }, []);
+    }, [igTestAvailable]);
 
     useEffect(() => {
         loadAccounts();
@@ -97,6 +104,10 @@ export default function IgTestPage() {
     }, [loadAccounts, loadLogs]);
 
     const handleConnect = async () => {
+        if (!igTestAvailable) {
+            notify.warning('IG Test backend endpoints are not deployed yet.');
+            return;
+        }
         setConnecting(true);
         try {
             const res = await igTestAPI.connect();
@@ -108,6 +119,7 @@ export default function IgTestPage() {
     };
 
     const handleDisconnect = async (id) => {
+        if (!igTestAvailable) return;
         if (!confirm('Disconnect this test account?')) return;
         try {
             await igTestAPI.disconnect(id);
@@ -163,6 +175,10 @@ export default function IgTestPage() {
     };
 
     const checkLimit = async () => {
+        if (!igTestAvailable) {
+            notify.warning('IG Test backend endpoints are not deployed yet.');
+            return;
+        }
         if (!selectedAccount) return;
         try {
             const res = await igTestAPI.publishLimit(selectedAccount);
@@ -180,6 +196,10 @@ export default function IgTestPage() {
     };
 
     const handlePublish = async () => {
+        if (!igTestAvailable) {
+            notify.warning('IG Test backend endpoints are not deployed yet.');
+            return;
+        }
         if (!canPublish()) return;
         setPublishing(true);
         setResult(null);
@@ -227,6 +247,15 @@ export default function IgTestPage() {
                     </div>
                 </div>
             </div>
+
+            {!igTestAvailable && (
+                <div className="mb-6 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+                    IG Test endpoints are unavailable on the current API host (
+                    <code className="mx-1 rounded bg-amber-100 px-1.5 py-0.5 text-xs">/api/ig-test/*</code>
+                    returned 404). Deploy the latest backend to <code className="mx-1 rounded bg-amber-100 px-1.5 py-0.5 text-xs">api.viralix.dev</code> or point
+                    <code className="mx-1 rounded bg-amber-100 px-1.5 py-0.5 text-xs">NEXT_PUBLIC_API_URL</code> to the server where these routes exist.
+                </div>
+            )}
 
             {/* Connected accounts */}
             <div className="dash-card dash-card-hover rounded-xl border border-[var(--viralix-border)] p-6 mb-6">
