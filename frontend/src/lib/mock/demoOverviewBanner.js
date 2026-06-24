@@ -1,8 +1,40 @@
 /**
- * Dummy data for previewing the overview analytics banner (multi-account per platform).
+ * Dummy data for previewing overview platform cards.
  * Use: /dashboard/analytics?demo=overview
  * Or enable mock mode (NEXT_PUBLIC_USE_MOCK_DATA=true).
  */
+
+function sumEngagement(target, source = {}) {
+    target.likes += source.likes || 0;
+    target.comments += source.comments || 0;
+    target.shares += source.shares || 0;
+    target.views += source.views || 0;
+}
+
+export function buildDemoPlatformBreakdown(accountBreakdown) {
+    const result = {};
+    Object.entries(accountBreakdown).forEach(([key, stats]) => {
+        const platformId = stats.platform || key.split(':')[0];
+        if (!result[platformId]) {
+            result[platformId] = {
+                posts: 0,
+                published: 0,
+                scheduled: 0,
+                draft: 0,
+                failed: 0,
+                engagement: { likes: 0, comments: 0, shares: 0, views: 0 },
+            };
+        }
+        const bucket = result[platformId];
+        bucket.posts += stats.posts || 0;
+        bucket.published += stats.published || 0;
+        bucket.scheduled += stats.scheduled || 0;
+        bucket.draft += stats.draft || 0;
+        bucket.failed += stats.failed || 0;
+        sumEngagement(bucket.engagement, stats.engagement);
+    });
+    return result;
+}
 
 export const DEMO_OVERVIEW_BANNER = {
     overview: {
