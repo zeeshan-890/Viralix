@@ -15,6 +15,7 @@ export function useAccounts() {
                 ...a,
                 platformAccountId: a.platformAccountId || a.accountId,
                 followerCount: a.followerCount ?? a.metadata?.followersCount ?? 0,
+                username: a.username ?? a.metadata?.username,
             }));
         },
     });

@@ -143,7 +143,7 @@ export default function PlatformAnalyticsBanner({
                     </p>
                     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2 flex-1 auto-rows-fr">
                         {allMetrics.map((m) => (
-                            <CompactMetricTile key={m.label} {...m} variant="dark" className="!p-2 sm:!p-2.5" />
+                            <CompactMetricTile key={m.label} {...m} variant="dark" />
                         ))}
                     </div>
                 </div>

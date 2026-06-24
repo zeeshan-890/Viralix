@@ -113,8 +113,29 @@ router.get('/overview', auth, async (req, res) => {
         // Calculate engagement rate
         const engagementRate = totalViews > 0 ? ((totalLikes + totalComments + totalShares) / totalViews * 100) : 0;
 
-        // Platform breakdown
+        // Platform + per-account breakdown
         const platformBreakdown = {};
+        const accountBreakdown = {};
+
+        const ensureBucket = (bucket) => {
+            if (!bucket.engagement) {
+                bucket.engagement = { likes: 0, comments: 0, shares: 0, views: 0 };
+            }
+            return bucket;
+        };
+
+        const addPlatformStats = (bucket, platform) => {
+            const b = ensureBucket(bucket);
+            b.posts++;
+            b[platform.status]++;
+            if (platform.engagement) {
+                b.engagement.likes += platform.engagement.likes || 0;
+                b.engagement.comments += platform.engagement.comments || 0;
+                b.engagement.shares += platform.engagement.shares || 0;
+                b.engagement.views += platform.engagement.views || 0;
+            }
+        };
+
         posts.forEach(post => {
             post.platforms.forEach(platform => {
                 if (!platformBreakdown[platform.name]) {
@@ -127,14 +148,22 @@ router.get('/overview', auth, async (req, res) => {
                         engagement: { likes: 0, comments: 0, shares: 0, views: 0 }
                     };
                 }
-                platformBreakdown[platform.name].posts++;
-                platformBreakdown[platform.name][platform.status]++;
-                if (platform.engagement) {
-                    platformBreakdown[platform.name].engagement.likes += platform.engagement.likes || 0;
-                    platformBreakdown[platform.name].engagement.comments += platform.engagement.comments || 0;
-                    platformBreakdown[platform.name].engagement.shares += platform.engagement.shares || 0;
-                    platformBreakdown[platform.name].engagement.views += platform.engagement.views || 0;
+                addPlatformStats(platformBreakdown[platform.name], platform);
+
+                const accKey = `${platform.name}:${platform.accountId}`;
+                if (!accountBreakdown[accKey]) {
+                    accountBreakdown[accKey] = {
+                        platform: platform.name,
+                        accountId: platform.accountId,
+                        posts: 0,
+                        published: 0,
+                        scheduled: 0,
+                        draft: 0,
+                        failed: 0,
+                        engagement: { likes: 0, comments: 0, shares: 0, views: 0 }
+                    };
                 }
+                addPlatformStats(accountBreakdown[accKey], platform);
             });
         });
 
@@ -155,6 +184,7 @@ router.get('/overview', auth, async (req, res) => {
                 engagementRate: Math.round(engagementRate * 100) / 100
             },
             platformBreakdown,
+            accountBreakdown,
             dateRange: { startDate, endDate }
         };
 

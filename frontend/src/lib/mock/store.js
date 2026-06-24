@@ -24,9 +24,16 @@ function saveToStorage(store) {
     }
 }
 
+const DEMO_STORE_VERSION = 2;
+
 export function getMockStore() {
     if (!memoryStore) {
         memoryStore = loadFromStorage() || createInitialStore();
+    }
+    if (memoryStore.demoStoreVersion !== DEMO_STORE_VERSION) {
+        memoryStore = createInitialStore();
+        memoryStore.demoStoreVersion = DEMO_STORE_VERSION;
+        saveToStorage(memoryStore);
     }
     return memoryStore;
 }
@@ -117,6 +124,18 @@ export function buildAnalyticsOverview() {
     let totalViews = 0;
 
     const platformBreakdown = {};
+    const accountBreakdown = {};
+
+    const addStats = (bucket, platform) => {
+        bucket.posts++;
+        if (bucket[platform.status] !== undefined) bucket[platform.status]++;
+        if (platform.engagement) {
+            bucket.engagement.likes += platform.engagement.likes || 0;
+            bucket.engagement.comments += platform.engagement.comments || 0;
+            bucket.engagement.shares += platform.engagement.shares || 0;
+            bucket.engagement.views += platform.engagement.views || 0;
+        }
+    };
 
     posts.forEach((post) => {
         (post.platforms || []).forEach((platform) => {
@@ -126,14 +145,20 @@ export function buildAnalyticsOverview() {
                     engagement: { likes: 0, comments: 0, shares: 0, views: 0 },
                 };
             }
-            const pb = platformBreakdown[platform.name];
-            pb.posts++;
-            if (pb[platform.status] !== undefined) pb[platform.status]++;
+            addStats(platformBreakdown[platform.name], platform);
+
+            const accKey = `${platform.name}:${platform.accountId}`;
+            if (!accountBreakdown[accKey]) {
+                accountBreakdown[accKey] = {
+                    platform: platform.name,
+                    accountId: platform.accountId,
+                    posts: 0, published: 0, scheduled: 0, draft: 0, failed: 0,
+                    engagement: { likes: 0, comments: 0, shares: 0, views: 0 },
+                };
+            }
+            addStats(accountBreakdown[accKey], platform);
+
             if (platform.engagement) {
-                pb.engagement.likes += platform.engagement.likes || 0;
-                pb.engagement.comments += platform.engagement.comments || 0;
-                pb.engagement.shares += platform.engagement.shares || 0;
-                pb.engagement.views += platform.engagement.views || 0;
                 totalLikes += platform.engagement.likes || 0;
                 totalComments += platform.engagement.comments || 0;
                 totalShares += platform.engagement.shares || 0;
@@ -164,6 +189,7 @@ export function buildAnalyticsOverview() {
             engagementRate,
         },
         platformBreakdown,
+        accountBreakdown,
         dateRange: {
             startDate: new Date(Date.now() - 30 * 86400000).toISOString(),
             endDate: new Date().toISOString(),

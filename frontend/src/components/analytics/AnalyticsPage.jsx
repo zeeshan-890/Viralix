@@ -2,8 +2,9 @@
 
 import { useEffect, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { analyticsAPI } from '@/lib/api';
+import { analyticsAPI, isMockMode } from '@/lib/api';
 import { useAccounts } from '@/hooks/useAccounts';
+import { DEMO_OVERVIEW_BANNER } from '@/lib/mock/demoOverviewBanner';
 import PerformanceChart from '@/components/dashboard/PerformanceChart';
 import PlatformBreakdown from './PlatformBreakdown';
 import TopPostsTable from './TopPostsTable';
@@ -17,8 +18,10 @@ export default function AnalyticsPage() {
     const searchParams = useSearchParams();
     const platformParam = searchParams.get('platform') || '';
     const accountFilter = searchParams.get('account') || '';
+    const demoOverview = searchParams.get('demo') === 'overview';
 
     const activeTab = ['tiktok', 'instagram'].includes(platformParam) ? platformParam : 'overview';
+    const useDemoBanner = demoOverview || (isMockMode() && activeTab === 'overview');
 
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
@@ -53,28 +56,33 @@ export default function AnalyticsPage() {
     };
 
     const o = analytics?.overview || {};
-    const platformBreakdown = analytics?.platformBreakdown || {};
+    const accountBreakdown = analytics?.accountBreakdown || {};
+
+    const bannerOverview = useDemoBanner ? DEMO_OVERVIEW_BANNER.overview : o;
+    const bannerAccounts = useDemoBanner ? DEMO_OVERVIEW_BANNER.accounts : accounts;
+    const bannerAccountBreakdown = useDemoBanner ? DEMO_OVERVIEW_BANNER.accountBreakdown : accountBreakdown;
 
     return (
         <div className="space-y-5 pb-2">
             <div className="space-y-5">
                 {activeTab === 'overview' && (
                     <>
-                        {loading ? (
+                        {loading && !useDemoBanner ? (
                             <div className="analytics-panel flex flex-col items-center justify-center gap-3 py-16">
                                 <Loader2 className="h-8 w-8 animate-spin text-[var(--viralix-primary)]" />
                                 <p className="text-sm text-[var(--viralix-muted)]">Loading analytics…</p>
                             </div>
-                        ) : error ? (
+                        ) : error && !useDemoBanner ? (
                             <div className="analytics-panel border-red-200 bg-red-50/80 px-4 py-3 text-sm text-red-700">{error}</div>
                         ) : (
                             <>
                                 <OverviewAnalyticsBanner
-                                    overview={o}
-                                    platformBreakdown={platformBreakdown}
-                                    accounts={accounts}
-                                    onRefresh={handleRefresh}
+                                    overview={bannerOverview}
+                                    accountBreakdown={bannerAccountBreakdown}
+                                    accounts={bannerAccounts}
+                                    onRefresh={useDemoBanner ? undefined : handleRefresh}
                                     refreshing={refreshing}
+                                    demoMode={useDemoBanner}
                                 />
 
                                 <PerformanceChart />

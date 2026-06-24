@@ -24,11 +24,14 @@ export function createInitialStore() {
 
     return {
         user: { ...MOCK_USER },
+        demoStoreVersion: 2,
         accounts: [
-            { _id: 'acc-fb-1', platform: 'facebook', platformAccountId: 'fb-page-101', accountId: 'fb-page-101', accountName: 'Viralix Brand', followerCount: 12400, connectedAt: daysAgo(30), isActive: true },
-            { _id: 'acc-ig-1', platform: 'instagram', platformAccountId: 'ig-user-201', accountId: 'ig-user-201', accountName: '@viralix.official', followerCount: 28700, connectedAt: daysAgo(28), isActive: true },
-            { _id: 'acc-tt-1', platform: 'tiktok', platformAccountId: 'tt-open-301', accountId: 'tt-open-301', accountName: 'viralix_creators', followerCount: 45200, connectedAt: daysAgo(14), isActive: true },
-            { _id: 'acc-yt-1', platform: 'youtube', platformAccountId: 'yt-channel-401', accountId: 'yt-channel-401', accountName: 'Viralix Media', followerCount: 18300, connectedAt: daysAgo(21), isActive: true },
+            { _id: 'acc-fb-1', platform: 'facebook', platformAccountId: 'fb-page-101', accountId: 'fb-page-101', accountName: 'Viralix Brand', username: 'viralixbrand', followerCount: 12400, connectedAt: daysAgo(30), isActive: true },
+            { _id: 'acc-ig-1', platform: 'instagram', platformAccountId: 'ig-user-201', accountId: 'ig-user-201', accountName: 'Viralix Official', username: 'viralix.official', followerCount: 28700, connectedAt: daysAgo(28), isActive: true },
+            { _id: 'acc-ig-2', platform: 'instagram', platformAccountId: 'ig-user-202', accountId: 'ig-user-202', accountName: 'Viralix Clips', username: 'viralix.clips', followerCount: 12400, connectedAt: daysAgo(20), isActive: true },
+            { _id: 'acc-tt-1', platform: 'tiktok', platformAccountId: 'tt-open-301', accountId: 'tt-open-301', accountName: 'Viralix Creators', username: 'viralix_creators', followerCount: 45200, connectedAt: daysAgo(14), isActive: true },
+            { _id: 'acc-tt-2', platform: 'tiktok', platformAccountId: 'tt-open-302', accountId: 'tt-open-302', accountName: 'Shani Clips', username: 'shaniclips', followerCount: 3200, connectedAt: daysAgo(7), isActive: true },
+            { _id: 'acc-yt-1', platform: 'youtube', platformAccountId: 'yt-channel-401', accountId: 'yt-channel-401', accountName: 'Viralix Media', username: 'ViralixMedia', followerCount: 18300, connectedAt: daysAgo(21), isActive: true },
         ],
         posts: [
             {
@@ -114,6 +117,26 @@ export function createInitialStore() {
                     { name: 'tiktok', accountId: 'tt-open-301', status: 'draft' },
                 ],
                 createdAt: daysAgo(0), updatedAt: daysAgo(0), scheduledDate: null, scheduledAt: null,
+            },
+            {
+                _id: 'post-009', title: 'Reel: Quick Tips', content: '3 hooks that stop the scroll 🎬',
+                status: 'published', isPublished: true, isScheduled: false, isDraft: false,
+                hashtags: ['Reels', 'Tips'],
+                media: [{ type: 'video', url: VID, filename: 'reel-tips.mp4' }],
+                platforms: [
+                    { name: 'instagram', accountId: 'ig-user-202', status: 'published', publishedAt: daysAgo(1), engagement: { views: 12400, likes: 1840, comments: 92, shares: 48 } },
+                ],
+                createdAt: daysAgo(2), updatedAt: daysAgo(1), scheduledDate: null, scheduledAt: null,
+            },
+            {
+                _id: 'post-010', title: 'Shani Clips — Day in Life', content: 'Behind the scenes from today 📱',
+                status: 'published', isPublished: true, isScheduled: false, isDraft: false,
+                hashtags: ['DayInLife', 'Clips'],
+                media: [{ type: 'video', url: VID, filename: 'day-life.mp4' }],
+                platforms: [
+                    { name: 'tiktok', accountId: 'tt-open-302', status: 'published', publishedAt: daysAgo(1), engagement: { views: 1420, likes: 89, comments: 12, shares: 34 } },
+                ],
+                createdAt: daysAgo(2), updatedAt: daysAgo(1), scheduledDate: null, scheduledAt: null,
             },
         ],
         mediaFiles: [
