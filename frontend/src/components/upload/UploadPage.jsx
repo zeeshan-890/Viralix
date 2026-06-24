@@ -9,13 +9,18 @@ import { cn } from '@/lib/utils';
 import TikTokSettings, { useTikTokSettingsValidation } from '../../../app/dashboard/upload/components/TikTokSettings';
 import UploadSidebar from './UploadSidebar';
 import UploadMediaCanvas from './UploadMediaCanvas';
-import { Image as ImageIcon, Layers, PenLine, Rocket, Calendar, FileText } from 'lucide-react';
+import { Image as ImageIcon, PenLine, Rocket, Calendar, FileText, Target } from 'lucide-react';
 import Link from 'next/link';
+import {
+    getMediaConstraints,
+    filterFilesForConstraints,
+    mediaTypeOfFile,
+} from '@/lib/platformMediaRules';
 
 const STEPS = [
+    { id: 'targets', label: 'Platforms', icon: Target },
     { id: 'media', label: 'Media', icon: ImageIcon },
     { id: 'copy', label: 'Copy', icon: PenLine },
-    { id: 'targets', label: 'Targets', icon: Layers },
     { id: 'publish', label: 'Publish', icon: Rocket },
 ];
 
@@ -75,8 +80,35 @@ export default function UploadPage() {
         });
     };
 
+    const mediaConstraints = useMemo(
+        () => getMediaConstraints(selectedPlatforms),
+        [selectedPlatforms]
+    );
+
+    // Drop media incompatible with newly selected platforms
+    useEffect(() => {
+        if (!selectedPlatforms.length) {
+            if (uploadedFiles.length) setUploadedFiles([]);
+            return;
+        }
+        const compatible = filterFilesForConstraints(uploadedFiles, mediaConstraints);
+        if (compatible.length !== uploadedFiles.length) {
+            setUploadedFiles(compatible);
+            setActiveFileIndex(0);
+            notify.warning('Some files were removed because they are not supported for the selected platforms.');
+        }
+    }, [mediaConstraints, selectedPlatforms.length]); // eslint-disable-line react-hooks/exhaustive-deps
+
+    const hasVideo = uploadedFiles.some((f) => mediaTypeOfFile(f) === 'video');
+    const hasImage = uploadedFiles.some((f) => mediaTypeOfFile(f) === 'image');
+
     const addFiles = (files) => {
-        setUploadedFiles((prev) => [...prev, ...files]);
+        const room = Math.max(0, mediaConstraints.maxFiles - uploadedFiles.length);
+        const toAdd = files.slice(0, room);
+        if (toAdd.length < files.length) {
+            notify.warning(`Maximum ${mediaConstraints.maxFiles} file(s) for this platform selection.`);
+        }
+        setUploadedFiles((prev) => [...prev, ...toAdd]);
     };
 
     const removeFile = (publicId) => {
@@ -87,46 +119,56 @@ export default function UploadPage() {
         });
     };
 
-    const hasIG = selectedPlatforms.some((p) => p.name === 'instagram');
-    const hasTT = selectedPlatforms.some((p) => p.name === 'tiktok');
-    const hasYT = selectedPlatforms.some((p) => p.name === 'youtube');
-    const hasVideo = uploadedFiles.some((f) => f.type === 'video');
+    const hasIG = mediaConstraints.hasInstagram;
+    const hasTT = mediaConstraints.hasTikTok;
+    const hasYT = mediaConstraints.hasYouTube;
     const selectedTiktokAccount = useMemo(() => selectedPlatforms.find((p) => p.name === 'tiktok')?.accountId || null, [selectedPlatforms]);
     const tiktokValidation = useTikTokSettingsValidation(tiktokSettings);
 
     const stepState = useMemo(() => ({
-        media: uploadedFiles.length > 0,
-        copy: Boolean(contentForm.title && contentForm.description),
         targets: selectedPlatforms.length > 0,
+        media: !mediaConstraints.requiresMedia || uploadedFiles.length > 0,
+        copy: Boolean(contentForm.title && contentForm.description),
         publish: false,
-    }), [uploadedFiles.length, contentForm.title, contentForm.description, selectedPlatforms.length]);
+    }), [selectedPlatforms.length, mediaConstraints.requiresMedia, uploadedFiles.length, contentForm.title, contentForm.description]);
 
     const canSubmit = useMemo(() => {
-        if (!contentForm.title || !contentForm.description) return false;
         if (!selectedPlatforms.length) return false;
+        if (!contentForm.title || !contentForm.description) return false;
+        if (mediaConstraints.requiresMedia && !uploadedFiles.length) return false;
+        if (mediaConstraints.videoOnly && !hasVideo) return false;
+        if (mediaConstraints.imageOnly && !hasImage) return false;
         if (hasIG && !uploadedFiles.length) return false;
-        if ((hasTT || hasYT) && !hasVideo) return false;
         if (scheduleType === 'later' && (!date || !time)) return false;
         if (hasTT && !tiktokValidation.isValid) return false;
         return true;
-    }, [contentForm, selectedPlatforms, uploadedFiles, hasIG, hasTT, hasYT, hasVideo, scheduleType, date, time, tiktokValidation.isValid]);
+    }, [contentForm, selectedPlatforms, uploadedFiles, mediaConstraints, hasIG, hasTT, hasVideo, hasImage, scheduleType, date, time, tiktokValidation.isValid]);
 
     stepState.publish = canSubmit;
 
     const validationHints = useMemo(() => {
         const hints = [];
-        if (hasIG && !uploadedFiles.length && selectedPlatforms.length) hints.push({ type: 'warn', message: 'Instagram requires a photo or video.' });
-        if (hasTT && !hasVideo && selectedPlatforms.length) hints.push({ type: 'warn', message: 'TikTok requires a video file.' });
+        if (!selectedPlatforms.length) {
+            hints.push({ type: 'warn', message: 'Select at least one platform first.' });
+            return hints;
+        }
+        mediaConstraints.hints.forEach((msg) => hints.push({ type: 'info', message: msg }));
+        if (mediaConstraints.requiresMedia && !uploadedFiles.length) {
+            hints.push({ type: 'warn', message: 'Upload media — required for your selected platforms.' });
+        }
+        if (mediaConstraints.videoOnly && !hasVideo) {
+            hints.push({ type: 'warn', message: 'A video file is required (YouTube and/or TikTok selected).' });
+        }
         if (hasTT && tiktokValidation.errors[0]) hints.push({ type: 'error', message: tiktokValidation.errors[0] });
         return hints;
-    }, [hasIG, hasTT, hasVideo, uploadedFiles.length, selectedPlatforms.length, tiktokValidation.errors]);
+    }, [selectedPlatforms.length, mediaConstraints, hasVideo, hasImage, uploadedFiles.length, hasTT, tiktokValidation.errors]);
 
     const buildMediaPayload = () => uploadedFiles.map((f) => ({ type: f.type, url: f.url, filename: f.filename, size: f.size, mimetype: f.mimetype }));
 
     const tiktokPanel = hasTT && selectedTiktokAccount ? (
         <div className="rounded-xl border border-pink-200 bg-pink-50/50 p-3">
             <p className="mb-2 text-xs font-semibold text-[#354F52]">TikTok options</p>
-            <TikTokSettings accountId={selectedTiktokAccount} settings={tiktokSettings} onSettingsChange={setTiktokSettings} isPhotoPost={!hasVideo} />
+            <TikTokSettings accountId={selectedTiktokAccount} settings={tiktokSettings} onSettingsChange={setTiktokSettings} isPhotoPost={false} />
         </div>
     ) : null;
 
@@ -222,7 +264,7 @@ export default function UploadPage() {
                 <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
                     <div>
                         <h1 className="text-xl font-semibold tracking-tight text-white">Create content</h1>
-                        <p className="mt-0.5 text-sm text-white/60">Upload · write · publish</p>
+                        <p className="mt-0.5 text-sm text-white/60">Platforms · media · publish</p>
                     </div>
                     <div className="flex flex-wrap items-center gap-2">
                         <Link href="/dashboard/schedule" className="inline-flex items-center gap-1 rounded-lg bg-white/10 px-2.5 py-1.5 text-xs text-white/80 hover:bg-[var(--viralix-surface)]/20">
@@ -258,6 +300,9 @@ export default function UploadPage() {
                     onActiveChange={setActiveFileIndex}
                     onAdd={addFiles}
                     onRemove={removeFile}
+                    mediaConstraints={mediaConstraints}
+                    platformsSelected={selectedPlatforms.length > 0}
+                    forInstagram={mediaConstraints.hasInstagram && mediaConstraints.selectedPlatformNames?.length === 1}
                 />
                 <UploadSidebar
                     contentForm={contentForm}
@@ -265,6 +310,7 @@ export default function UploadPage() {
                     connectedTargets={connectedTargets}
                     selectedPlatforms={selectedPlatforms}
                     onTogglePlatform={toggleTarget}
+                    mediaConstraints={mediaConstraints}
                     scheduleType={scheduleType}
                     onScheduleTypeChange={setScheduleType}
                     date={date}

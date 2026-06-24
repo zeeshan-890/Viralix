@@ -152,6 +152,12 @@ try {
     console.warn('Instagram routes not mounted yet:', e.message);
 }
 try {
+    app.use('/api/instagram-publish', require('./routes/instagram-publish'));
+    console.log('📸 Instagram Publish routes mounted');
+} catch (e) {
+    console.warn('Instagram Publish routes not available:', e.message);
+}
+try {
     app.use('/api/ig-test', require('./routes/ig-test'));
     console.log('📸 Instagram Publishing Test routes mounted');
 } catch (e) {

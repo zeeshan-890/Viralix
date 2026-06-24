@@ -4,6 +4,7 @@ const { encrypt, decrypt } = require('../utils/encryption');
 const igTest = require('../services/igTest');
 const IgTestAccount = require('../models/igtest/IgTestAccount');
 const IgTestPublishLog = require('../models/igtest/IgTestPublishLog');
+const { mountInstagramPublishRoutes } = require('../services/instagramPublishRoutes');
 
 const router = express.Router();
 
@@ -15,18 +16,15 @@ function redirectBack(res, params) {
     return res.redirect(`${CLIENT_URL}${RETURN_PATH}?${qs}`);
 }
 
-// GET /api/ig-test/connect — return the Instagram Business Login URL
 router.get('/connect', auth, async (req, res) => {
     try {
         const state = igTest.signState(req.user.id);
-        const authUrl = igTest.buildAuthUrl(state);
-        res.json({ authUrl });
+        res.json({ authUrl: igTest.buildAuthUrl(state) });
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
 });
 
-// GET /api/ig-test/callback — exchange code, store account (public, state-verified)
 router.get('/callback', async (req, res) => {
     const { code, state, error, error_description } = req.query;
     if (error) return redirectBack(res, { error: error_description || error });
@@ -34,7 +32,6 @@ router.get('/callback', async (req, res) => {
 
     try {
         const userId = igTest.verifyState(state);
-
         const { shortLivedToken, igUserId: oauthUserId } = await igTest.exchangeCodeForToken(code);
         const { accessToken, expiresAt } = await igTest.getLongLivedToken(shortLivedToken);
         const profile = await igTest.getProfile(oauthUserId, accessToken);
@@ -43,8 +40,7 @@ router.get('/callback', async (req, res) => {
         await IgTestAccount.findOneAndUpdate(
             { userId, igUserId },
             {
-                userId,
-                igUserId,
+                userId, igUserId,
                 username: profile.username || String(igUserId),
                 accountType: profile.account_type,
                 profilePictureUrl: profile.profile_picture_url,
@@ -64,7 +60,6 @@ router.get('/callback', async (req, res) => {
     }
 });
 
-// GET /api/ig-test/accounts — list this user's connected test accounts
 router.get('/accounts', auth, async (req, res) => {
     try {
         const accounts = await IgTestAccount.find({ userId: req.user.id }).sort({ connectedAt: -1 });
@@ -84,7 +79,6 @@ router.get('/accounts', auth, async (req, res) => {
     }
 });
 
-// DELETE /api/ig-test/accounts/:id — disconnect a test account
 router.delete('/accounts/:id', auth, async (req, res) => {
     try {
         await IgTestAccount.deleteOne({ _id: req.params.id, userId: req.user.id });
@@ -97,303 +91,25 @@ router.delete('/accounts/:id', auth, async (req, res) => {
 async function loadAccountWithToken(userId, accountId) {
     const account = await IgTestAccount.findOne({ _id: accountId, userId }).select('+accessToken');
     if (!account) throw new Error('Account not found');
-    const token = decrypt(account.accessToken);
-    return { account, token };
+    return {
+        account: { id: account._id },
+        token: decrypt(account.accessToken),
+        igUserId: account.igUserId
+    };
 }
 
-function needsAsyncProcessing(type, children, { imageUrl, videoUrl } = {}) {
-    if (type === 'REELS') return true;
-    if (type === 'STORIES') return Boolean(videoUrl && !imageUrl);
-    if (type === 'CAROUSEL') {
-        return (children || []).some((child) => (child.type || '').toLowerCase() === 'video');
-    }
-    return false;
+async function touchAccount(accountId) {
+    await IgTestAccount.findByIdAndUpdate(accountId, { lastUsed: new Date() });
 }
 
-function publishErrorMessage(error) {
-    return error.response?.data?.error
-        ? igTest.formatIgApiError(error)
-        : (error.message || 'Publish failed');
-}
-
-async function runPublishJob({ logId, userId, accountId, igUserId, token, containerId, mediaType }) {
-    try {
-        await igTest.waitForContainer(
-            containerId,
-            token,
-            igTest.waitOptionsForMediaType(mediaType, { background: true })
-        );
-        const published = await igTest.publishContainer(igUserId, token, containerId);
-        await IgTestPublishLog.findOneAndUpdate(
-            { _id: logId, userId },
-            { status: 'published', publishedMediaId: published.id }
-        );
-        await IgTestAccount.findByIdAndUpdate(accountId, { lastUsed: new Date() });
-        console.log('[igTest] Background publish complete:', published.id);
-    } catch (error) {
-        const msg = publishErrorMessage(error);
-        await IgTestPublishLog.findOneAndUpdate(
-            { _id: logId, userId },
-            { status: 'failed', error: msg }
-        );
-        console.error('[igTest] Background publish error:', error.response?.data || error.message);
-    }
-}
-
-async function runCarouselPublishJob({
-    logId, userId, accountId, igUserId, token, children, caption, isAiGenerated, mediaType
-}) {
-    try {
-        const waitOpts = igTest.waitOptionsForMediaType(mediaType, { background: true });
-        const childIds = [];
-        for (const child of children) {
-            const isVideo = (child.type || '').toLowerCase() === 'video';
-            const childPayload = { is_carousel_item: true };
-            if (isVideo) {
-                childPayload.media_type = 'VIDEO';
-                childPayload.video_url = child.url;
-            } else {
-                childPayload.image_url = igTest.ensureInstagramImageUrl(child.url, 'IMAGE');
-                if (child.altText) childPayload.alt_text = child.altText;
-            }
-            const created = await igTest.createMediaContainer(igUserId, token, childPayload);
-            await igTest.waitForContainer(created.id, token, waitOpts);
-            childIds.push(created.id);
-        }
-        const carouselPayload = {
-            media_type: 'CAROUSEL',
-            children: childIds.join(',')
-        };
-        if (caption) carouselPayload.caption = caption;
-        if (isAiGenerated) carouselPayload.is_ai_generated = true;
-        const carousel = await igTest.createMediaContainer(igUserId, token, carouselPayload);
-        await igTest.waitForContainer(carousel.id, token, waitOpts);
-        const published = await igTest.publishContainer(igUserId, token, carousel.id);
-        await IgTestPublishLog.findOneAndUpdate(
-            { _id: logId, userId },
-            {
-                status: 'published',
-                publishedMediaId: published.id,
-                containerId: carousel.id,
-                carouselChildren: childIds
-            }
-        );
-        await IgTestAccount.findByIdAndUpdate(accountId, { lastUsed: new Date() });
-    } catch (error) {
-        const msg = publishErrorMessage(error);
-        await IgTestPublishLog.findOneAndUpdate(
-            { _id: logId, userId },
-            { status: 'failed', error: msg }
-        );
-        console.error('[igTest] Background carousel publish error:', error.response?.data || error.message);
-    }
-}
-
-// POST /api/ig-test/publish — publish image / reel / story / carousel
-router.post('/publish', auth, async (req, res) => {
-    const { accountId, mediaType, imageUrl, videoUrl, children, caption, altText, isAiGenerated } = req.body || {};
-
-    let log;
-    try {
-        if (!accountId) throw new Error('accountId is required');
-        const type = String(mediaType || '').toUpperCase();
-        if (!['IMAGE', 'REELS', 'STORIES', 'CAROUSEL'].includes(type)) {
-            throw new Error('mediaType must be IMAGE, REELS, STORIES, or CAROUSEL');
-        }
-
-        const { account, token } = await loadAccountWithToken(req.user.id, accountId);
-        const igUserId = account.igUserId;
-        const isStoryImage = type === 'STORIES' && imageUrl && !videoUrl;
-        const isAsync = needsAsyncProcessing(type, children || [], { imageUrl, videoUrl });
-
-        const mediaUrls = [];
-        if (type === 'CAROUSEL') {
-            if (!Array.isArray(children) || children.length < 2) {
-                throw new Error('CAROUSEL requires at least 2 children');
-            }
-            if (children.length > 10) throw new Error('CAROUSEL supports a maximum of 10 items');
-        } else if (type === 'IMAGE' || isStoryImage) {
-            const sourceUrl = imageUrl;
-            if (!sourceUrl) throw new Error('imageUrl is required for IMAGE/STORY image');
-            const preparedImageUrl = igTest.ensureInstagramImageUrl(sourceUrl, isStoryImage ? 'STORIES' : 'IMAGE');
-            await igTest.verifyInstagramImageUrl(preparedImageUrl);
-            console.log('[igTest] Publishing image URL:', preparedImageUrl);
-            mediaUrls.push(preparedImageUrl);
-        } else {
-            if (!videoUrl) throw new Error('videoUrl is required for REELS/STORIES video');
-            mediaUrls.push(videoUrl);
-        }
-
-        log = await IgTestPublishLog.create({
-            userId: req.user.id,
-            igUserId,
-            mediaType: type,
-            caption,
-            mediaUrls,
-            status: isAsync ? 'processing' : 'pending'
-        });
-
-        // Carousel with video: create containers in the background (can exceed 30s).
-        if (isAsync && type === 'CAROUSEL') {
-            log.mediaUrls = children.map((c) => c.url);
-            await log.save();
-            setImmediate(() => {
-                runCarouselPublishJob({
-                    logId: log._id,
-                    userId: req.user.id,
-                    accountId: account._id,
-                    igUserId,
-                    token,
-                    children,
-                    caption,
-                    isAiGenerated,
-                    mediaType: type
-                });
-            });
-            return res.status(202).json({
-                success: true,
-                async: true,
-                logId: log._id,
-                message: 'Carousel is processing on Instagram. This may take a few minutes.'
-            });
-        }
-
-        const waitOpts = igTest.waitOptionsForMediaType(type);
-        let creationId;
-
-        if (type === 'CAROUSEL') {
-            const childIds = [];
-            for (const child of children) {
-                const isVideo = (child.type || '').toLowerCase() === 'video';
-                const childPayload = { is_carousel_item: true };
-                if (isVideo) {
-                    childPayload.media_type = 'VIDEO';
-                    childPayload.video_url = child.url;
-                } else {
-                    childPayload.image_url = igTest.ensureInstagramImageUrl(child.url, 'IMAGE');
-                    if (child.altText) childPayload.alt_text = child.altText;
-                }
-                const created = await igTest.createMediaContainer(igUserId, token, childPayload);
-                await igTest.waitForContainer(created.id, token, waitOpts);
-                childIds.push(created.id);
-            }
-            const carouselPayload = {
-                media_type: 'CAROUSEL',
-                children: childIds.join(',')
-            };
-            if (caption) carouselPayload.caption = caption;
-            if (isAiGenerated) carouselPayload.is_ai_generated = true;
-            const carousel = await igTest.createMediaContainer(igUserId, token, carouselPayload);
-            await igTest.waitForContainer(carousel.id, token, waitOpts);
-            creationId = carousel.id;
-            log.carouselChildren = childIds;
-            log.mediaUrls = children.map((c) => c.url);
-        } else {
-            const payload = {};
-            if (caption) payload.caption = caption;
-            if (isAiGenerated) payload.is_ai_generated = true;
-
-            if (type === 'IMAGE' || isStoryImage) {
-                payload.image_url = mediaUrls[0];
-                if (type === 'STORIES') payload.media_type = 'STORIES';
-                if (altText) payload.alt_text = altText;
-            } else {
-                payload.media_type = type;
-                payload.video_url = videoUrl;
-            }
-
-            const container = await igTest.createMediaContainer(igUserId, token, payload);
-            creationId = container.id;
-
-            if (isAsync) {
-                log.containerId = creationId;
-                await log.save();
-                setImmediate(() => {
-                    runPublishJob({
-                        logId: log._id,
-                        userId: req.user.id,
-                        accountId: account._id,
-                        igUserId,
-                        token,
-                        containerId: creationId,
-                        mediaType: type
-                    });
-                });
-                return res.status(202).json({
-                    success: true,
-                    async: true,
-                    logId: log._id,
-                    containerId: creationId,
-                    message: 'Video is processing on Instagram. This usually takes 1–3 minutes.'
-                });
-            }
-
-            await igTest.waitForContainer(container.id, token, waitOpts);
-        }
-
-        log.containerId = creationId;
-        await log.save();
-
-        const published = await igTest.publishContainer(igUserId, token, creationId);
-
-        log.publishedMediaId = published.id;
-        log.status = 'published';
-        await log.save();
-
-        account.lastUsed = new Date();
-        await account.save();
-
-        res.json({ success: true, mediaId: published.id, containerId: creationId });
-    } catch (error) {
-        const msg = publishErrorMessage(error);
-        if (log) {
-            log.status = 'failed';
-            log.error = msg;
-            await log.save().catch(() => {});
-        }
-        console.error('[igTest] publish error:', error.response?.data || error.message);
-        res.status(500).json({ message: msg });
-    }
+const publishRouter = express.Router();
+publishRouter.use(auth);
+mountInstagramPublishRoutes(publishRouter, {
+    PublishLog: IgTestPublishLog,
+    loadAccountWithToken,
+    touchAccount,
+    logPrefix: '[igTest]'
 });
-
-// GET /api/ig-test/publish/:logId — poll async publish job status
-router.get('/publish/:logId', auth, async (req, res) => {
-    try {
-        const log = await IgTestPublishLog.findOne({ _id: req.params.logId, userId: req.user.id });
-        if (!log) return res.status(404).json({ message: 'Publish job not found' });
-        res.json({
-            logId: log._id,
-            status: log.status,
-            mediaId: log.publishedMediaId,
-            containerId: log.containerId,
-            error: log.error
-        });
-    } catch (error) {
-        res.status(500).json({ message: error.message });
-    }
-});
-
-// GET /api/ig-test/publish-limit/:accountId — current rate-limit usage
-router.get('/publish-limit/:accountId', auth, async (req, res) => {
-    try {
-        const { account, token } = await loadAccountWithToken(req.user.id, req.params.accountId);
-        const data = await igTest.getPublishingLimit(account.igUserId, token);
-        res.json(data);
-    } catch (error) {
-        res.status(500).json({ message: igTest.formatIgApiError(error) });
-    }
-});
-
-// GET /api/ig-test/logs — recent publish attempts
-router.get('/logs', auth, async (req, res) => {
-    try {
-        const logs = await IgTestPublishLog.find({ userId: req.user.id })
-            .sort({ createdAt: -1 })
-            .limit(20);
-        res.json({ logs });
-    } catch (error) {
-        res.status(500).json({ message: error.message });
-    }
-});
+router.use(publishRouter);
 
 module.exports = router;

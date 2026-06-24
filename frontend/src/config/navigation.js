@@ -88,6 +88,7 @@ export const NAV_SECTIONS = [
         items: [
             { name: 'All Platforms', href: '/dashboard/platforms', icon: Layers, exact: true },
             { name: 'Instagram', href: '/dashboard/platforms/instagram', icon: Instagram },
+            { name: 'Instagram Upload', href: '/dashboard/platforms/instagram/upload', icon: Upload },
             { name: 'TikTok', href: '/dashboard/platforms/tiktok', icon: Music2 },
             { name: 'YouTube', href: '/dashboard/platforms/youtube', icon: Youtube },
             { name: 'Facebook', href: '/dashboard/platforms/facebook', icon: Facebook },
@@ -96,6 +97,7 @@ export const NAV_SECTIONS = [
         topLinks: [
             { name: 'All', href: '/dashboard/platforms', exact: true },
             { name: 'Instagram', href: '/dashboard/platforms/instagram' },
+            { name: 'IG Upload', href: '/dashboard/platforms/instagram/upload' },
             { name: 'TikTok', href: '/dashboard/platforms/tiktok' },
             { name: 'YouTube', href: '/dashboard/platforms/youtube' },
             { name: 'Facebook', href: '/dashboard/platforms/facebook' },
@@ -109,14 +111,14 @@ export const NAV_SECTIONS = [
         items: [
             { name: 'Connect Accounts', href: '/dashboard/connect-accounts', icon: Link2, exact: true },
             { name: 'Facebook', href: '/dashboard/connect-accounts/facebook', icon: Facebook },
-            { name: 'Instagram', href: '/dashboard/connect-accounts/instagram', icon: Instagram },
+            { name: 'Instagram', href: '/dashboard/connect-accounts/instagram-oauth', icon: Instagram },
             { name: 'TikTok', href: '/dashboard/connect-accounts/tiktok', icon: Music2 },
             { name: 'YouTube', href: '/dashboard/connect-accounts/youtube', icon: Youtube },
         ],
         topLinks: [
             { name: 'Hub', href: '/dashboard/connect-accounts', exact: true },
             { name: 'Facebook', href: '/dashboard/connect-accounts/facebook' },
-            { name: 'Instagram', href: '/dashboard/connect-accounts/instagram' },
+            { name: 'Instagram', href: '/dashboard/connect-accounts/instagram-oauth' },
             { name: 'TikTok', href: '/dashboard/connect-accounts/tiktok' },
             { name: 'YouTube', href: '/dashboard/connect-accounts/youtube' },
         ],

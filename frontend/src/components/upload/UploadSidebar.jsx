@@ -11,17 +11,19 @@ import {
     CheckCircle2,
     AlertCircle,
     Sparkles,
-    Layers,
+    Target,
     PenLine,
     Rocket,
+    Info,
+    ExternalLink,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import TagsInput from '../../../app/dashboard/upload/components/TagsInput';
 import { PLATFORM_CONFIG } from '@/components/dashboard/constants';
 
 const TABS = [
+    { id: 'targets', label: 'Platforms', icon: Target },
     { id: 'write', label: 'Write', icon: PenLine },
-    { id: 'targets', label: 'Targets', icon: Layers },
     { id: 'publish', label: 'Publish', icon: Rocket },
 ];
 
@@ -40,6 +42,7 @@ export default function UploadSidebar({
     connectedTargets,
     selectedPlatforms,
     onTogglePlatform,
+    mediaConstraints,
     scheduleType,
     onScheduleTypeChange,
     date,
@@ -56,7 +59,8 @@ export default function UploadSidebar({
     onSchedule,
     tiktokPanel,
 }) {
-    const [tab, setTab] = useState('write');
+    const [tab, setTab] = useState('targets');
+    const constraints = mediaConstraints || { platformNotes: [], summary: '', hints: [] };
     const fieldClass =
         'w-full rounded-lg border border-[var(--viralix-border)] bg-[var(--viralix-bg)] px-3 py-2.5 text-sm text-[var(--viralix-accent)] placeholder:text-[#94A3B8] focus:border-[#84A98C] focus:outline-none focus:ring-2 focus:ring-[#84A98C]/25';
 
@@ -123,7 +127,7 @@ export default function UploadSidebar({
                 {tab === 'targets' && (
                     <div className="space-y-3">
                         <p className="text-xs text-[var(--viralix-muted)]">
-                            Select where this post should go. {selectedPlatforms.length} of {connectedTargets.length} selected.
+                            Step 1 — choose where to publish. Media and publish options adapt to your selection.
                         </p>
                         {connectedTargets.length === 0 ? (
                             <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-3 text-xs text-amber-900">
@@ -160,9 +164,48 @@ export default function UploadSidebar({
                                 })}
                             </div>
                         )}
-                        {uploadedFiles.length === 0 && selectedPlatforms.length > 0 && (
-                            <p className="rounded-lg bg-[var(--viralix-inset)] px-3 py-2 text-xs text-[var(--viralix-muted)]">
-                                Tip: Instagram requires media. Facebook supports text-only posts.
+
+                        {selectedPlatforms.length > 0 && (
+                            <div className="rounded-xl border border-[var(--viralix-border)] bg-[var(--viralix-bg)] p-3 space-y-2">
+                                <div className="flex items-center gap-2 text-xs font-semibold text-[var(--viralix-accent)]">
+                                    <Info className="h-3.5 w-3.5 text-[#84A98C]" />
+                                    Media for this selection
+                                </div>
+                                <p className="text-xs text-[var(--viralix-muted)]">
+                                    <span className="font-medium text-[var(--viralix-accent)]">{constraints.summary}</span>
+                                    {constraints.maxFiles === 1 ? ' · single file' : ` · up to ${constraints.maxFiles} files`}
+                                    {!constraints.requiresMedia && ' · text-only OK (Facebook)'}
+                                </p>
+                                {constraints.hints?.map((hint) => (
+                                    <p key={hint} className="text-[0.6875rem] leading-relaxed text-[var(--viralix-muted)]">
+                                        {hint}
+                                    </p>
+                                ))}
+                            </div>
+                        )}
+
+                        {constraints.platformNotes?.map(({ platform, label, note, advancedUploadPath }) => (
+                            <div
+                                key={platform}
+                                className="rounded-lg border border-[var(--viralix-border)] bg-[var(--viralix-inset)]/50 px-3 py-2.5 text-xs text-[var(--viralix-muted)]"
+                            >
+                                <span className="font-semibold text-[var(--viralix-accent)]">{label}:</span> {note}
+                                {advancedUploadPath && selectedPlatforms.some((p) => p.name === platform) && (
+                                    <Link
+                                        href={advancedUploadPath}
+                                        className="mt-1.5 flex items-center gap-1 font-medium text-[#84A98C] hover:underline"
+                                    >
+                                        Open Instagram Upload
+                                        <ExternalLink className="h-3 w-3" />
+                                    </Link>
+                                )}
+                            </div>
+                        ))}
+
+                        {selectedPlatforms.length > 0 && (
+                            <p className="text-[0.6875rem] text-[var(--viralix-muted)]">
+                                {selectedPlatforms.length} account{selectedPlatforms.length !== 1 ? 's' : ''} selected
+                                {uploadedFiles.length > 0 && ` · ${uploadedFiles.length} file${uploadedFiles.length !== 1 ? 's' : ''} uploaded`}
                             </p>
                         )}
                     </div>
@@ -222,7 +265,17 @@ export default function UploadSidebar({
                         {tiktokPanel}
 
                         {validationHints?.map((hint, i) => (
-                            <div key={i} className={cn('flex items-start gap-2 rounded-lg px-3 py-2.5 text-xs', hint.type === 'error' ? 'bg-red-50 text-red-800 ring-1 ring-red-200' : 'bg-amber-50 text-amber-900 ring-1 ring-amber-200')}>
+                            <div
+                                key={i}
+                                className={cn(
+                                    'flex items-start gap-2 rounded-lg px-3 py-2.5 text-xs',
+                                    hint.type === 'error'
+                                        ? 'bg-red-50 text-red-800 ring-1 ring-red-200'
+                                        : hint.type === 'info'
+                                          ? 'bg-sky-50 text-sky-900 ring-1 ring-sky-200'
+                                          : 'bg-amber-50 text-amber-900 ring-1 ring-amber-200'
+                                )}
+                            >
                                 <AlertCircle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
                                 {hint.message}
                             </div>
