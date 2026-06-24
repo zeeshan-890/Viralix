@@ -6,7 +6,7 @@ import { analyticsAPI, platformSyncAPI } from '@/lib/api';
 import { formatNumber } from '@/lib/utils';
 import { getPlatform } from '@/config/platforms';
 import PlatformIcon from '@/components/ui/PlatformIcon';
-import MetricCard from './shared/MetricCard';
+import PlatformAnalyticsBanner from './shared/PlatformAnalyticsBanner';
 import DeepTimelineChart from './shared/DeepTimelineChart';
 import MetricsLineChart from './shared/MetricsLineChart';
 import EngagementPieChart from './shared/EngagementPieChart';
@@ -15,8 +15,7 @@ import TopPostsBarChart, { AccountComparisonBarChart } from './shared/TopPostsBa
 import PostsActivityBarChart from './shared/PostsActivityBarChart';
 import TopContentTable from './shared/TopContentTable';
 import {
-    Eye, Heart, MessageCircle, Share2, Bookmark, TrendingUp, BarChart3,
-    RefreshCw, Loader2, Video, Image as ImageIcon, ExternalLink,
+    RefreshCw, Loader2, Video, Image as ImageIcon, ExternalLink, BarChart3,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -77,6 +76,11 @@ export default function PlatformDeepAnalytics({ platform, accountId: initialAcco
 
     const s = data?.summary || {};
     const accounts = data?.accounts || [];
+    const activeAccount = accountId
+        ? accounts.find((a) => a.accountId === accountId)
+        : accounts.length === 1
+            ? accounts[0]
+            : null;
 
     return (
         <div className="space-y-6">
@@ -143,83 +147,16 @@ export default function PlatformDeepAnalytics({ platform, accountId: initialAcco
                 <div className="analytics-panel border-amber-200/80 bg-amber-50/90 px-4 py-3 text-sm text-amber-900">{error}</div>
             )}
 
-            {/* Account cards */}
-            {accounts.length > 0 && (
-                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                    {accounts.map((acc) => (
-                        <div key={acc.accountId} className="analytics-panel analytics-panel-hover p-5">
-                            <div className="flex items-center gap-3 mb-3">
-                                {acc.avatarUrl ? (
-                                    <img src={acc.avatarUrl} alt="" className="h-12 w-12 rounded-full object-cover border border-gray-100" />
-                                ) : (
-                                    <div className={cn('h-12 w-12 rounded-full flex items-center justify-center', config.lightBg)}>
-                                        <PlatformIcon platform={platform} size={24} />
-                                    </div>
-                                )}
-                                <div className="min-w-0">
-                                    <p className="font-semibold text-[var(--viralix-accent)] truncate">{acc.accountName}</p>
-                                    {acc.username && <p className="text-xs text-[var(--viralix-muted)]">@{acc.username}</p>}
-                                </div>
-                            </div>
-                            <dl className="grid grid-cols-2 gap-3 text-sm">
-                                <div className="analytics-inset p-2.5">
-                                    <dt className="text-[0.625rem] uppercase tracking-wide text-[var(--viralix-muted)]">Followers</dt>
-                                    <dd className="font-bold tabular-nums text-[var(--viralix-accent)] mt-0.5">{formatNumber(acc.followers)}</dd>
-                                </div>
-                                <div className="analytics-inset p-2.5">
-                                    <dt className="text-[0.625rem] uppercase tracking-wide text-[var(--viralix-muted)]">Synced posts</dt>
-                                    <dd className="font-bold tabular-nums text-[var(--viralix-accent)] mt-0.5">{formatNumber(acc.contentStats?.posts)}</dd>
-                                </div>
-                                <div className="analytics-inset p-2.5">
-                                    <dt className="text-[0.625rem] uppercase tracking-wide text-[var(--viralix-muted)]">Avg views</dt>
-                                    <dd className="font-bold tabular-nums text-[var(--viralix-accent)] mt-0.5">{formatNumber(acc.avgViewsPerPost)}</dd>
-                                </div>
-                                <div className="analytics-inset p-2.5">
-                                    <dt className="text-[0.625rem] uppercase tracking-wide text-[var(--viralix-muted)]">Avg engagement</dt>
-                                    <dd className="font-bold tabular-nums text-[var(--viralix-accent)] mt-0.5">{formatNumber(acc.avgEngagementPerPost)}</dd>
-                                </div>
-                            </dl>
-                            {platform === 'instagram' && acc.accountInsights && Object.keys(acc.accountInsights).length > 0 && (
-                                <div className="mt-3 pt-3 border-t border-gray-100 grid grid-cols-2 gap-2 text-xs">
-                                    {acc.accountInsights.reach != null && (
-                                        <div><span className="text-gray-500">Reach (24h)</span><br /><strong>{formatNumber(acc.accountInsights.reach)}</strong></div>
-                                    )}
-                                    {acc.accountInsights.profile_views != null && (
-                                        <div><span className="text-gray-500">Profile views</span><br /><strong>{formatNumber(acc.accountInsights.profile_views)}</strong></div>
-                                    )}
-                                </div>
-                            )}
-                            {platform === 'tiktok' && acc.videoCount != null && (
-                                <p className="mt-2 text-xs text-gray-500">{formatNumber(acc.videoCount)} total videos on TikTok</p>
-                            )}
-                        </div>
-                    ))}
-                </div>
-            )}
+            {/* Account banner — profile left, metrics right */}
+            <PlatformAnalyticsBanner
+                platform={platform}
+                account={activeAccount}
+                summary={s}
+                accounts={accounts}
+                isAllAccounts={!accountId && accounts.length > 1}
+            />
 
-            {/* Summary metrics */}
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
-                <MetricCard label="Total views" value={formatNumber(s.totalViews)} icon={Eye} accent="mint" />
-                <MetricCard label="Engagement rate" value={`${s.engagementRate || 0}%`} icon={TrendingUp} accent="purple" sub="All interactions / views" />
-                <MetricCard label="Likes" value={formatNumber(s.totalLikes)} icon={Heart} accent="pink" />
-                <MetricCard label="Comments" value={formatNumber(s.totalComments)} icon={MessageCircle} accent="blue" />
-                <MetricCard label="Shares" value={formatNumber(s.totalShares)} icon={Share2} accent="sage" />
-                <MetricCard label="Posts" value={formatNumber(s.totalPosts)} icon={BarChart3} accent="forest" />
-            </div>
-
-            {/* Secondary rates */}
-            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-                <MetricCard label="Avg views / post" value={formatNumber(s.avgViewsPerPost)} sub={`${s.totalPosts || 0} posts in period`} />
-                <MetricCard label="Avg likes / post" value={formatNumber(s.avgLikesPerPost)} />
-                <MetricCard label="Like / view ratio" value={`${s.likeToViewRatio || 0}%`} />
-                <MetricCard label="Comment / view ratio" value={`${s.commentToViewRatio || 0}%`} />
-            </div>
-
-            {platform === 'instagram' && (s.totalSaves > 0) && (
-                <MetricCard label="Total saves" value={formatNumber(s.totalSaves)} icon={Bookmark} accent="forest" className="max-w-xs" />
-            )}
-
-            {/* Charts */}
+            {/* Charts section */}
             <div className="space-y-5">
                 <div className="analytics-panel px-4 py-3 flex items-center gap-2">
                     <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[var(--viralix-inset)]">

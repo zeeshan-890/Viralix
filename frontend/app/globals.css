@@ -149,6 +149,23 @@ body {
     color: #fff;
 }
 
+.analytics-metric-tile {
+    background: linear-gradient(180deg, #D4E0DA 0%, #C8D8CE 100%);
+    border: 1px solid #B5C7BC;
+    border-radius: 0.5rem;
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.45),
+        0 1px 2px rgba(47, 62, 70, 0.06);
+    transition: background 0.15s ease, box-shadow 0.15s ease;
+}
+
+.analytics-metric-tile:hover {
+    background: linear-gradient(180deg, #CCD9CF 0%, #BECFC4 100%);
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.5),
+        0 2px 6px rgba(47, 62, 70, 0.08);
+}
+
 /* Dashboard-wide: unify legacy gray borders with theme tokens */
 .dashboard-shell .border-gray-100,
 .dashboard-shell .border-gray-200 {

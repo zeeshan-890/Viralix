@@ -14,7 +14,7 @@ import {
 } from 'lucide-react';
 
 /** @typedef {{ name: string, href: string, icon?: import('react').ComponentType<{ className?: string }>, exact?: boolean }} NavItem */
-/** @typedef {{ name: string, href: string, exact?: boolean }} TopLink */
+/** @typedef {{ name: string, href: string, exact?: boolean, match?: (pathname: string, searchParams: URLSearchParams) => boolean }} TopLink */
 /** @typedef {{ id: string, label: string, items: NavItem[], topLinks?: TopLink[], match?: (path: string) => boolean }} NavSection */
 
 /** @type {NavSection[]} */
@@ -54,9 +54,21 @@ export const NAV_SECTIONS = [
             { name: 'Overview', href: '/dashboard/analytics', icon: BarChart3 },
         ],
         topLinks: [
-            { name: 'Overview', href: '/dashboard/analytics' },
-            { name: 'Posts', href: '/dashboard/preview' },
-            { name: 'Inbox', href: '/dashboard/inbox' },
+            {
+                name: 'Overview',
+                href: '/dashboard/analytics',
+                match: (path, sp) => path.startsWith('/dashboard/analytics') && !sp.get('platform'),
+            },
+            {
+                name: 'TikTok',
+                href: '/dashboard/analytics?platform=tiktok',
+                match: (path, sp) => path.startsWith('/dashboard/analytics') && sp.get('platform') === 'tiktok',
+            },
+            {
+                name: 'Instagram',
+                href: '/dashboard/analytics?platform=instagram',
+                match: (path, sp) => path.startsWith('/dashboard/analytics') && sp.get('platform') === 'instagram',
+            },
         ],
         match: (path) => path.startsWith('/dashboard/analytics'),
     },
@@ -187,9 +199,14 @@ export function isNavItemActive(pathname, item) {
 /**
  * @param {string} pathname
  * @param {TopLink} link
+ * @param {URLSearchParams} [searchParams]
  */
-export function isTopLinkActive(pathname, link) {
-    if (link.exact) return pathname === link.href;
-    if (pathname === link.href) return true;
-    return pathname.startsWith(link.href + '/');
+export function isTopLinkActive(pathname, link, searchParams) {
+    if (link.match && searchParams) {
+        return link.match(pathname, searchParams);
+    }
+    if (link.exact) return pathname === link.href.split('?')[0];
+    const base = link.href.split('?')[0];
+    if (pathname === base) return true;
+    return pathname.startsWith(base + '/');
 }

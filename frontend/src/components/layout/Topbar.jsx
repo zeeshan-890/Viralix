@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { usePathname, useRouter } from 'next/navigation';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { Bell, ChevronDown, LogOut, Menu, Search, Settings, User } from 'lucide-react';
 import { useState, useRef, useEffect } from 'react';
 import { useAuthStore } from '../../store/authStore';
@@ -11,20 +11,25 @@ import { cn } from '../../lib/utils';
 import Image from 'next/image';
 import Breadcrumb from './Breadcrumb';
 
-function SectionTabLink({ link }) {
+function SectionTabLink({ link, dark }) {
     const pathname = usePathname();
-    const active = isTopLinkActive(pathname, link);
+    const searchParams = useSearchParams();
+    const active = isTopLinkActive(pathname, link, searchParams);
 
     return (
         <Link
             href={link.href}
             className={cn(
-                'shrink-0 rounded-md px-2.5 py-1 text-xs font-medium transition-colors',
-                active
-                    ? 'text-white'
-                    : 'text-[#52796F] hover:bg-[var(--viralix-surface)] hover:text-[#2F3E46]'
+                'shrink-0 rounded-lg px-3 py-1.5 text-xs font-semibold transition-all',
+                dark
+                    ? active
+                        ? 'bg-[#84A98C] text-white shadow-[0_2px_8px_rgba(0,0,0,0.25)] ring-1 ring-white/20'
+                        : 'text-white/60 hover:bg-white/10 hover:text-white'
+                    : active
+                        ? 'text-white shadow-sm'
+                        : 'text-[#52796F] hover:bg-[var(--viralix-surface)] hover:text-[#2F3E46]'
             )}
-            style={active ? { backgroundColor: '#84A98C' } : undefined}
+            style={!dark && active ? { backgroundColor: '#84A98C' } : undefined}
         >
             {link.name}
         </Link>
@@ -37,7 +42,9 @@ export default function Topbar({ onToggleSidebar = () => {} }) {
     const logout = useAuthStore((state) => state.logout);
     const user = useAuthStore((state) => state.user);
     const router = useRouter();
+    const pathname = usePathname();
     const { sectionTitle, topLinks } = useNavigation();
+    const isAnalyticsSection = pathname.startsWith('/dashboard/analytics');
 
     useEffect(() => {
         const handleClick = (e) => {
@@ -162,10 +169,15 @@ export default function Topbar({ onToggleSidebar = () => {} }) {
 
             {topLinks.length > 0 && (
                 <div
-                    className="tabs-scroll flex h-9 items-center gap-1 overflow-x-auto border-t border-[var(--viralix-border)] bg-[var(--viralix-bg)] px-4 sm:px-5"
+                    className={cn(
+                        'tabs-scroll flex h-10 items-center gap-1.5 overflow-x-auto border-t px-4 sm:px-5',
+                        isAnalyticsSection
+                            ? 'border-[#3d5559] bg-[#2F3E46]'
+                            : 'border-[var(--viralix-border)] bg-[var(--viralix-bg)]'
+                    )}
                 >
                     {topLinks.map((link) => (
-                        <SectionTabLink key={`${link.href}-${link.name}`} link={link} />
+                        <SectionTabLink key={`${link.href}-${link.name}`} link={link} dark={isAnalyticsSection} />
                     ))}
                 </div>
             )}

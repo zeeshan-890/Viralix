@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from 'react';
+import { Suspense, useState } from 'react';
 import Sidebar from '../../src/components/layout/Sidebar';
 import Topbar from '../../src/components/layout/Topbar';
 import MockModeBanner from '../../src/components/MockModeBanner';
@@ -13,7 +13,9 @@ export default function DashboardLayout({ children }) {
             <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
             <div className="flex min-h-screen flex-1 flex-col md:pl-[15.5rem]">
-                <Topbar onToggleSidebar={() => setSidebarOpen(true)} />
+                <Suspense fallback={<div className="h-12 shrink-0 border-b border-[var(--viralix-border)] bg-[var(--viralix-surface)]" />}>
+                    <Topbar onToggleSidebar={() => setSidebarOpen(true)} />
+                </Suspense>
 
                 <main className="app-main flex-1 overflow-auto p-4 sm:p-5">
                     <MockModeBanner />
