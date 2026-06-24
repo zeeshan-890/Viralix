@@ -138,6 +138,24 @@ async function getProfile(igUserId, token) {
     }
 }
 
+function formatIgApiError(error) {
+    const igError = error?.response?.data?.error;
+    const code = igError?.code;
+    const message = igError?.message || error?.message || 'Instagram API request failed';
+
+    if (code === 10) {
+        return [
+            'Instagram publishing is not permitted for this app/token.',
+            'In Meta Developer Console: use "API setup with Instagram login", enable instagram_business_content_publish,',
+            'add your Instagram account under App Roles → Instagram Testers, then disconnect and reconnect here.',
+        ].join(' ');
+    }
+    if (code === 190) {
+        return 'Instagram token expired or invalid. Disconnect and reconnect the test account.';
+    }
+    return message;
+}
+
 async function postGraph(paths, token, params) {
     let lastErr;
     for (const path of paths) {
@@ -174,7 +192,22 @@ async function getGraph(paths, token, params) {
     throw lastErr;
 }
 
-// ─── Publishing ───
+function ensureInstagramImageUrl(url) {
+    if (!url || !url.includes('res.cloudinary.com') || !url.includes('/image/upload/')) {
+        return url;
+    }
+    if (url.includes('/f_jpg') || url.includes('f_jpg,')) return url;
+    return url.replace('/image/upload/', '/image/upload/f_jpg,q_auto/');
+}
+
+function waitOptionsForMediaType(mediaType) {
+    const type = String(mediaType || '').toUpperCase();
+    if (type === 'IMAGE') {
+        return { intervalMs: 1000, maxAttempts: 20 };
+    }
+    // Heroku HTTP requests time out at 30s — keep video polling within that budget.
+    return { intervalMs: 2000, maxAttempts: 12 };
+}
 
 // Create a media container. `payload` may include image_url, video_url,
 // media_type, caption, alt_text, is_carousel_item, children, is_ai_generated.
@@ -184,23 +217,26 @@ async function createMediaContainer(igUserId, token, payload) {
 
 async function getContainerStatus(containerId, token) {
     const { data } = await axios.get(buildGraphUrl(`/${containerId}`), {
-        params: { fields: 'status_code', access_token: token }
+        params: { fields: 'status_code,status', access_token: token }
     });
-    return data.status_code; // EXPIRED | ERROR | FINISHED | IN_PROGRESS | PUBLISHED
+    return data;
 }
 
-// Poll a container until it is FINISHED (ready to publish). Recommended
-// cadence: once per minute for up to 5 minutes (for video / reels).
-async function waitForContainer(containerId, token, { intervalMs = 5000, maxAttempts = 60 } = {}) {
+// Poll a container until it is FINISHED (ready to publish).
+async function waitForContainer(containerId, token, { intervalMs = 2000, maxAttempts = 12 } = {}) {
     for (let attempt = 0; attempt < maxAttempts; attempt++) {
-        const status = await getContainerStatus(containerId, token);
+        const data = await getContainerStatus(containerId, token);
+        const status = data.status_code;
         if (status === 'FINISHED') return true;
         if (status === 'ERROR' || status === 'EXPIRED') {
-            throw new Error(`Container ${containerId} status: ${status}`);
+            const detail = data.status ? `${status}: ${data.status}` : status;
+            throw new Error(`Instagram media processing failed (${detail})`);
         }
-        await new Promise((r) => setTimeout(r, intervalMs));
+        if (attempt < maxAttempts - 1) {
+            await new Promise((r) => setTimeout(r, intervalMs));
+        }
     }
-    throw new Error(`Container ${containerId} was not ready after ${maxAttempts} attempts`);
+    throw new Error(`Media processing timed out after ${Math.round((intervalMs * maxAttempts) / 1000)}s`);
 }
 
 async function publishContainer(igUserId, token, creationId) {
@@ -216,6 +252,7 @@ async function getPublishingLimit(igUserId, token) {
 }
 
 module.exports = {
+    formatIgApiError,
     GRAPH_VERSION,
     signState,
     verifyState,
@@ -224,6 +261,8 @@ module.exports = {
     getLongLivedToken,
     getMeProfile,
     getProfile,
+    ensureInstagramImageUrl,
+    waitOptionsForMediaType,
     createMediaContainer,
     getContainerStatus,
     waitForContainer,

@@ -139,6 +139,8 @@ router.post('/publish', auth, async (req, res) => {
             status: 'pending'
         });
 
+        const waitOpts = igTest.waitOptionsForMediaType(type);
+
         let creationId;
 
         if (type === 'CAROUSEL') {
@@ -151,11 +153,11 @@ router.post('/publish', auth, async (req, res) => {
                     childPayload.media_type = 'VIDEO';
                     childPayload.video_url = child.url;
                 } else {
-                    childPayload.image_url = child.url;
+                    childPayload.image_url = igTest.ensureInstagramImageUrl(child.url);
                     if (child.altText) childPayload.alt_text = child.altText;
                 }
                 const created = await igTest.createMediaContainer(igUserId, token, childPayload);
-                await igTest.waitForContainer(created.id, token);
+                await igTest.waitForContainer(created.id, token, waitOpts);
                 childIds.push(created.id);
             }
             // 2. Create the carousel container referencing the children.
@@ -166,7 +168,7 @@ router.post('/publish', auth, async (req, res) => {
             if (caption) carouselPayload.caption = caption;
             if (isAiGenerated) carouselPayload.is_ai_generated = true;
             const carousel = await igTest.createMediaContainer(igUserId, token, carouselPayload);
-            await igTest.waitForContainer(carousel.id, token);
+            await igTest.waitForContainer(carousel.id, token, waitOpts);
             creationId = carousel.id;
             log.carouselChildren = childIds;
             log.mediaUrls = children.map((c) => c.url);
@@ -176,7 +178,7 @@ router.post('/publish', auth, async (req, res) => {
             if (isAiGenerated) payload.is_ai_generated = true;
 
             if (type === 'IMAGE') {
-                payload.image_url = imageUrl;
+                payload.image_url = igTest.ensureInstagramImageUrl(imageUrl);
                 if (altText) payload.alt_text = altText;
             } else {
                 payload.media_type = type; // REELS or STORIES
@@ -184,8 +186,7 @@ router.post('/publish', auth, async (req, res) => {
             }
 
             const container = await igTest.createMediaContainer(igUserId, token, payload);
-            // Images are usually instant; videos/reels/stories need processing time.
-            await igTest.waitForContainer(container.id, token);
+            await igTest.waitForContainer(container.id, token, waitOpts);
             creationId = container.id;
         }
 
@@ -203,7 +204,7 @@ router.post('/publish', auth, async (req, res) => {
 
         res.json({ success: true, mediaId: published.id, containerId: creationId });
     } catch (error) {
-        const msg = error.response?.data?.error?.message || error.response?.data?.error_message || error.message;
+        const msg = igTest.formatIgApiError(error);
         if (log) {
             log.status = 'failed';
             log.error = msg;
@@ -221,8 +222,7 @@ router.get('/publish-limit/:accountId', auth, async (req, res) => {
         const data = await igTest.getPublishingLimit(account.igUserId, token);
         res.json(data);
     } catch (error) {
-        const msg = error.response?.data?.error?.message || error.message;
-        res.status(500).json({ message: msg });
+        res.status(500).json({ message: igTest.formatIgApiError(error) });
     }
 });
 
