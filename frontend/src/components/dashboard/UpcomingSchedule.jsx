@@ -17,7 +17,7 @@ export default function UpcomingSchedule({ posts = [] }) {
         .slice(0, 4);
 
     return (
-        <section className="rounded-xl border border-[var(--viralix-border)] bg-white">
+        <section className="dash-card rounded-xl border border-[var(--viralix-border)]">
             <div className="flex items-center justify-between border-b border-[var(--viralix-border)] p-4">
                 <div>
                     <h2 className="text-sm font-semibold text-[var(--viralix-accent)]">Upcoming</h2>

@@ -15,7 +15,6 @@ import ContentPipeline from './ContentPipeline';
 import UpcomingSchedule from './UpcomingSchedule';
 import RecentPostsList from './RecentPostsList';
 import InboxPreview from './InboxPreview';
-import QuickActionsPanel from './QuickActionsPanel';
 import AiInsightsPanel from './AiInsightsPanel';
 
 export default function DashboardHome() {
@@ -143,7 +142,6 @@ export default function DashboardHome() {
                 </div>
                 <div className="space-y-4 lg:col-span-5">
                     <InboxPreview conversations={conversations} unreadTotal={unreadTotal} />
-                    <QuickActionsPanel />
                     <AiInsightsPanel overview={overview} />
                 </div>
             </div>

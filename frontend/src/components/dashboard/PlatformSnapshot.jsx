@@ -7,7 +7,7 @@ export default function PlatformSnapshot({ accounts, platformBreakdown = {} }) {
     const connected = accounts.filter((a) => a.isActive !== false);
 
     return (
-        <section className="flex h-full flex-col rounded-xl border border-[var(--viralix-border)] bg-white">
+        <section className="dash-card flex h-full flex-col rounded-xl border border-[var(--viralix-border)]">
             <div className="flex items-center justify-between border-b border-[var(--viralix-border)] p-4">
                 <div>
                     <h2 className="text-sm font-semibold text-[var(--viralix-accent)]">Platforms</h2>

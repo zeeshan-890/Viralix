@@ -59,7 +59,7 @@ export default function PerformanceChart() {
     const total = timeline.reduce((s, d) => s + (d[metric] || 0), 0);
 
     return (
-        <section className="rounded-xl border border-[var(--viralix-border)] bg-white">
+        <section className="dash-card rounded-xl border border-[var(--viralix-border)]">
             <div className="flex flex-col gap-3 border-b border-[var(--viralix-border)] p-4 sm:flex-row sm:items-center sm:justify-between">
                 <div>
                     <h2 className="text-sm font-semibold text-[var(--viralix-accent)]">Performance</h2>

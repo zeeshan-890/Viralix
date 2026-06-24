@@ -50,7 +50,7 @@ export default function AiInsightsPanel({ overview = {} }) {
     }
 
     return (
-        <section className="rounded-xl border border-[var(--viralix-border)] bg-white">
+        <section className="dash-card rounded-xl border border-[var(--viralix-border)]">
             <div className="border-b border-[var(--viralix-border)] p-4">
                 <h2 className="text-sm font-semibold text-[var(--viralix-accent)]">AI insights</h2>
                 <p className="text-xs text-gray-400">Personalized recommendations</p>

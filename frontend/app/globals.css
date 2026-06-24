@@ -59,6 +59,31 @@ body {
     font-size: 0.875rem;
 }
 
+/* Dashboard — darker shell, lighter elevated cards */
+.dashboard-shell {
+    --viralix-bg: #DCE6E0;
+    --viralix-surface: #FEFEFE;
+    --viralix-border: #CDD9D2;
+    background-color: var(--viralix-bg);
+}
+
+.dash-card {
+    background-color: var(--viralix-surface);
+    box-shadow:
+        0 1px 2px rgba(47, 62, 70, 0.06),
+        0 4px 16px rgba(47, 62, 70, 0.08);
+}
+
+.dash-card-hover {
+    transition: box-shadow 0.2s ease;
+}
+
+.dash-card-hover:hover {
+    box-shadow:
+        0 2px 4px rgba(47, 62, 70, 0.08),
+        0 8px 24px rgba(47, 62, 70, 0.1);
+}
+
 .sidebar-scroll::-webkit-scrollbar,
 .tabs-scroll::-webkit-scrollbar {
     width: 4px;

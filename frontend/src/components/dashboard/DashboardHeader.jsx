@@ -8,7 +8,7 @@ export default function DashboardHeader({ userName, onRefresh, refreshing }) {
     const today = format(new Date(), 'EEEE, MMMM d');
 
     return (
-        <header className="relative overflow-hidden rounded-2xl border border-[var(--viralix-border)] bg-white">
+        <header className="dash-card relative overflow-hidden rounded-2xl border border-[var(--viralix-border)]">
             <div
                 className="absolute inset-0 opacity-[0.07]"
                 style={{
@@ -31,7 +31,7 @@ export default function DashboardHeader({ userName, onRefresh, refreshing }) {
                         type="button"
                         onClick={onRefresh}
                         disabled={refreshing}
-                        className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--viralix-border)] bg-white px-3 py-2 text-xs font-medium text-[var(--viralix-accent)] transition-colors hover:bg-[var(--viralix-bg)] disabled:opacity-60"
+                        className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--viralix-border)] bg-[var(--viralix-surface)] px-3 py-2 text-xs font-medium text-[var(--viralix-accent)] transition-colors hover:bg-[var(--viralix-bg)] disabled:opacity-60"
                         aria-label="Refresh dashboard data"
                     >
                         <RefreshCw className={`h-3.5 w-3.5 ${refreshing ? 'animate-spin' : ''}`} />
@@ -39,14 +39,14 @@ export default function DashboardHeader({ userName, onRefresh, refreshing }) {
                     </button>
                     <Link
                         href="/dashboard/inbox"
-                        className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--viralix-border)] bg-white px-3 py-2 text-xs font-medium text-[var(--viralix-accent)] transition-colors hover:bg-[var(--viralix-bg)]"
+                        className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--viralix-border)] bg-[var(--viralix-surface)] px-3 py-2 text-xs font-medium text-[var(--viralix-accent)] transition-colors hover:bg-[var(--viralix-bg)]"
                     >
                         <MessageSquare className="h-3.5 w-3.5" />
                         Inbox
                     </Link>
                     <Link
                         href="/dashboard/analytics"
-                        className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--viralix-border)] bg-white px-3 py-2 text-xs font-medium text-[var(--viralix-accent)] transition-colors hover:bg-[var(--viralix-bg)]"
+                        className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--viralix-border)] bg-[var(--viralix-surface)] px-3 py-2 text-xs font-medium text-[var(--viralix-accent)] transition-colors hover:bg-[var(--viralix-bg)]"
                     >
                         <BarChart3 className="h-3.5 w-3.5" />
                         Analytics
@@ -61,7 +61,7 @@ export default function DashboardHeader({ userName, onRefresh, refreshing }) {
                     </Link>
                     <Link
                         href="/dashboard/schedule"
-                        className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--viralix-border)] bg-white px-3 py-2 text-xs font-medium text-[var(--viralix-accent)] transition-colors hover:bg-[var(--viralix-bg)]"
+                        className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--viralix-border)] bg-[var(--viralix-surface)] px-3 py-2 text-xs font-medium text-[var(--viralix-accent)] transition-colors hover:bg-[var(--viralix-bg)]"
                     >
                         <CalendarPlus className="h-3.5 w-3.5" />
                         Calendar

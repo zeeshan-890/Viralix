@@ -12,7 +12,7 @@ export default function MetricCard({ title, value, change, icon: Icon, accent = 
     const positive = change === undefined || change >= 0;
 
     return (
-        <article className="group relative overflow-hidden rounded-xl border border-[var(--viralix-border)] bg-white p-4 transition-shadow hover:shadow-md">
+        <article className="dash-card dash-card-hover group relative overflow-hidden rounded-xl border border-[var(--viralix-border)] p-4">
             <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0 flex-1">
                     <p className="text-[0.6875rem] font-medium uppercase tracking-wide text-[var(--viralix-muted)]">

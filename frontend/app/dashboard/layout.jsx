@@ -9,7 +9,7 @@ export default function DashboardLayout({ children }) {
     const [sidebarOpen, setSidebarOpen] = useState(false);
 
     return (
-        <div className="flex min-h-screen" style={{ backgroundColor: '#F7FAF8' }}>
+        <div className="dashboard-shell flex min-h-screen">
             <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
             <div className="flex min-h-screen flex-1 flex-col md:pl-[15.5rem]">

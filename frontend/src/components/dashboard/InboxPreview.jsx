@@ -10,7 +10,7 @@ export default function InboxPreview({ conversations = [], unreadTotal = 0 }) {
         .slice(0, 3);
 
     return (
-        <section className="rounded-xl border border-[var(--viralix-border)] bg-white">
+        <section className="dash-card rounded-xl border border-[var(--viralix-border)]">
             <div className="flex items-center justify-between border-b border-[var(--viralix-border)] p-4">
                 <div className="flex items-center gap-2">
                     <h2 className="text-sm font-semibold text-[var(--viralix-accent)]">Inbox</h2>
