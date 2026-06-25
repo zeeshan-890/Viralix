@@ -493,6 +493,23 @@ async function waitForPublishComplete(accessToken, publishId, maxWaitMs = 300000
     throw new Error('Video publish timed out');
 }
 
+function getTikTokTotalChunkCount(videoSize, chunkSize) {
+    if (!videoSize || !chunkSize) {
+        throw new Error('Invalid TikTok upload size metadata');
+    }
+
+    return Math.max(1, Math.floor(videoSize / chunkSize));
+}
+
+function getTikTokChunkRange(chunkIndex, totalChunkCount, chunkSize, videoSize) {
+    const startByte = chunkIndex * chunkSize;
+    const endByte = chunkIndex === totalChunkCount - 1
+        ? videoSize - 1
+        : Math.min(startByte + chunkSize - 1, videoSize - 1);
+
+    return { startByte, endByte };
+}
+
 /**
  * Initialize FILE_UPLOAD for inbox (no domain verification needed)
  * This method uploads video directly to TikTok servers
@@ -505,7 +522,7 @@ async function waitForPublishComplete(accessToken, publishId, maxWaitMs = 300000
 async function initializeFileUpload(accessToken, videoSize, chunkSize = 10 * 1024 * 1024) {
     console.log(`[TikTok] Initializing FILE_UPLOAD - size: ${videoSize} bytes, chunk: ${chunkSize} bytes`);
 
-    const totalChunkCount = Math.ceil(videoSize / chunkSize);
+    const totalChunkCount = getTikTokTotalChunkCount(videoSize, chunkSize);
 
     const payload = {
         source_info: {
@@ -582,7 +599,7 @@ async function uploadVideoChunk(uploadUrl, chunkData, chunkIndex, startByte, end
 async function initializeDirectFileUpload(accessToken, videoSize, chunkSize = 10 * 1024 * 1024, options = {}) {
     console.log(`[TikTok] Initializing DIRECT FILE_UPLOAD - size: ${videoSize} bytes`);
 
-    const totalChunkCount = Math.ceil(videoSize / chunkSize);
+    const totalChunkCount = getTikTokTotalChunkCount(videoSize, chunkSize);
     const resolved = resolveDirectPostOptions(options);
 
     const payload = {
@@ -654,9 +671,8 @@ async function uploadVideoFromUrl(accessToken, videoUrl, options = null) {
     console.log(`[TikTok] Video downloaded: ${(videoSize / (1024 * 1024)).toFixed(2)} MB`);
 
     // Step 2: Calculate chunk size
-    // Step 2: Calculate chunk size
-    // Use 10MB chunks, but if video is smaller, use exact video size
-    // This ensures single-chunk uploads have matching chunk_size and video_size
+    // TikTok expects total_chunk_count to be rounded down and trailing bytes
+    // folded into the final chunk.
     const MAX_CHUNK_SIZE = 10 * 1024 * 1024;
     const chunkSize = Math.min(videoSize, MAX_CHUNK_SIZE);
 
@@ -674,12 +690,11 @@ async function uploadVideoFromUrl(accessToken, videoUrl, options = null) {
     }
 
     // Step 4: Upload in chunks
-    const totalChunks = Math.ceil(videoSize / chunkSize);
+    const totalChunks = getTikTokTotalChunkCount(videoSize, chunkSize);
     console.log(`[TikTok] Uploading ${totalChunks} chunk(s)...`);
 
     for (let i = 0; i < totalChunks; i++) {
-        const startByte = i * chunkSize;
-        const endByte = Math.min(startByte + chunkSize - 1, videoSize - 1);
+        const { startByte, endByte } = getTikTokChunkRange(i, totalChunks, chunkSize, videoSize);
         const chunkData = videoBuffer.slice(startByte, endByte + 1);
 
         await uploadVideoChunk(upload_url, chunkData, i, startByte, endByte, videoSize);
