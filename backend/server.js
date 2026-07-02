@@ -442,6 +442,7 @@ server.listen(PORT, () => {
 if (process.env.REDIS_URL) {
     try {
         require('./services/queue/publish.worker');
+        require('./services/queue/analyticsRefresh.worker');
         console.log('👷 Background workers started');
     } catch (error) {
         console.error('⚠️ Failed to start background workers:', error.message);

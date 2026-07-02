@@ -9,6 +9,10 @@ const youtubeService = require('../services/youtube');
 const tiktokService = require('../services/tiktok');
 const { buildDeepAnalytics } = require('../services/analytics/platformDeepAnalytics');
 const { log, withTrace, serializeError } = require('../utils/logger');
+const analyticsRefreshQueue = require('../services/queue/analyticsRefresh.queue');
+const AnalyticsRefreshJob = require('../models/AnalyticsRefreshJob');
+const { refreshAnalyticsForUser } = require('../services/analytics/refreshAnalytics');
+const { v4: uuidv4 } = require('uuid');
 
 const router = express.Router();
 
@@ -201,134 +205,55 @@ router.get('/overview', auth, async (req, res) => {
 
 // POST /api/analytics/refresh - Fetch latest metrics from platforms
 router.post('/refresh', auth, async (req, res) => {
-    const _t0 = Date.now();
     try {
-        const user = await User.findById(req.user.id).lean();
-        const connectedAccounts = await AccountService.getAccountsWithTokens(req.user.id);
-
-        // Pull recently published posts
-        const posts = await Post.find({ user: req.user.id, 'platforms.status': 'published' })
-            .sort({ updatedAt: -1 })
-            .limit(50);
-
-        let updatedCount = 0;
-        for (const post of posts) {
-            let changed = false;
-            const nextPlatforms = [];
-
-            for (const p of post.platforms) {
-                if (p.status !== 'published') { nextPlatforms.push(p); continue; }
-
-                // Find matching account token
-                const account = connectedAccounts.find(a => a.platform === p.name && a.platformAccountId === p.accountId);
-
-                try {
-                    if (p.name === 'facebook') {
-                        const page = user?.settings?.facebookPages?.find(pg => pg.id === p.accountId); // Legacy
-                        const token = page?.accessToken || page?.access_token || account?.accessToken;
-
-                        if (token && p.postId) {
-                            const metrics = await getPostMetrics(p.postId, token);
-                            if (metrics) {
-                                nextPlatforms.push({ ...p.toObject?.() || p, engagement: { ...p.engagement, ...metrics, lastUpdated: new Date() } });
-                                changed = true;
-                                continue;
-                            }
-                        }
-                    } else if (p.name === 'instagram') {
-                        // ... (Existing IG Logic - abbreviated for clarity but preserving flow)
-                        // Note: Reusing existing IG logic but adapted to use 'account' if available
-                        let token = account?.accessToken;
-                        if (!token) {
-                            // Linkage fallback
-                            const page = user?.settings?.facebookPages?.find(pg => pg.instagramId === p.accountId);
-                            token = page?.accessToken || page?.access_token;
-                        }
-
-                        if (token && p.postId) {
-                            // Use getIgMediaInsights or similar. 
-                            // Keeping original inline logic for safety but would be better to modularize.
-                            const axios = require('axios');
-                            // ... (Assuming standard Graph API calls work with the token)
-                            // For brevity in this edit, relying on the fact that existing logic works if token is valid.
-                            // Inserting logic similar to previous file but using 'account'
-                            try {
-                                const response = await axios.get(`https://graph.instagram.com/${p.postId}`, {
-                                    params: { fields: 'like_count,comments_count', access_token: token }
-                                });
-                                const media = response.data;
-                                const likes = media.like_count || 0;
-                                const comments = media.comments_count || 0;
-                                nextPlatforms.push({ ...p.toObject?.() || p, engagement: { ...p.engagement, likes, comments, lastUpdated: new Date() } });
-                                changed = true;
-                                continue;
-                            } catch { /* ignore */ }
-                        }
-                    } else if (p.name === 'youtube') {
-                        // YouTube Refresh
-                        if (account && account.accessToken && p.postId) {
-                            const details = await youtubeService.getVideoDetails(account.accessToken, p.postId);
-                            if (details && details.statistics) {
-                                const stats = details.statistics;
-                                nextPlatforms.push({
-                                    ...p.toObject?.() || p,
-                                    engagement: {
-                                        ...p.engagement,
-                                        views: parseInt(stats.viewCount || 0),
-                                        likes: parseInt(stats.likeCount || 0),
-                                        comments: parseInt(stats.commentCount || 0),
-                                        lastUpdated: new Date()
-                                    }
-                                });
-                                changed = true;
-                                continue;
-                            }
-                        }
-                    } else if (p.name === 'tiktok') {
-                        // TikTok Refresh
-                        if (account && account.accessToken && p.postId) {
-                            const details = await tiktokService.queryVideos(account.accessToken, [p.postId]);
-                            if (details && details.videos && details.videos.length > 0) {
-                                const vid = details.videos[0];
-                                nextPlatforms.push({
-                                    ...p.toObject?.() || p,
-                                    engagement: {
-                                        ...p.engagement,
-                                        views: vid.view_count || 0,
-                                        likes: vid.like_count || 0,
-                                        comments: vid.comment_count || 0,
-                                        shares: vid.share_count || 0,
-                                        lastUpdated: new Date()
-                                    }
-                                });
-                                changed = true;
-                                continue;
-                            }
-                        }
-                    }
-                } catch (e) {
-                    console.warn(`Failed to refresh ${p.name} post ${p.postId}:`, e.message);
-                }
-
-                // Fallback: keep original
-                nextPlatforms.push(p);
-            }
-
-            if (changed) {
-                post.platforms = nextPlatforms;
-                await post.save();
-                updatedCount++;
-            }
+        if (req.query.sync === '1') {
+            const result = await refreshAnalyticsForUser(req.user.id);
+            return res.json({ ok: true, mode: 'sync', updated: result.updated });
         }
 
-        console.log('[ANALYTICS] /refresh done', { updated: updatedCount });
-        return res.json({ ok: true, updated: updatedCount });
+        const refreshJobId = uuidv4();
+        await new AnalyticsRefreshJob({
+            jobId: refreshJobId,
+            userId: req.user.id,
+            status: 'queued',
+            logs: [{ level: 'info', message: 'Queued analytics refresh' }],
+        }).save();
+
+        await analyticsRefreshQueue.add({
+            refreshJobId,
+            userId: req.user.id,
+            traceId: req.traceId,
+        });
+
+        return res.json({ ok: true, mode: 'async', jobId: refreshJobId, status: 'queued' });
     } catch (e) {
         log('error', 'analytics refresh failed', withTrace({
             userId: req.user?.id,
             error: serializeError(e),
         }, req.traceId));
         return res.status(500).json({ message: 'Failed to refresh analytics' });
+    }
+});
+
+router.get('/refresh/:jobId', auth, async (req, res) => {
+    try {
+        const job = await AnalyticsRefreshJob.findOne({
+            jobId: req.params.jobId,
+            userId: req.user.id,
+        }).lean();
+        if (!job) return res.status(404).json({ message: 'Refresh job not found' });
+        return res.json({
+            jobId: job.jobId,
+            status: job.status,
+            progress: job.progress || 0,
+            result: job.result || null,
+            error: job.error || null,
+            startedAt: job.startedAt || null,
+            completedAt: job.completedAt || null,
+            updatedAt: job.updatedAt,
+        });
+    } catch {
+        return res.status(500).json({ message: 'Failed to load refresh job status' });
     }
 });
 
