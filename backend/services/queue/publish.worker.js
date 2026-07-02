@@ -3,12 +3,14 @@ const PublishJob = require('../../models/PublishJob');
 const User = require('../../models/User');
 const Post = require('../../models/Post');
 const { log, withTrace, serializeError } = require('../../utils/logger');
+const { observeQueueJobDuration } = require('../../config/metrics');
 // Note: PublisherFactory is required dynamically below in the processing loop
 
 const publishWorkerConcurrency = Number(process.env.PUBLISH_WORKER_CONCURRENCY || 6);
 
 // Use configurable concurrency so publish workers can be tuned per deployment size.
 publishQueue.process(publishWorkerConcurrency, async (job) => {
+    const startedAt = Date.now();
     const traceId = job.data?.traceId;
     log('info', 'publish worker started', withTrace({
         queueJobId: job.id,
@@ -251,6 +253,8 @@ publishQueue.process(publishWorkerConcurrency, async (job) => {
 
     // Do NOT call publishJob.save() here as it is stale and would overwrite atomic updates
     // await publishJob.save();
+    observeQueueJobDuration('social-publish', 'wait', failCount > 0 ? 'partial_or_failed' : 'completed', Math.max(startedAt - (job.timestamp || startedAt), 0));
+    observeQueueJobDuration('social-publish', 'total', failCount > 0 ? 'partial_or_failed' : 'completed', Date.now() - startedAt);
     log('info', 'publish worker completed', withTrace({
         publishJobId: jobId,
         successCount,

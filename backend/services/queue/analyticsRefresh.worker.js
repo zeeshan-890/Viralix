@@ -2,11 +2,13 @@ const AnalyticsRefreshJob = require('../../models/AnalyticsRefreshJob');
 const analyticsRefreshQueue = require('./analyticsRefresh.queue');
 const { refreshAnalyticsForUser } = require('../analytics/refreshAnalytics');
 const { log, withTrace, serializeError } = require('../../utils/logger');
+const { observeQueueJobDuration } = require('../../config/metrics');
 
 const analyticsRefreshWorkerConcurrency = Number(process.env.ANALYTICS_REFRESH_WORKER_CONCURRENCY || 2);
 
 // Keep analytics refresh parallelism bounded to avoid starving publish/sync workers.
 analyticsRefreshQueue.process(analyticsRefreshWorkerConcurrency, async (job) => {
+    const startedAt = Date.now();
     const { refreshJobId, userId, traceId } = job.data;
     const refreshJob = await AnalyticsRefreshJob.findOne({ jobId: refreshJobId });
     if (!refreshJob) throw new Error(`Refresh job ${refreshJobId} not found`);
@@ -33,6 +35,8 @@ analyticsRefreshQueue.process(analyticsRefreshWorkerConcurrency, async (job) => 
                 $push: { logs: { level: 'info', message: `Completed refresh; updated ${result.updated} posts` } },
             }
         );
+        observeQueueJobDuration('analytics-refresh', 'wait', 'completed', Math.max(startedAt - (job.timestamp || startedAt), 0));
+        observeQueueJobDuration('analytics-refresh', 'total', 'completed', Date.now() - startedAt);
         log('info', 'analytics refresh worker completed', withTrace({ refreshJobId, userId, updated: result.updated }, traceId));
     } catch (error) {
         await AnalyticsRefreshJob.updateOne(
@@ -46,6 +50,8 @@ analyticsRefreshQueue.process(analyticsRefreshWorkerConcurrency, async (job) => 
                 $push: { logs: { level: 'error', message: `Refresh failed: ${error.message}` } },
             }
         );
+        observeQueueJobDuration('analytics-refresh', 'wait', 'failed', Math.max(startedAt - (job.timestamp || startedAt), 0));
+        observeQueueJobDuration('analytics-refresh', 'total', 'failed', Date.now() - startedAt);
         log('error', 'analytics refresh worker failed', withTrace({ refreshJobId, userId, error: serializeError(error) }, traceId));
         throw error;
     }

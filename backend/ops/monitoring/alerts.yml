@@ -28,3 +28,21 @@ groups:
           summary: "Scheduler lock not acquired recently"
           description: "No scheduler lock acquisition event detected in the last 15 minutes."
 
+      - alert: ViralixApiP95LatencyHigh
+        expr: histogram_quantile(0.95, sum(rate(viralix_http_request_duration_ms_bucket[10m])) by (le)) > 800
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "API p95 latency is above SLO"
+          description: "Global API p95 latency has exceeded 800ms for the last 10 minutes."
+
+      - alert: ViralixQueueFailureRatioHigh
+        expr: sum(rate(viralix_queue_jobs_total{status=~"failed|partial_or_failed"}[10m])) / clamp_min(sum(rate(viralix_queue_jobs_total[10m])), 1) > 0.10
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Queue failure ratio is high"
+          description: "Combined queue failed/partial job ratio is above 10% over the last 10 minutes."
+

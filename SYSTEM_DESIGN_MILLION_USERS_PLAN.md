@@ -333,6 +333,11 @@ Use this mapping to execute each phase incrementally without a risky rewrite.
   - `viralix_scheduler_lock_events_total`
   - `viralix_queue_jobs_total`
   - `viralix_queue_depth`
+  - `viralix_queue_job_duration_ms`
+
+### SLO-focused alerts
+- API p95 latency alert: `ViralixApiP95LatencyHigh` (>800ms over 10m)
+- Queue failure ratio alert: `ViralixQueueFailureRatioHigh` (>10% over 10m)
 
 ### Scheduler lock verification
 1. Run two backend replicas against the same Redis.

@@ -4,6 +4,7 @@ const {
     incSchedulerLockEvent,
     incQueueJob,
     setQueueDepth,
+    observeQueueJobDuration,
 } = require('../config/metrics');
 
 describe('metrics registry', () => {
@@ -12,6 +13,7 @@ describe('metrics registry', () => {
         incSchedulerLockEvent('acquire');
         incQueueJob('social-publish', 'completed');
         setQueueDepth('social-publish', 'waiting', 3);
+        observeQueueJobDuration('social-publish', 'total', 'completed', 500);
 
         const content = await register.metrics();
         expect(content).toContain('viralix_http_request_duration_ms');
@@ -19,6 +21,7 @@ describe('metrics registry', () => {
         expect(content).toContain('viralix_scheduler_lock_events_total');
         expect(content).toContain('viralix_queue_jobs_total');
         expect(content).toContain('viralix_queue_depth');
+        expect(content).toContain('viralix_queue_job_duration_ms');
     });
 });
 

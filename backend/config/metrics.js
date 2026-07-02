@@ -39,6 +39,14 @@ const queueDepthGauge = new client.Gauge({
     registers: [register],
 });
 
+const queueJobDurationMs = new client.Histogram({
+    name: 'viralix_queue_job_duration_ms',
+    help: 'Queue job end-to-end duration and wait times in ms',
+    labelNames: ['queue', 'metric', 'status'],
+    buckets: [100, 300, 500, 1000, 2000, 5000, 10000, 30000, 60000, 180000],
+    registers: [register],
+});
+
 function observeHttp({ method, route, statusCode, durationMs }) {
     const labels = { method, route, status_code: String(statusCode) };
     httpRequestsTotal.inc(labels, 1);
@@ -57,11 +65,16 @@ function setQueueDepth(queue, state, value) {
     queueDepthGauge.set({ queue, state }, value);
 }
 
+function observeQueueJobDuration(queue, metric, status, durationMs) {
+    queueJobDurationMs.observe({ queue, metric, status }, durationMs);
+}
+
 module.exports = {
     register,
     observeHttp,
     incSchedulerLockEvent,
     incQueueJob,
     setQueueDepth,
+    observeQueueJobDuration,
 };
 
