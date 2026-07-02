@@ -3,6 +3,7 @@ const mongoose = require('mongoose');
 const PlatformSyncJobSchema = new mongoose.Schema({
     jobId: { type: String, required: true, unique: true, index: true },
     traceId: { type: String, index: true },
+    idempotencyKey: { type: String, index: true, sparse: true },
     userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true, index: true },
     platform: { type: String, enum: ['instagram', 'tiktok', 'youtube', 'facebook', 'all'], required: true, index: true },
     status: {

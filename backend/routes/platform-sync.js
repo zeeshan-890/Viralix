@@ -9,6 +9,8 @@ const platformSyncQueue = require('../services/queue/platformSync.queue');
 const PlatformSyncJob = require('../models/PlatformSyncJob');
 const { executePlatformSync } = require('../services/platformSync.service');
 const { rejectWhenQueueBacklogged } = require('../utils/queueAdmission');
+const { parseIdempotencyKey } = require('../utils/httpIdempotency');
+const { recordAuditEvent } = require('../services/audit.service');
 const { v4: uuidv4 } = require('uuid');
 const axios = require('axios');
 
@@ -16,9 +18,33 @@ const router = express.Router();
 
 const INSTAGRAM_GRAPH_URL = 'https://graph.instagram.com';
 
+async function findExistingSyncJob(userId, platform, idempotencyKey) {
+    if (!idempotencyKey) return null;
+    return PlatformSyncJob.findOne({
+        userId,
+        platform,
+        idempotencyKey,
+        status: { $in: ['queued', 'processing', 'completed'] },
+    }).sort({ createdAt: -1 });
+}
+
 // Sync all platforms for a user
 router.post('/sync-all', auth, async (req, res) => {
     try {
+        const idempotencyKey = parseIdempotencyKey(req);
+        if (idempotencyKey) {
+            const existing = await findExistingSyncJob(req.user.id, 'all', idempotencyKey);
+            if (existing) {
+                return res.json({
+                    success: true,
+                    mode: 'async',
+                    jobId: existing.jobId,
+                    status: existing.status,
+                    deduped: true,
+                });
+            }
+        }
+
         if (req.query.sync === '1') {
             const result = await executePlatformSync(req.user.id, 'all');
             return res.json({ success: true, mode: 'sync', ...result });
@@ -38,6 +64,7 @@ router.post('/sync-all', auth, async (req, res) => {
         await new PlatformSyncJob({
             jobId: syncJobId,
             traceId: req.traceId,
+            idempotencyKey,
             userId: req.user.id,
             platform: 'all',
             status: 'queued',
@@ -51,6 +78,17 @@ router.post('/sync-all', auth, async (req, res) => {
             traceId: req.traceId,
         });
 
+        await recordAuditEvent({
+            actorId: req.user.id,
+            userId: req.user.id,
+            action: 'platform_sync.requested',
+            resourceType: 'platform_sync_job',
+            resourceId: syncJobId,
+            traceId: req.traceId,
+            metadata: { platform: 'all', mode: 'async' },
+            ip: req.ip,
+        });
+
         res.json({ success: true, mode: 'async', jobId: syncJobId, status: 'queued' });
     } catch (error) {
         console.error('[Sync] Error:', error);
@@ -62,6 +100,20 @@ router.post('/sync-all', auth, async (req, res) => {
 router.post('/sync/:platform', auth, async (req, res) => {
     const { platform } = req.params;
     try {
+        const idempotencyKey = parseIdempotencyKey(req);
+        if (idempotencyKey) {
+            const existing = await findExistingSyncJob(req.user.id, platform, idempotencyKey);
+            if (existing) {
+                return res.json({
+                    success: true,
+                    mode: 'async',
+                    jobId: existing.jobId,
+                    status: existing.status,
+                    deduped: true,
+                });
+            }
+        }
+
         const accounts = await AccountService.getAccountsWithTokens(req.user.id);
         const platformAccounts = accounts.filter(a => a.platform === platform);
 
@@ -88,6 +140,7 @@ router.post('/sync/:platform', auth, async (req, res) => {
         await new PlatformSyncJob({
             jobId: syncJobId,
             traceId: req.traceId,
+            idempotencyKey,
             userId: req.user.id,
             platform,
             status: 'queued',
@@ -99,6 +152,17 @@ router.post('/sync/:platform', auth, async (req, res) => {
             userId: req.user.id,
             platform,
             traceId: req.traceId,
+        });
+
+        await recordAuditEvent({
+            actorId: req.user.id,
+            userId: req.user.id,
+            action: 'platform_sync.requested',
+            resourceType: 'platform_sync_job',
+            resourceId: syncJobId,
+            traceId: req.traceId,
+            metadata: { platform, mode: 'async' },
+            ip: req.ip,
         });
 
         res.json({ success: true, mode: 'async', jobId: syncJobId, status: 'queued' });
