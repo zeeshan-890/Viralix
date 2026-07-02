@@ -463,6 +463,13 @@ Use this mapping to execute each phase incrementally without a risky rewrite.
 4. Call `GET /api/analytics/trends?days=30` and verify `source: rollup` with ascending `timeline`.
 5. Run `npm run ensure-indexes` and confirm `DomainEvent` + `AnalyticsDailyRollup` indexes are ensured.
 
+### Analytical trends adapter
+- `ANALYTICS_TRENDS_BACKEND=mongo|external` (default `mongo`; `external` falls back until wired)
+- `ANALYTICS_TRENDS_EXTERNAL_URL` — future ClickHouse/BigQuery HTTP endpoint
+- `ANALYTICS_TRENDS_USE_ROLLUP=0` disables rollup-backed `/api/analytics/performance` for 90d/1y
+- Long-range performance charts (`90d`, `1y`) read from rollups via `trendsAdapter.js`
+- Admin domain event query: `GET /api/audit/domain-events` (admin role)
+
 ### Analytical DB (document only — not implemented)
 - When rollup volume exceeds Mongo aggregation comfort (~millions of rows/day globally), export `AnalyticsDailyRollup` to ClickHouse/BigQuery via nightly ETL or change stream.
 - Keep API contract (`/api/analytics/trends`) stable; swap read adapter behind `getAnalyticsTrends`.
