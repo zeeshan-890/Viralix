@@ -3,7 +3,10 @@ const platformSyncQueue = require('./platformSync.queue');
 const { executePlatformSync } = require('../platformSync.service');
 const { log, withTrace, serializeError } = require('../../utils/logger');
 
-platformSyncQueue.process(async (job) => {
+const platformSyncWorkerConcurrency = Number(process.env.PLATFORM_SYNC_WORKER_CONCURRENCY || 3);
+
+// Platform sync can be heavy and rate-limited externally, so keep it tunable via env.
+platformSyncQueue.process(platformSyncWorkerConcurrency, async (job) => {
     const { syncJobId, userId, platform, traceId } = job.data;
     const syncJob = await PlatformSyncJob.findOne({ jobId: syncJobId });
     if (!syncJob) throw new Error(`Sync job ${syncJobId} not found`);
@@ -48,5 +51,5 @@ platformSyncQueue.process(async (job) => {
     }
 });
 
-log('info', 'platform sync worker started');
+log('info', 'platform sync worker started', { concurrency: platformSyncWorkerConcurrency });
 

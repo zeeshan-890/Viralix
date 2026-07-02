@@ -5,8 +5,10 @@ const Post = require('../../models/Post');
 const { log, withTrace, serializeError } = require('../../utils/logger');
 // Note: PublisherFactory is required dynamically below in the processing loop
 
-// Process jobs
-publishQueue.process(async (job) => {
+const publishWorkerConcurrency = Number(process.env.PUBLISH_WORKER_CONCURRENCY || 6);
+
+// Use configurable concurrency so publish workers can be tuned per deployment size.
+publishQueue.process(publishWorkerConcurrency, async (job) => {
     const traceId = job.data?.traceId;
     log('info', 'publish worker started', withTrace({
         queueJobId: job.id,
@@ -257,4 +259,4 @@ publishQueue.process(async (job) => {
     return { success: successCount, failed: failCount };
 });
 
-console.log('👷 Publish Worker started');
+console.log(`👷 Publish Worker started (concurrency=${publishWorkerConcurrency})`);

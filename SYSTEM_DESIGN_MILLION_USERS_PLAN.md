@@ -320,6 +320,9 @@ Use this mapping to execute each phase incrementally without a risky rewrite.
 - `ANALYTICS_REFRESH_QUEUE_DELAYED_LIMIT=200` (reject refresh enqueue above this delayed depth)
 - `PLATFORM_SYNC_QUEUE_WAITING_LIMIT=120` (reject sync enqueue above this waiting depth)
 - `PLATFORM_SYNC_QUEUE_DELAYED_LIMIT=120` (reject sync enqueue above this delayed depth)
+- `PUBLISH_WORKER_CONCURRENCY=6` (publish worker pool size per process)
+- `ANALYTICS_REFRESH_WORKER_CONCURRENCY=2` (analytics refresh worker pool size per process)
+- `PLATFORM_SYNC_WORKER_CONCURRENCY=3` (platform sync worker pool size per process)
 
 ### Health and metrics checks
 - API health: `GET /api/health`

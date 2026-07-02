@@ -3,7 +3,10 @@ const analyticsRefreshQueue = require('./analyticsRefresh.queue');
 const { refreshAnalyticsForUser } = require('../analytics/refreshAnalytics');
 const { log, withTrace, serializeError } = require('../../utils/logger');
 
-analyticsRefreshQueue.process(async (job) => {
+const analyticsRefreshWorkerConcurrency = Number(process.env.ANALYTICS_REFRESH_WORKER_CONCURRENCY || 2);
+
+// Keep analytics refresh parallelism bounded to avoid starving publish/sync workers.
+analyticsRefreshQueue.process(analyticsRefreshWorkerConcurrency, async (job) => {
     const { refreshJobId, userId, traceId } = job.data;
     const refreshJob = await AnalyticsRefreshJob.findOne({ jobId: refreshJobId });
     if (!refreshJob) throw new Error(`Refresh job ${refreshJobId} not found`);
@@ -48,5 +51,5 @@ analyticsRefreshQueue.process(async (job) => {
     }
 });
 
-log('info', 'analytics refresh worker started');
+log('info', 'analytics refresh worker started', { concurrency: analyticsRefreshWorkerConcurrency });
 
