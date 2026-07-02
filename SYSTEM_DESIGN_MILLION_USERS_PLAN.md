@@ -424,4 +424,17 @@ Use this mapping to execute each phase incrementally without a risky rewrite.
 3. Call `GET /api/posts/dlq` and `POST /api/posts/dlq/:dlqJobId/replay`.
 4. Verify job is re-enqueued and audit event `publish.dlq_replayed` is written.
 
+### Index optimization verification
+1. Run `npm run ensure-indexes` in `backend/`.
+2. Confirm startup logs show indexes ensured for all hot-path models.
+3. Validate query plans in Mongo for:
+   - `Post.find({ user, createdAt })`
+   - `PublishJob.find({ userId, postId, idempotencyKey })`
+   - `AuditLog.find({ actorId }).sort({ createdAt: -1 })`
+
+### Load and chaos drills
+1. Smoke load: `LOAD_TEST_BASE_URL=http://localhost:5000 npm run load:smoke`
+2. Auth read load: set `LOAD_TEST_AUTH_TOKEN` then run `npm run load:read`
+3. Circuit chaos drill: `npm run chaos:circuit` and confirm `circuitOpened: true`
+
 
