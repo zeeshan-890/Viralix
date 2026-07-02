@@ -42,5 +42,13 @@ function getRedisClient(type) {
 
 module.exports = {
     getRedisClient,
-    redisUrl
+    redisUrl,
+    async pingRedis() {
+        try {
+            const pong = await getRedisClient().ping();
+            return pong === 'PONG' ? 'connected' : 'degraded';
+        } catch {
+            return 'disconnected';
+        }
+    },
 };

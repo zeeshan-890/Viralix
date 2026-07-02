@@ -318,17 +318,21 @@ try {
 
 // Health check endpoint
 const { getDbStatus, getReadDbStatus } = require('./config/database');
-app.get('/api/health', (req, res) => {
+const { pingRedis } = require('./config/redis');
+app.get('/api/health', async (req, res) => {
     const dbStatus = getDbStatus();
     const readDbStatus = getReadDbStatus();
+    const redisStatus = await pingRedis();
     const isProd = process.env.NODE_ENV === 'production';
-    const ok = dbStatus === 'connected' || (!isProd && dbStatus === 'not_configured');
+    const ok = (dbStatus === 'connected' || (!isProd && dbStatus === 'not_configured'))
+        && (redisStatus === 'connected' || redisStatus === 'not_configured' || !process.env.REDIS_URL);
     res.status(ok ? 200 : 503).json({
         status: ok ? 'OK' : 'DEGRADED',
         db: dbStatus,
         readDb: readDbStatus,
+        redis: process.env.REDIS_URL ? redisStatus : 'not_configured',
         processType: process.env.PROCESS_TYPE || 'all',
-        message: ok ? 'AutoReach AI Backend is running' : 'Backend up but database unavailable',
+        message: ok ? 'AutoReach AI Backend is running' : 'Backend up but a dependency is unavailable',
         timestamp: new Date().toISOString()
     });
 });

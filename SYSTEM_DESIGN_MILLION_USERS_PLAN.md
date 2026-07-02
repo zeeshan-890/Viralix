@@ -333,6 +333,12 @@ Use this mapping to execute each phase incrementally without a risky rewrite.
 - `MONGODB_READ_URI` (optional dedicated Mongo read replica connection string)
 - `MONGODB_READ_PREFERENCE=secondaryPreferred` (optional query read preference)
 - `PROCESS_TYPE=all|api|worker` (split API and worker runtime roles)
+- `TENANT_QUOTA_PUBLISH_DAILY=200` (max publish requests per user per day)
+- `TENANT_QUOTA_SYNC_HOURLY=24` (max sync requests per user per hour)
+- `TENANT_QUOTA_ANALYTICS_REFRESH_HOURLY=12` (max analytics refresh requests per user per hour)
+- `TENANT_QUOTA_AI_MINUTELY=20` (max AI requests per user per minute)
+- `CIRCUIT_BREAKER_FAILURE_THRESHOLD=5` (open circuit after consecutive platform failures)
+- `CIRCUIT_BREAKER_RESET_TIMEOUT_MS=60000` (circuit half-open retry delay)
 
 ### Health and metrics checks
 - API health: `GET /api/health`
@@ -406,5 +412,16 @@ Use this mapping to execute each phase incrementally without a risky rewrite.
 1. Heroku: scale `web=2` and `worker=2` dynos using updated `Procfile`.
 2. Kubernetes: apply manifests in `backend/ops/deploy/kubernetes/` and confirm HPA targets.
 3. Confirm API dyno runs with `PROCESS_TYPE=api` and worker dyno runs `worker-process.js`.
+
+### Tenant quota verification
+1. Lower a quota (for example `TENANT_QUOTA_SYNC_HOURLY=1`) in local env.
+2. Trigger sync twice within the window and confirm second request returns `429` with quota metadata.
+3. Restore production limits and verify normal enqueue behavior.
+
+### DLQ replay verification
+1. Force a publish job to fail beyond retry attempts.
+2. Confirm `PublishDlqJob` record is created with `status: dead_lettered`.
+3. Call `GET /api/posts/dlq` and `POST /api/posts/dlq/:dlqJobId/replay`.
+4. Verify job is re-enqueued and audit event `publish.dlq_replayed` is written.
 
 
