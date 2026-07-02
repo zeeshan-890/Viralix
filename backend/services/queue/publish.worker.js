@@ -5,6 +5,7 @@ const Post = require('../../models/Post');
 const { log, withTrace, serializeError } = require('../../utils/logger');
 const { observeQueueJobDuration } = require('../../config/metrics');
 const { recordAuditEvent } = require('../audit.service');
+const { runWithCircuitBreaker } = require('../../utils/circuitBreaker');
 // Note: PublisherFactory is required dynamically below in the processing loop
 
 const publishWorkerConcurrency = Number(process.env.PUBLISH_WORKER_CONCURRENCY || 6);
@@ -115,7 +116,7 @@ publishQueue.process(publishWorkerConcurrency, async (job) => {
             const PublisherFactory = require('../publishers/publisher.factory');
             const publisher = PublisherFactory.getPublisher(user, platform.name);
 
-            const result = await publisher.publish({
+            const result = await runWithCircuitBreaker(`publish:${platform.name}`, async () => publisher.publish({
                 accountId: platform.accountId,
                 accountName: platform.accountName
             }, {
@@ -123,7 +124,7 @@ publishQueue.process(publishWorkerConcurrency, async (job) => {
                 media: content.media,
                 title: content.title,
                 tiktokSettings: content.tiktokSettings
-            });
+            }));
 
             // Update success (Atomic)
             await PublishJob.updateOne(
