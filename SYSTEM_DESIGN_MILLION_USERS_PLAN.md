@@ -2,8 +2,9 @@
 
 This document is a practical system design blueprint for scaling Viralix to millions of users while keeping reliability, performance, and cost under control.
 
-It answers:
-- What your system looks like today
+**Architecture diagrams:** see [`SYSTEM_DESIGN_ARCHITECTURE.md`](./SYSTEM_DESIGN_ARCHITECTURE.md) for 20 Mermaid diagrams (context, containers, deployment, pipelines, Kafka, queues, data, observability, evolution path).
+
+It answers:- What your system looks like today
 - What system design concepts/technologies apply
 - Whether each should be used in Viralix (`Yes now`, `Yes later`, `No`)
 - Why each choice makes sense
@@ -51,6 +52,9 @@ It answers:
 - Move to selective service extraction only when domain throughput/team boundaries justify it.
 
 ## Recommended reference architecture
+
+> Visual version: [SYSTEM_DESIGN_ARCHITECTURE.md §2–3](./SYSTEM_DESIGN_ARCHITECTURE.md#2-container-architecture-c4-level-2)
+
 1. Edge + WAF + CDN
 2. API layer (multiple stateless backend replicas)
 3. Worker layer (publish/sync/analytics workers, separately autoscaled)
