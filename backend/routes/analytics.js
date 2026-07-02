@@ -10,7 +10,12 @@ const analyticsRefreshQueue = require('../services/queue/analyticsRefresh.queue'
 const AnalyticsRefreshJob = require('../models/AnalyticsRefreshJob');
 const { refreshAnalyticsForUser } = require('../services/analytics/refreshAnalytics');
 const { materializeAnalyticsOverview } = require('../services/analytics/overviewStore');
-const { getAnalyticsTrends } = require('../services/analytics/dailyRollup');
+const {
+    getAnalyticsTrends,
+    mapRollupTimelineToPerformance,
+    periodToDays,
+    shouldUseRollupForPerformance,
+} = require('../services/analytics/trendsAdapter');
 const { rejectWhenQueueBacklogged } = require('../utils/queueAdmission');
 const { enforceTenantQuota } = require('../middleware/tenantQuota');
 const { v4: uuidv4 } = require('uuid');
@@ -240,6 +245,18 @@ router.get('/deep/:platform', auth, async (req, res) => {
 router.get('/performance', auth, async (req, res) => {
     try {
         const { period = '30d', platform } = req.query;
+
+        if (shouldUseRollupForPerformance(period)) {
+            const trends = await getAnalyticsTrends(req.user.id, periodToDays(period));
+            const timeline = mapRollupTimelineToPerformance(trends.timeline, platform);
+            return res.json({
+                period,
+                platform: platform || 'all',
+                timeline,
+                source: trends.source,
+            });
+        }
+
         let startDate;
         switch (period) {
             case '7d': startDate = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000); break;
@@ -268,7 +285,7 @@ router.get('/performance', auth, async (req, res) => {
             timeline[key].engagement += engagement;
             timeline[key].posts += 1;
         }
-        return res.json({ period, platform: platform || 'all', timeline: Object.values(timeline) });
+        return res.json({ period, platform: platform || 'all', timeline: Object.values(timeline), source: 'live' });
     } catch (e) {
         return res.status(500).json({ message: 'Failed to load performance analytics' });
     }
