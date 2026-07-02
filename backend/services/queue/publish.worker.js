@@ -4,6 +4,7 @@ const User = require('../../models/User');
 const Post = require('../../models/Post');
 const { log, withTrace, serializeError } = require('../../utils/logger');
 const { observeQueueJobDuration } = require('../../config/metrics');
+const { recordAuditEvent } = require('../audit.service');
 // Note: PublisherFactory is required dynamically below in the processing loop
 
 const publishWorkerConcurrency = Number(process.env.PUBLISH_WORKER_CONCURRENCY || 6);
@@ -255,6 +256,15 @@ publishQueue.process(publishWorkerConcurrency, async (job) => {
     // await publishJob.save();
     observeQueueJobDuration('social-publish', 'wait', failCount > 0 ? 'partial_or_failed' : 'completed', Math.max(startedAt - (job.timestamp || startedAt), 0));
     observeQueueJobDuration('social-publish', 'total', failCount > 0 ? 'partial_or_failed' : 'completed', Date.now() - startedAt);
+    await recordAuditEvent({
+        actorId: userId,
+        userId,
+        action: failCount === 0 ? 'publish.completed' : (successCount === 0 ? 'publish.failed' : 'publish.partially_failed'),
+        resourceType: 'publish_job',
+        resourceId: jobId,
+        traceId,
+        metadata: { postId: String(postId || ''), successCount, failCount },
+    });
     log('info', 'publish worker completed', withTrace({
         publishJobId: jobId,
         successCount,

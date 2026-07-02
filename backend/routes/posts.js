@@ -5,6 +5,7 @@ const User = require('../models/User');
 const auth = require('../middleware/auth');
 const { buildPublishQueuePayload } = require('../utils/publishPayload');
 const { parseIdempotencyKey } = require('../utils/httpIdempotency');
+const { recordAuditEvent } = require('../services/audit.service');
 // const { publishPostById } = require('../services/publisher'); // Legacy removed
 
 const router = express.Router();
@@ -234,6 +235,7 @@ router.delete('/:id', auth, async (req, res) => {
 
 const publishQueue = require('../services/queue/publish.queue');
 const PublishJob = require('../models/PublishJob');
+const { rejectWhenQueueBacklogged } = require('../utils/queueAdmission');
 const { v4: uuidv4 } = require('uuid');
 
 // POST /api/posts/:id/publish - publish async via queue
@@ -265,6 +267,17 @@ router.post('/:id/publish', auth, async (req, res) => {
 
         const jobId = uuidv4();
 
+        const admission = await rejectWhenQueueBacklogged(publishQueue, {
+            waitingLimit: Number(process.env.PUBLISH_QUEUE_WAITING_LIMIT || 300),
+            delayedLimit: Number(process.env.PUBLISH_QUEUE_DELAYED_LIMIT || 300),
+        });
+        if (admission.shouldReject) {
+            return res.status(429).json({
+                message: 'Publish queue is busy. Please try again shortly.',
+                queue: admission.counts,
+            });
+        }
+
         // Create Job Record
         const job = new PublishJob({
             jobId,
@@ -294,6 +307,17 @@ router.post('/:id/publish', auth, async (req, res) => {
             traceId: req.traceId,
             post,
         }));
+
+        await recordAuditEvent({
+            actorId: req.user.id,
+            userId: req.user.id,
+            action: 'publish.requested',
+            resourceType: 'publish_job',
+            resourceId: jobId,
+            traceId: req.traceId,
+            metadata: { postId: String(post._id), platformCount: post.platforms.length },
+            ip: req.ip,
+        });
 
         res.json({
             message: 'Publishing started in background',
