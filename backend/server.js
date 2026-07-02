@@ -3,6 +3,9 @@ const cors = require('cors');
 const helmet = require('helmet');
 const cookieParser = require('cookie-parser');
 const morgan = require('morgan');
+const { traceMiddleware } = require('./middleware/trace');
+const { log, withTrace, serializeError } = require('./utils/logger');
+const { register, observeHttp } = require('./config/metrics');
 
 // const rateLimit = require('express-rate-limit'); // Moved to middleware
 const { URL } = require('url');
@@ -15,6 +18,19 @@ const PORT = process.env.PORT || 5000;
 // express-rate-limit does not throw ERR_ERL_UNEXPECTED_X_FORWARDED_FOR.
 // Trust only the first proxy hop (Heroku router) which preserves client IP in X-Forwarded-For.
 app.set('trust proxy', 1);
+app.use(traceMiddleware);
+app.use((req, res, next) => {
+    const start = Date.now();
+    res.on('finish', () => {
+        observeHttp({
+            method: req.method,
+            route: req.route?.path || req.baseUrl || req.path || 'unknown',
+            statusCode: res.statusCode,
+            durationMs: Date.now() - start,
+        });
+    });
+    next();
+});
 
 // Security middleware with enhanced configuration
 app.use(helmet({
@@ -64,6 +80,7 @@ if (process.env.ALLOW_LOCAL_DEV !== '0') {
 }
 
 console.log('🌐 CORS Allowed Origins:', ALLOWED);
+log('info', 'CORS allowlist loaded', { origins: ALLOWED });
 
 app.use(cors({
     origin: (origin, cb) => {
@@ -132,9 +149,19 @@ app.use(morgan('combined'));
 app.use('/api/analytics', (req, res, next) => {
     const start = Date.now();
     const { method, originalUrl } = req;
-    console.log('[REQ] analytics', { method, originalUrl, origin: req.headers?.origin, hasCookie: !!req.headers?.cookie });
+    log('info', 'analytics request', withTrace({
+        method,
+        originalUrl,
+        origin: req.headers?.origin,
+        hasCookie: !!req.headers?.cookie,
+    }, req.traceId));
     res.on('finish', () => {
-        console.log('[RES] analytics', { method, originalUrl, status: res.statusCode, ms: Date.now() - start });
+        log('info', 'analytics response', withTrace({
+            method,
+            originalUrl,
+            status: res.statusCode,
+            ms: Date.now() - start,
+        }, req.traceId));
     });
     next();
 });
@@ -296,6 +323,13 @@ app.get('/api/health', (req, res) => {
     });
 });
 
+if (process.env.METRICS_ENABLED !== '0') {
+    app.get('/api/metrics', async (req, res) => {
+        res.set('Content-Type', register.contentType);
+        res.end(await register.metrics());
+    });
+}
+
 // CORS debug endpoint (DO NOT expose in production unless needed)
 app.get('/api/cors/debug', (req, res) => {
     res.json({
@@ -346,7 +380,11 @@ app.use('*', (req, res) => {
 
 // Global error handler
 app.use((err, req, res, next) => {
-    console.error(err.stack);
+    log('error', 'Unhandled server error', withTrace({
+        path: req.originalUrl,
+        method: req.method,
+        error: serializeError(err),
+    }, req.traceId));
     res.status(500).json({
         error: 'Internal Server Error',
         message: process.env.NODE_ENV === 'production' ? 'Something went wrong' : err.message
@@ -415,15 +453,15 @@ if (process.env.REDIS_URL) {
 // Start lightweight scheduler using node-cron to publish due posts
 try {
     const cron = require('node-cron');
-    const { scheduleDuePosts } = require('./services/scheduler');
+    const { runScheduleWithLock } = require('./services/scheduler');
     cron.schedule('* * * * *', async () => {
         try {
-            const count = await scheduleDuePosts(new Date());
-            if (count > 0) {
-                console.log(`📣 Scheduler enqueued ${count} due post(s)`);
+            const result = await runScheduleWithLock(new Date());
+            if (result.acquired && result.enqueued > 0) {
+                log('info', 'scheduler enqueued due posts', { enqueued: result.enqueued });
             }
         } catch (e) {
-            console.error('Scheduler error:', e.message);
+            log('error', 'scheduler cycle failed', { error: serializeError(e) });
         }
     });
     console.log('⏱️  Scheduler started: running every minute');

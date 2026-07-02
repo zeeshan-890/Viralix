@@ -2,13 +2,22 @@ const Post = require('../models/Post');
 const PublishJob = require('../models/PublishJob');
 const publishQueue = require('./queue/publish.queue'); // Import the queue
 const { v4: uuidv4 } = require('uuid');
+const { randomUUID } = require('crypto');
+const { getRedisClient } = require('../config/redis');
+const { acquireSchedulerLock, renewSchedulerLock, releaseSchedulerLock } = require('./schedulerLock');
+const { log, serializeError } = require('../utils/logger');
+const { incSchedulerLockEvent } = require('../config/metrics');
+
+const SCHEDULER_LOCK_KEY = process.env.SCHEDULER_LOCK_KEY || 'viralix:scheduler:lock';
+const SCHEDULER_LOCK_TTL_MS = Number(process.env.SCHEDULER_LOCK_TTL_MS || 55000);
+const SCHEDULER_LOCK_HEARTBEAT_MS = Number(process.env.SCHEDULER_LOCK_HEARTBEAT_MS || 15000);
 
 /**
  * Find due posts and enqueue them for publishing
  * @param {Date} now - Current timestamp
  */
 async function scheduleDuePosts(now = new Date()) {
-    console.log(`[Scheduler] Checking for posts due before ${now.toISOString()}...`);
+    log('info', 'scheduler scan started', { runAt: now.toISOString() });
 
     // Find posts that are:
     // 1. Scheduled (isScheduled: true)
@@ -32,7 +41,7 @@ async function scheduleDuePosts(now = new Date()) {
 
     if (duePosts.length === 0) return 0;
 
-    console.log(`[Scheduler] Found ${duePosts.length} due post(s). Enqueueing...`);
+    log('info', 'scheduler due posts found', { duePosts: duePosts.length });
     let count = 0;
 
     for (const post of duePosts) {
@@ -64,6 +73,7 @@ async function scheduleDuePosts(now = new Date()) {
             await publishQueue.add({
                 jobId,
                 userId: post.user,
+                traceId: randomUUID(),
                 postId: post._id, // Critical for status updates
                 platforms: post.platforms,
                 content: {
@@ -86,11 +96,70 @@ async function scheduleDuePosts(now = new Date()) {
             count++;
 
         } catch (e) {
-            console.error(`[Scheduler] Failed to enqueue post ${post._id}:`, e);
+            log('error', 'scheduler enqueue failed', {
+                postId: String(post._id),
+                error: serializeError(e),
+            });
         }
     }
 
     return count;
 }
 
-module.exports = { scheduleDuePosts };
+async function runScheduleWithLock(now = new Date(), deps = {}) {
+    const redis = deps.redis || getRedisClient();
+    const lockKey = deps.lockKey || SCHEDULER_LOCK_KEY;
+    const lockTtlMs = deps.lockTtlMs || SCHEDULER_LOCK_TTL_MS;
+    const heartbeatMs = deps.heartbeatMs || SCHEDULER_LOCK_HEARTBEAT_MS;
+    const logger = deps.logger || console;
+
+    let token;
+    let heartbeat;
+    try {
+        token = await acquireSchedulerLock(redis, lockKey, lockTtlMs);
+        if (!token) {
+            incSchedulerLockEvent('miss');
+            logger.log('[Scheduler] Skipping cycle; lock is held by another instance');
+            return { acquired: false, enqueued: 0 };
+        }
+        incSchedulerLockEvent('acquire');
+
+        heartbeat = setInterval(async () => {
+            try {
+                const renewed = await renewSchedulerLock(redis, lockKey, token, lockTtlMs);
+                if (!renewed) {
+                    incSchedulerLockEvent('renew_miss');
+                    logger.warn('[Scheduler] Lock renew failed; another instance may take over');
+                } else {
+                    incSchedulerLockEvent('renew_ok');
+                }
+            } catch (error) {
+                incSchedulerLockEvent('renew_error');
+                logger.error('[Scheduler] Lock renew error:', error.message);
+            }
+        }, heartbeatMs);
+
+        const enqueued = await scheduleDuePosts(now);
+        return { acquired: true, enqueued };
+    } catch (error) {
+        incSchedulerLockEvent('error');
+        logger.error('[Scheduler] Lock flow error:', error.message);
+        return { acquired: false, enqueued: 0, error: error.message };
+    } finally {
+        if (heartbeat) clearInterval(heartbeat);
+        if (token) {
+            try {
+                await releaseSchedulerLock(redis, lockKey, token);
+                incSchedulerLockEvent('release');
+            } catch (error) {
+                incSchedulerLockEvent('release_error');
+                logger.error('[Scheduler] Lock release error:', error.message);
+            }
+        }
+    }
+}
+
+module.exports = {
+    scheduleDuePosts,
+    runScheduleWithLock,
+};

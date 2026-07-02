@@ -3,6 +3,7 @@ const { body, validationResult } = require('express-validator');
 const Post = require('../models/Post');
 const User = require('../models/User');
 const auth = require('../middleware/auth');
+const { buildPublishQueuePayload } = require('../utils/publishPayload');
 // const { publishPostById } = require('../services/publisher'); // Legacy removed
 
 const router = express.Router();
@@ -265,18 +266,12 @@ router.post('/:id/publish', auth, async (req, res) => {
         await job.save();
 
         // Add to Queue
-        await publishQueue.add({
+        await publishQueue.add(buildPublishQueuePayload({
             jobId,
             userId: req.user.id,
-            postId: post._id,
-            platforms: post.platforms,
-            content: {
-                title: post.title,
-                body: post.content,
-                media: post.media,
-                tiktokSettings: post.tiktokSettings
-            }
-        });
+            traceId: req.traceId,
+            post,
+        }));
 
         res.json({
             message: 'Publishing started in background',

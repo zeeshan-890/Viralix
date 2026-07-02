@@ -1,34 +1,69 @@
 const rateLimit = require('express-rate-limit');
-// const RedisStore = require('rate-limit-redis');
-// const { getRedisClient } = require('../config/redis');
+const RedisStore = require('rate-limit-redis');
+const { getRedisClient } = require('../config/redis');
 
-// Fallback to memory store if Redis is not available or disconnected
-// But since we set up Redis in Phase 1, we should try to use it for distributed limiting.
-// However, rate-limit-redis requires a specific client interface. 
-// For simplicity in this "quick win" phase, we'll start with MemoryStore 
-// but design it to be easily switchable.
+function shouldUseRedisStore() {
+    return process.env.RATE_LIMIT_USE_REDIS !== '0';
+}
 
-const limiter = rateLimit({
-    windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 100, // Limit each IP to 100 requests per windowMs
-    standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
-    legacyHeaders: false, // Disable the `X-RateLimit-*` headers
-    skip: (req) => req.method === 'OPTIONS', // Skip preflight requests to prevent CORS issues
+function createRedisStore(prefix) {
+    if (!shouldUseRedisStore()) return undefined;
+    try {
+        const redis = getRedisClient();
+        return new RedisStore({
+            prefix,
+            sendCommand: (...args) => redis.call(...args),
+        });
+    } catch (error) {
+        console.warn('[RateLimiter] Falling back to memory store:', error.message);
+        return undefined;
+    }
+}
+
+function createLimiter(options) {
+    return rateLimit({
+        standardHeaders: true,
+        legacyHeaders: false,
+        skip: (req) => req.method === 'OPTIONS',
+        ...options,
+    });
+}
+
+const limiter = createLimiter({
+    windowMs: 15 * 60 * 1000,
+    max: 100,
+    store: createRedisStore('rl:general:'),
     message: {
         status: 429,
-        message: 'Too many requests, please try again later.'
-    }
+        message: 'Too many requests, please try again later.',
+    },
 });
 
-// Stricter limit for auth routes (login/signup)
-const authLimiter = rateLimit({
-    windowMs: 60 * 60 * 1000, // 1 hour
-    max: 50, // Increased from 10 to allow more auth requests
-    skip: (req) => req.method === 'OPTIONS', // Skip preflight requests to prevent CORS issues
+const authLimiter = createLimiter({
+    windowMs: 60 * 60 * 1000,
+    max: 50,
+    store: createRedisStore('rl:auth:'),
     message: {
         status: 429,
-        message: 'Too many login attempts, please try again later.'
-    }
+        message: 'Too many login attempts, please try again later.',
+    },
 });
 
-module.exports = { limiter, authLimiter };
+const aiLimiter = createLimiter({
+    windowMs: 60 * 1000,
+    max: 20,
+    store: createRedisStore('rl:ai:'),
+    message: {
+        status: 429,
+        message: 'Too many AI requests, please try again later.',
+    },
+});
+
+module.exports = {
+    limiter,
+    authLimiter,
+    aiLimiter,
+    // exported for tests
+    createRedisStore,
+    shouldUseRedisStore,
+};

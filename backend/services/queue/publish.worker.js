@@ -2,24 +2,35 @@ const publishQueue = require('./publish.queue');
 const PublishJob = require('../../models/PublishJob');
 const User = require('../../models/User');
 const Post = require('../../models/Post');
+const { log, withTrace, serializeError } = require('../../utils/logger');
 // Note: PublisherFactory is required dynamically below in the processing loop
 
 // Process jobs
 publishQueue.process(async (job) => {
-    console.log('[PublishWorker] Processing job:', job.id, 'Data:', JSON.stringify(job.data));
+    const traceId = job.data?.traceId;
+    log('info', 'publish worker started', withTrace({
+        queueJobId: job.id,
+        publishJobId: job.data?.jobId,
+        userId: String(job.data?.userId || ''),
+    }, traceId));
 
     const { jobId, userId, platforms, content, postId } = job.data;
 
     // 1. Fetch Job and User
     const publishJob = await PublishJob.findOne({ jobId });
     if (!publishJob) {
-        console.error('[PublishWorker] Job not found in DB:', jobId);
+        log('error', 'publish worker missing job record', withTrace({
+            publishJobId: jobId,
+        }, traceId));
         throw new Error(`Job ${jobId} not found in database`);
     }
 
     const user = await User.findById(userId);
     if (!user) {
-        console.error('[PublishWorker] User not found:', userId);
+        log('error', 'publish worker missing user', withTrace({
+            userId: String(userId),
+            publishJobId: jobId,
+        }, traceId));
         publishJob.status = 'failed';
         publishJob.error = 'User not found';
         publishJob.completedAt = new Date();
@@ -27,7 +38,10 @@ publishQueue.process(async (job) => {
         throw new Error(`User ${userId} not found`);
     }
 
-    console.log('[PublishWorker] Found job and user, starting publish for', platforms.length, 'platforms');
+    log('info', 'publish worker fanout start', withTrace({
+        publishJobId: jobId,
+        platforms: platforms.length,
+    }, traceId));
 
     publishJob.status = 'processing';
     publishJob.logs.push({ message: 'Starting publish job' });
@@ -141,7 +155,12 @@ publishQueue.process(async (job) => {
             return { success: true, platform: platform.name };
 
         } catch (error) {
-            console.error(`Publish failed for ${platform.name}:`, error);
+            log('error', 'publish platform failed', withTrace({
+                publishJobId: jobId,
+                platform: platform.name,
+                accountId: String(platform.accountId || ''),
+                error: serializeError(error),
+            }, traceId));
 
             // Update failure (Atomic)
             await PublishJob.updateOne(
@@ -230,6 +249,11 @@ publishQueue.process(async (job) => {
 
     // Do NOT call publishJob.save() here as it is stale and would overwrite atomic updates
     // await publishJob.save();
+    log('info', 'publish worker completed', withTrace({
+        publishJobId: jobId,
+        successCount,
+        failCount,
+    }, traceId));
     return { success: successCount, failed: failCount };
 });
 

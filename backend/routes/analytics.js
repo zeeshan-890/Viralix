@@ -8,6 +8,7 @@ const { getIgUserInsights, getIgFeed, getIgMediaInsights } = require('../service
 const youtubeService = require('../services/youtube');
 const tiktokService = require('../services/tiktok');
 const { buildDeepAnalytics } = require('../services/analytics/platformDeepAnalytics');
+const { log, withTrace, serializeError } = require('../utils/logger');
 
 const router = express.Router();
 
@@ -190,7 +191,10 @@ router.get('/overview', auth, async (req, res) => {
 
         res.json(payload);
     } catch (error) {
-        console.error('[ANALYTICS] /overview error', error.message);
+        log('error', 'analytics overview failed', withTrace({
+            userId: req.user?.id,
+            error: serializeError(error),
+        }, req.traceId));
         res.status(500).json({ message: 'Server error' });
     }
 });
@@ -320,7 +324,10 @@ router.post('/refresh', auth, async (req, res) => {
         console.log('[ANALYTICS] /refresh done', { updated: updatedCount });
         return res.json({ ok: true, updated: updatedCount });
     } catch (e) {
-        console.error('Analytics refresh error:', e.message);
+        log('error', 'analytics refresh failed', withTrace({
+            userId: req.user?.id,
+            error: serializeError(e),
+        }, req.traceId));
         return res.status(500).json({ message: 'Failed to refresh analytics' });
     }
 });
@@ -424,7 +431,11 @@ router.get('/deep/:platform', auth, async (req, res) => {
         const data = await buildDeepAnalytics(req.user.id, platform, { period, accountId });
         res.json(data);
     } catch (error) {
-        console.error('[ANALYTICS] /deep error', error.message);
+        log('error', 'analytics deep failed', withTrace({
+            userId: req.user?.id,
+            platform: req.params?.platform,
+            error: serializeError(error),
+        }, req.traceId));
         if (error.message === 'Unsupported platform') {
             return res.status(400).json({ message: error.message });
         }

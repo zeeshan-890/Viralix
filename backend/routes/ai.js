@@ -1,12 +1,11 @@
 const express = require('express');
 const auth = require('../middleware/auth');
-const rateLimit = require('express-rate-limit');
+const { aiLimiter } = require('../middleware/rateLimiter');
 const { suggestCaption, suggestHashtags, rewriteText } = require('../services/ai');
 
 const router = express.Router();
 
-const limiter = rateLimit({ windowMs: 60 * 1000, max: 20 });
-router.use(limiter);
+router.use(aiLimiter);
 
 router.post('/caption', auth, async (req, res) => {
     try {

@@ -1,0 +1,44 @@
+{
+  "title": "Viralix Backend P0",
+  "panels": [
+    {
+      "type": "timeseries",
+      "title": "HTTP Request Rate",
+      "targets": [
+        {
+          "expr": "sum(rate(viralix_http_requests_total[5m])) by (status_code)"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "HTTP P95 Duration (ms)",
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.95, sum(rate(viralix_http_request_duration_ms_bucket[5m])) by (le))"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Publish Queue Depth",
+      "targets": [
+        {
+          "expr": "viralix_queue_depth{queue=\"social-publish\"}"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Scheduler Lock Events",
+      "targets": [
+        {
+          "expr": "increase(viralix_scheduler_lock_events_total[5m])"
+        }
+      ]
+    }
+  ],
+  "schemaVersion": 38,
+  "version": 1
+}
+
