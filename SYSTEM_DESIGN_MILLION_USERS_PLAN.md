@@ -114,7 +114,7 @@ Legend:
 |---|---|---|---|
 | Bull/Redis queues | Yes now | Already present and effective | Continue for publish/sync/analytics jobs |
 | Queue partitioning by job type | Yes now | Prevents one workload starving others | Separate queues: publish, sync, analytics-refresh, webhook-processing |
-| Kafka/PubSub stream backbone | Yes later | Useful at very high event volume, but heavy ops overhead now | Cross-domain events, audit/event replay, downstream analytics |
+| Kafka/PubSub stream backbone | Yes now (domain events), Yes later (full platform bus) | Kafka is wired for domain events; expand to cross-service workflows as volume grows | Cross-domain events, audit/event replay, downstream analytics |
 
 ## Consistency and reliability
 
@@ -444,6 +444,9 @@ Use this mapping to execute each phase incrementally without a risky rewrite.
 ### Domain events (outbox-lite)
 - Events are persisted to `DomainEvent` on publish completion/failure, platform sync completion, and analytics materialization.
 - Optional Redis fan-out: set `DOMAIN_EVENTS_REDIS_PUBLISH=1` and optionally `DOMAIN_EVENTS_CHANNEL=viralix:domain-events`.
+- **Kafka (default when `KAFKA_BROKERS` is set):** domain events publish to `KAFKA_DOMAIN_EVENTS_TOPIC` (default `viralix.domain-events`).
+- Env: `KAFKA_BROKERS`, `DOMAIN_EVENTS_BACKEND=kafka|both|redis`, `DOMAIN_EVENTS_KAFKA_PUBLISH=1|0`, `KAFKA_DOMAIN_EVENTS_CONSUMER=1`, `KAFKA_DOMAIN_EVENTS_GROUP_ID`.
+- Local Kafka: `docker compose -f backend/ops/deploy/docker-compose.scale.yml up kafka redis`.
 - Query recent events in Mongo: `db.domainevents.find({ userId: ObjectId("...") }).sort({ createdAt: -1 }).limit(20)`.
 - Event types: `publish.completed`, `publish.failed`, `publish.partially_failed`, `platform_sync.completed`, `analytics.materialized`.
 
@@ -495,4 +498,11 @@ Use this mapping to execute each phase incrementally without a risky rewrite.
 2. Trigger publish/sync/refresh jobs and confirm structured logs include matching `traceId`.
 3. Run `npm run export:rollups -- --days=7` and confirm JSON summary with rollup `count`.
 4. Import `require('./modules')` and verify `analytics`, `platformSync`, `publishing` surfaces load.
+
+### Kafka domain events verification
+1. Start Redpanda/Kafka: `docker compose -f backend/ops/deploy/docker-compose.scale.yml up -d kafka`.
+2. Set `KAFKA_BROKERS=localhost:9092` and `DOMAIN_EVENTS_KAFKA_PUBLISH=1`.
+3. Trigger publish/sync/analytics materialize and confirm Kafka topic receives JSON envelopes.
+4. Run worker with `KAFKA_DOMAIN_EVENTS_CONSUMER=1` and confirm `kafka domain event consumed` logs.
+5. Check `GET /api/health` reports `kafka: connected` when brokers are reachable.
 

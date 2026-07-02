@@ -11,6 +11,9 @@ services:
       MONGODB_URI: ${MONGODB_URI}
       MONGODB_READ_URI: ${MONGODB_READ_URI:-}
       REDIS_URL: ${REDIS_URL}
+      KAFKA_BROKERS: ${KAFKA_BROKERS:-kafka:9092}
+      DOMAIN_EVENTS_BACKEND: ${DOMAIN_EVENTS_BACKEND:-kafka}
+      KAFKA_DOMAIN_EVENTS_TOPIC: ${KAFKA_DOMAIN_EVENTS_TOPIC:-viralix.domain-events}
       JWT_SECRET: ${JWT_SECRET}
     ports:
       - '5000:5000'
@@ -30,6 +33,11 @@ services:
       PROCESS_TYPE: worker
       MONGODB_URI: ${MONGODB_URI}
       REDIS_URL: ${REDIS_URL}
+      KAFKA_BROKERS: ${KAFKA_BROKERS:-kafka:9092}
+      DOMAIN_EVENTS_BACKEND: ${DOMAIN_EVENTS_BACKEND:-kafka}
+      KAFKA_DOMAIN_EVENTS_TOPIC: ${KAFKA_DOMAIN_EVENTS_TOPIC:-viralix.domain-events}
+      KAFKA_DOMAIN_EVENTS_CONSUMER: ${KAFKA_DOMAIN_EVENTS_CONSUMER:-1}
+      KAFKA_DOMAIN_EVENTS_GROUP_ID: ${KAFKA_DOMAIN_EVENTS_GROUP_ID:-viralix-domain-events}
       JWT_SECRET: ${JWT_SECRET}
       PUBLISH_WORKER_CONCURRENCY: ${PUBLISH_WORKER_CONCURRENCY:-6}
       ANALYTICS_REFRESH_WORKER_CONCURRENCY: ${ANALYTICS_REFRESH_WORKER_CONCURRENCY:-2}
@@ -45,3 +53,24 @@ services:
     image: redis:7-alpine
     ports:
       - '6379:6379'
+
+  kafka:
+    image: redpandadata/redpanda:v24.2.4
+    command:
+      - redpanda
+      - start
+      - --overprovisioned
+      - --smp
+      - '1'
+      - --memory
+      - 1G
+      - --reserve-memory
+      - 0M
+      - --node-id
+      - '0'
+      - --kafka-addr
+      - PLAINTEXT://0.0.0.0:9092
+      - --advertise-kafka-addr
+      - PLAINTEXT://kafka:9092
+    ports:
+      - '9092:9092'
