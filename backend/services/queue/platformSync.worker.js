@@ -5,11 +5,12 @@ const { recordAuditEvent } = require('../audit.service');
 const { emitDomainEvent } = require('../domainEvents.service');
 const { log, withTrace, serializeError } = require('../../utils/logger');
 const { observeQueueJobDuration } = require('../../config/metrics');
+const { withWorkerSpan } = require('../../utils/tracing');
 
 const platformSyncWorkerConcurrency = Number(process.env.PLATFORM_SYNC_WORKER_CONCURRENCY || 3);
 
 // Platform sync can be heavy and rate-limited externally, so keep it tunable via env.
-platformSyncQueue.process(platformSyncWorkerConcurrency, async (job) => {
+platformSyncQueue.process(platformSyncWorkerConcurrency, withWorkerSpan('platform-sync', async (job) => {
     const startedAt = Date.now();
     const { syncJobId, userId, platform, traceId } = job.data;
     const syncJob = await PlatformSyncJob.findOne({ jobId: syncJobId });
@@ -74,7 +75,7 @@ platformSyncQueue.process(platformSyncWorkerConcurrency, async (job) => {
         log('error', 'platform sync worker failed', withTrace({ syncJobId, userId, platform, error: serializeError(error) }, traceId));
         throw error;
     }
-});
+}));
 
 log('info', 'platform sync worker started', { concurrency: platformSyncWorkerConcurrency });
 

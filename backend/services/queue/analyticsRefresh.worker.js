@@ -4,11 +4,12 @@ const { refreshAnalyticsForUser } = require('../analytics/refreshAnalytics');
 const { materializeAnalyticsOverview } = require('../analytics/overviewStore');
 const { log, withTrace, serializeError } = require('../../utils/logger');
 const { observeQueueJobDuration } = require('../../config/metrics');
+const { withWorkerSpan } = require('../../utils/tracing');
 
 const analyticsRefreshWorkerConcurrency = Number(process.env.ANALYTICS_REFRESH_WORKER_CONCURRENCY || 2);
 
 // Keep analytics refresh parallelism bounded to avoid starving publish/sync workers.
-analyticsRefreshQueue.process(analyticsRefreshWorkerConcurrency, async (job) => {
+analyticsRefreshQueue.process(analyticsRefreshWorkerConcurrency, withWorkerSpan('analytics-refresh', async (job) => {
     const startedAt = Date.now();
     const { refreshJobId, userId, traceId } = job.data;
     const refreshJob = await AnalyticsRefreshJob.findOne({ jobId: refreshJobId });
@@ -57,7 +58,7 @@ analyticsRefreshQueue.process(analyticsRefreshWorkerConcurrency, async (job) => 
         log('error', 'analytics refresh worker failed', withTrace({ refreshJobId, userId, error: serializeError(error) }, traceId));
         throw error;
     }
-});
+}));
 
 log('info', 'analytics refresh worker started', { concurrency: analyticsRefreshWorkerConcurrency });
 

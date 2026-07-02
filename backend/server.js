@@ -10,6 +10,8 @@ const { register, observeHttp } = require('./config/metrics');
 // const rateLimit = require('express-rate-limit'); // Moved to middleware
 const { URL } = require('url');
 require('dotenv').config();
+const { bootstrapTracing } = require('./config/tracing');
+bootstrapTracing();
 
 const app = express();
 const PORT = process.env.PORT || 5000;

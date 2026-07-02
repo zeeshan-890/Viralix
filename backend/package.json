@@ -10,7 +10,8 @@
         "ensure-indexes": "node scripts/ensure-indexes.js",
         "load:smoke": "node ops/load/smoke.js",
         "load:read": "node ops/load/read-endpoints.js",
-        "chaos:circuit": "node ops/chaos/circuit-breaker-drill.js"
+        "chaos:circuit": "node ops/chaos/circuit-breaker-drill.js",
+        "export:rollups": "node scripts/export-analytics-rollups.js"
     },
     "keywords": [
         "social media",
@@ -23,6 +24,7 @@
     "license": "MIT",
     "dependencies": {
         "@google/generative-ai": "^0.19.0",
+        "@opentelemetry/api": "^1.9.1",
         "axios": "^1.5.0",
         "bcryptjs": "^2.4.3",
         "bull": "^4.16.5",

@@ -9,6 +9,7 @@ describe('trace middleware', () => {
         traceMiddleware(req, res, next);
         expect(req.traceId).toBe('trace-123');
         expect(res.setHeader).toHaveBeenCalledWith('x-trace-id', 'trace-123');
+        expect(res.setHeader).toHaveBeenCalledWith('traceparent', expect.stringContaining('00-'));
         expect(next).toHaveBeenCalled();
     });
 

@@ -7,12 +7,13 @@ const { observeQueueJobDuration } = require('../../config/metrics');
 const { recordAuditEvent } = require('../audit.service');
 const { runWithCircuitBreaker } = require('../../utils/circuitBreaker');
 const { emitDomainEvent } = require('../domainEvents.service');
+const { withWorkerSpan } = require('../../utils/tracing');
 // Note: PublisherFactory is required dynamically below in the processing loop
 
 const publishWorkerConcurrency = Number(process.env.PUBLISH_WORKER_CONCURRENCY || 6);
 
 // Use configurable concurrency so publish workers can be tuned per deployment size.
-publishQueue.process(publishWorkerConcurrency, async (job) => {
+publishQueue.process(publishWorkerConcurrency, withWorkerSpan('publish', async (job) => {
     const startedAt = Date.now();
     const traceId = job.data?.traceId;
     log('info', 'publish worker started', withTrace({
@@ -281,6 +282,6 @@ publishQueue.process(publishWorkerConcurrency, async (job) => {
         failCount,
     }, traceId));
     return { success: successCount, failed: failCount };
-});
+}));
 
 console.log(`👷 Publish Worker started (concurrency=${publishWorkerConcurrency})`);
