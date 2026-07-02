@@ -142,6 +142,7 @@ export const analyticsAPI = {
     getDeepAnalytics: (platform, params) => api.get(`/analytics/deep/${platform}`, { params }),
     getContentPerformance: (params) => api.get('/analytics/content-performance', { params }),
     getPerformance: (params) => api.get('/analytics/performance', { params }),
+    getTrends: (params) => api.get('/analytics/trends', { params }),
     refresh: () => api.post('/analytics/refresh'),
     refreshStatus: (jobId) => api.get(`/analytics/refresh/${jobId}`),
     getBestTimes: (params) => api.get('/analytics/best-times', { params }),
