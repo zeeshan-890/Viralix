@@ -298,6 +298,13 @@ try {
 }
 
 try {
+    app.use('/api/audit', require('./routes/audit'));
+    console.log('🧾 Audit routes mounted');
+} catch (e) {
+    console.warn('Audit routes not mounted:', e.message);
+}
+
+try {
     app.use('/api/facebook', require('./routes/facebook-insights'));
     console.log('📘 Facebook Insights routes mounted');
 } catch (e) {

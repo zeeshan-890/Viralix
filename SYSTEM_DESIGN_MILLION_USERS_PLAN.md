@@ -323,11 +323,13 @@ Use this mapping to execute each phase incrementally without a risky rewrite.
 - `PUBLISH_WORKER_CONCURRENCY=6` (publish worker pool size per process)
 - `ANALYTICS_REFRESH_WORKER_CONCURRENCY=2` (analytics refresh worker pool size per process)
 - `PLATFORM_SYNC_WORKER_CONCURRENCY=3` (platform sync worker pool size per process)
-+- `CACHE_ENABLED=1` (default enabled; set `0` to disable Redis cache-aside)
-+- `CACHE_DEFAULT_TTL_SEC=120` (default cache TTL for read endpoints)
-+- `ANALYTICS_OVERVIEW_CACHE_TTL_SEC=180` (overview cache TTL)
-+- `PUBLISH_QUEUE_WAITING_LIMIT=300` (reject publish enqueue above this waiting depth)
-+- `PUBLISH_QUEUE_DELAYED_LIMIT=300` (reject publish enqueue above this delayed depth)
+- `CACHE_ENABLED=1` (default enabled; set `0` to disable Redis cache-aside)
+- `CACHE_DEFAULT_TTL_SEC=120` (default cache TTL for read endpoints)
+- `ANALYTICS_OVERVIEW_CACHE_TTL_SEC=180` (overview cache TTL)
+- `PUBLISH_QUEUE_WAITING_LIMIT=300` (reject publish enqueue above this waiting depth)
+- `PUBLISH_QUEUE_DELAYED_LIMIT=300` (reject publish enqueue above this delayed depth)
+- `ACCOUNTS_CACHE_TTL_SEC=300` (connected accounts cache TTL)
+- `WEBHOOK_IDEMPOTENCY_TTL_SEC=86400` (webhook dedupe cache TTL)
 
 ### Health and metrics checks
 - API health: `GET /api/health`
@@ -378,5 +380,14 @@ Use this mapping to execute each phase incrementally without a risky rewrite.
 1. Publish a post and confirm `publish.requested` and completion audit events are written.
 2. Trigger platform sync and confirm `platform_sync.requested` and `platform_sync.completed` events.
 3. Query `AuditLog` collection filtered by `actorId` and `traceId`.
+
+### Webhook idempotency verification
+1. Replay the same Instagram/Facebook webhook payload twice.
+2. Confirm only the first delivery is processed (duplicate log message appears).
+3. Verify `WebhookEvent` contains one record per `platform + eventId`.
+
+### Connected accounts cache verification
+1. Call `GET /api/platforms/connected` twice and confirm second response has `source: cache`.
+2. Connect/disconnect an account and confirm cache invalidates (`source: live` on next read).
 
 
