@@ -468,6 +468,8 @@ export const platformSyncAPI = {
     syncAll: () => api.post('/platform-sync/sync-all'),
     // Sync specific platform
     sync: (platform) => api.post(`/platform-sync/sync/${platform}`),
+    // Poll async sync status
+    syncStatus: (jobId) => api.get(`/platform-sync/sync/status/${jobId}`),
     // Get synced content for platform
     getContent: (platform, params = {}) => api.get(`/platform-sync/content/${platform}`, { params }),
 };

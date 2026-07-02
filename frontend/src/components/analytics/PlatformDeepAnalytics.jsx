@@ -62,7 +62,19 @@ export default function PlatformDeepAnalytics({ platform, accountId: initialAcco
     const handleSync = async () => {
         setSyncing(true);
         try {
-            await platformSyncAPI.sync(platform);
+            const res = await platformSyncAPI.sync(platform);
+            const jobId = res?.data?.jobId;
+            if (jobId) {
+                const started = Date.now();
+                const timeoutMs = 2 * 60 * 1000;
+                while (Date.now() - started < timeoutMs) {
+                    const statusRes = await platformSyncAPI.syncStatus(jobId);
+                    const status = statusRes?.data?.status;
+                    if (status === 'completed') break;
+                    if (status === 'failed') throw new Error('Sync job failed');
+                    await new Promise((r) => setTimeout(r, 2500));
+                }
+            }
             await load();
         } catch {
             setError('Sync failed');

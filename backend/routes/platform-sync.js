@@ -5,6 +5,10 @@ const AccountService = require('../services/account.service');
 const PlatformContent = require('../models/PlatformContent');
 const tiktokService = require('../services/tiktok');
 const youtubeService = require('../services/youtube');
+const platformSyncQueue = require('../services/queue/platformSync.queue');
+const PlatformSyncJob = require('../models/PlatformSyncJob');
+const { executePlatformSync } = require('../services/platformSync.service');
+const { v4: uuidv4 } = require('uuid');
 const axios = require('axios');
 
 const router = express.Router();
@@ -14,27 +18,28 @@ const INSTAGRAM_GRAPH_URL = 'https://graph.instagram.com';
 // Sync all platforms for a user
 router.post('/sync-all', auth, async (req, res) => {
     try {
-        const accounts = await AccountService.getAccountsWithTokens(req.user.id);
-        const results = { instagram: null, tiktok: null, youtube: null, facebook: null };
-
-        for (const account of accounts) {
-            try {
-                if (account.platform === 'instagram') {
-                    results.instagram = await syncInstagram(req.user.id, account);
-                } else if (account.platform === 'tiktok') {
-                    results.tiktok = await syncTikTok(req.user.id, account);
-                } else if (account.platform === 'youtube') {
-                    results.youtube = await syncYouTube(req.user.id, account);
-                } else if (account.platform === 'facebook') {
-                    results.facebook = await syncFacebook(req.user.id, account);
-                }
-            } catch (e) {
-                console.warn(`[Sync] Failed to sync ${account.platform}:`, e.message);
-                results[account.platform] = { error: e.message };
-            }
+        if (req.query.sync === '1') {
+            const result = await executePlatformSync(req.user.id, 'all');
+            return res.json({ success: true, mode: 'sync', ...result });
         }
 
-        res.json({ success: true, results });
+        const syncJobId = uuidv4();
+        await new PlatformSyncJob({
+            jobId: syncJobId,
+            userId: req.user.id,
+            platform: 'all',
+            status: 'queued',
+            logs: [{ level: 'info', message: 'Queued all-platform sync' }],
+        }).save();
+
+        await platformSyncQueue.add({
+            syncJobId,
+            userId: req.user.id,
+            platform: 'all',
+            traceId: req.traceId,
+        });
+
+        res.json({ success: true, mode: 'async', jobId: syncJobId, status: 'queued' });
     } catch (error) {
         console.error('[Sync] Error:', error);
         res.status(500).json({ message: error.message });
@@ -52,33 +57,54 @@ router.post('/sync/:platform', auth, async (req, res) => {
             return res.status(404).json({ message: `No ${platform} accounts connected` });
         }
 
-        let result = { synced: 0, content: [] };
-
-        for (const account of platformAccounts) {
-            try {
-                let syncResult;
-                if (platform === 'instagram') {
-                    syncResult = await syncInstagram(req.user.id, account);
-                } else if (platform === 'tiktok') {
-                    syncResult = await syncTikTok(req.user.id, account);
-                } else if (platform === 'youtube') {
-                    syncResult = await syncYouTube(req.user.id, account);
-                } else if (platform === 'facebook') {
-                    syncResult = await syncFacebook(req.user.id, account);
-                }
-                if (syncResult) {
-                    result.synced += syncResult.synced || 0;
-                    result.content.push(...(syncResult.content || []));
-                }
-            } catch (e) {
-                console.warn(`[Sync] ${platform} account ${account.platformAccountId}:`, e.message);
-            }
+        if (req.query.sync === '1') {
+            const result = await executePlatformSync(req.user.id, platform);
+            return res.json({ success: true, mode: 'sync', ...result.byPlatform[platform], byPlatform: result.byPlatform });
         }
 
-        res.json({ success: true, ...result });
+        const syncJobId = uuidv4();
+        await new PlatformSyncJob({
+            jobId: syncJobId,
+            userId: req.user.id,
+            platform,
+            status: 'queued',
+            logs: [{ level: 'info', message: `Queued ${platform} sync` }],
+        }).save();
+
+        await platformSyncQueue.add({
+            syncJobId,
+            userId: req.user.id,
+            platform,
+            traceId: req.traceId,
+        });
+
+        res.json({ success: true, mode: 'async', jobId: syncJobId, status: 'queued' });
     } catch (error) {
         console.error('[Sync] Error:', error);
         res.status(500).json({ message: error.message });
+    }
+});
+
+router.get('/sync/status/:jobId', auth, async (req, res) => {
+    try {
+        const job = await PlatformSyncJob.findOne({
+            jobId: req.params.jobId,
+            userId: req.user.id,
+        }).lean();
+        if (!job) return res.status(404).json({ message: 'Sync job not found' });
+        return res.json({
+            jobId: job.jobId,
+            platform: job.platform,
+            status: job.status,
+            progress: job.progress || 0,
+            result: job.result || null,
+            error: job.error || null,
+            startedAt: job.startedAt || null,
+            completedAt: job.completedAt || null,
+            updatedAt: job.updatedAt,
+        });
+    } catch (error) {
+        return res.status(500).json({ message: 'Failed to load sync status' });
     }
 });
 
