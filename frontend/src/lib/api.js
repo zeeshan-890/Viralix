@@ -143,6 +143,7 @@ export const analyticsAPI = {
     getContentPerformance: (params) => api.get('/analytics/content-performance', { params }),
     getPerformance: (params) => api.get('/analytics/performance', { params }),
     refresh: () => api.post('/analytics/refresh'),
+    refreshStatus: (jobId) => api.get(`/analytics/refresh/${jobId}`),
     getBestTimes: (params) => api.get('/analytics/best-times', { params }),
 };
 export const aiAPI = {

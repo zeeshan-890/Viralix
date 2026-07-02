@@ -48,7 +48,19 @@ export default function AnalyticsPage() {
     const handleRefresh = async () => {
         setRefreshing(true);
         try {
-            await analyticsAPI.refresh();
+            const res = await analyticsAPI.refresh();
+            const jobId = res?.data?.jobId;
+            if (jobId) {
+                const started = Date.now();
+                const timeoutMs = 2 * 60 * 1000;
+                while (Date.now() - started < timeoutMs) {
+                    const statusRes = await analyticsAPI.refreshStatus(jobId);
+                    const status = statusRes?.data?.status;
+                    if (status === 'completed') break;
+                    if (status === 'failed') throw new Error('Refresh job failed');
+                    await new Promise((r) => setTimeout(r, 2500));
+                }
+            }
             await load();
         } finally {
             setRefreshing(false);
