@@ -316,6 +316,10 @@ Use this mapping to execute each phase incrementally without a risky rewrite.
 - `SCHEDULER_LOCK_TTL_MS=55000` (optional override)
 - `SCHEDULER_LOCK_HEARTBEAT_MS=15000` (optional override)
 - `METRICS_ENABLED=1` (default enabled; set `0` to disable `/api/metrics`)
+- `ANALYTICS_REFRESH_QUEUE_WAITING_LIMIT=200` (reject refresh enqueue above this waiting depth)
+- `ANALYTICS_REFRESH_QUEUE_DELAYED_LIMIT=200` (reject refresh enqueue above this delayed depth)
+- `PLATFORM_SYNC_QUEUE_WAITING_LIMIT=120` (reject sync enqueue above this waiting depth)
+- `PLATFORM_SYNC_QUEUE_DELAYED_LIMIT=120` (reject sync enqueue above this delayed depth)
 
 ### Health and metrics checks
 - API health: `GET /api/health`
@@ -344,5 +348,11 @@ Use this mapping to execute each phase incrementally without a risky rewrite.
 2. Confirm response includes `x-trace-id`.
 3. Confirm publish enqueue payload includes trace ID.
 4. Confirm worker structured logs include same trace ID.
+
+### Queue backpressure verification
+1. Temporarily reduce queue limits to a low value (for example `1`) in local env.
+2. Trigger multiple analytics refresh/sync requests concurrently.
+3. Confirm API begins returning `429` with queue counters once limits are crossed.
+4. Restore production limits and verify requests enqueue normally again.
 
 
