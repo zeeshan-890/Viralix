@@ -321,18 +321,22 @@ try {
 // Health check endpoint
 const { getDbStatus, getReadDbStatus } = require('./config/database');
 const { pingRedis } = require('./config/redis');
+const { pingKafka, isKafkaConfigured } = require('./config/kafka');
 app.get('/api/health', async (req, res) => {
     const dbStatus = getDbStatus();
     const readDbStatus = getReadDbStatus();
     const redisStatus = await pingRedis();
+    const kafkaStatus = await pingKafka();
     const isProd = process.env.NODE_ENV === 'production';
     const ok = (dbStatus === 'connected' || (!isProd && dbStatus === 'not_configured'))
-        && (redisStatus === 'connected' || redisStatus === 'not_configured' || !process.env.REDIS_URL);
+        && (redisStatus === 'connected' || redisStatus === 'not_configured' || !process.env.REDIS_URL)
+        && (kafkaStatus === 'connected' || kafkaStatus === 'not_configured' || !isKafkaConfigured());
     res.status(ok ? 200 : 503).json({
         status: ok ? 'OK' : 'DEGRADED',
         db: dbStatus,
         readDb: readDbStatus,
         redis: process.env.REDIS_URL ? redisStatus : 'not_configured',
+        kafka: isKafkaConfigured() ? kafkaStatus : 'not_configured',
         processType: process.env.PROCESS_TYPE || 'all',
         message: ok ? 'AutoReach AI Backend is running' : 'Backend up but a dependency is unavailable',
         timestamp: new Date().toISOString()

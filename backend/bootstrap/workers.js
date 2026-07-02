@@ -20,6 +20,17 @@ function startQueueWorkers() {
     console.log('👷 Background workers started');
 }
 
+async function startKafkaConsumers() {
+    if (process.env.KAFKA_DOMAIN_EVENTS_CONSUMER !== '1') return;
+
+    try {
+        const { startKafkaDomainEventsConsumer } = require('../services/events/kafkaDomainEventsConsumer');
+        await startKafkaDomainEventsConsumer();
+    } catch (error) {
+        console.error('⚠️ Failed to start Kafka domain events consumer:', error.message);
+    }
+}
+
 function startScheduler() {
     try {
         const cron = require('node-cron');
@@ -47,6 +58,9 @@ function startBackgroundServices() {
     try {
         startQueueWorkers();
         startScheduler();
+        startKafkaConsumers().catch((error) => {
+            console.error('⚠️ Kafka consumer startup failed:', error.message);
+        });
     } catch (error) {
         console.error('⚠️ Failed to start background services:', error.message);
     }
