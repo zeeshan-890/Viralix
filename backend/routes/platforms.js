@@ -3,6 +3,7 @@ const router = express.Router();
 const AccountService = require('../services/account.service');
 const User = require('../models/User');
 const auth = require('../middleware/auth');
+const { cacheHeaders } = require('../middleware/cacheHeaders');
 const { cacheGet, cacheSet } = require('../utils/cache');
 
 const PLATFORMS_CONNECTED_CACHE_TTL_SEC = Number(process.env.ACCOUNTS_CACHE_TTL_SEC || 300);
@@ -15,7 +16,7 @@ router.use(auth);
  * @desc    Get all connected social accounts for the current user
  * @access  Private
  */
-router.get('/connected', async (req, res) => {
+router.get('/connected', cacheHeaders({ maxAge: 60, sMaxAge: 180, privateCache: true }), async (req, res) => {
     try {
         const cacheKey = AccountService.platformsCacheKey(req.user.id);
         const cached = await cacheGet(cacheKey);

@@ -1,6 +1,7 @@
 const express = require('express');
 const Post = require('../models/Post');
 const auth = require('../middleware/auth');
+const { cacheHeaders } = require('../middleware/cacheHeaders');
 const { buildDeepAnalytics } = require('../services/analytics/platformDeepAnalytics');
 const { computeAnalyticsOverview } = require('../services/analytics/computeOverview');
 const { getMaterializedOverview } = require('../services/analytics/overviewStore');
@@ -15,7 +16,7 @@ const { v4: uuidv4 } = require('uuid');
 const router = express.Router();
 
 // GET /api/analytics/overview - Dashboard overview stats
-router.get('/overview', auth, async (req, res) => {
+router.get('/overview', auth, cacheHeaders({ maxAge: 30, sMaxAge: 120, privateCache: true }), async (req, res) => {
     try {
         const hasCustomRange = Boolean(req.query.startDate || req.query.endDate);
         if (!hasCustomRange) {
