@@ -330,6 +330,9 @@ Use this mapping to execute each phase incrementally without a risky rewrite.
 - `PUBLISH_QUEUE_DELAYED_LIMIT=300` (reject publish enqueue above this delayed depth)
 - `ACCOUNTS_CACHE_TTL_SEC=300` (connected accounts cache TTL)
 - `WEBHOOK_IDEMPOTENCY_TTL_SEC=86400` (webhook dedupe cache TTL)
+- `MONGODB_READ_URI` (optional dedicated Mongo read replica connection string)
+- `MONGODB_READ_PREFERENCE=secondaryPreferred` (optional query read preference)
+- `PROCESS_TYPE=all|api|worker` (split API and worker runtime roles)
 
 ### Health and metrics checks
 - API health: `GET /api/health`
@@ -389,5 +392,19 @@ Use this mapping to execute each phase incrementally without a risky rewrite.
 ### Connected accounts cache verification
 1. Call `GET /api/platforms/connected` twice and confirm second response has `source: cache`.
 2. Connect/disconnect an account and confirm cache invalidates (`source: live` on next read).
+
+### Read replica verification
+1. Set `MONGODB_READ_URI` to Atlas read replica SRV connection.
+2. Restart API and confirm `/api/health` reports `readDb: connected`.
+3. Hit read-heavy endpoints (`/api/analytics/overview`, `/api/audit/logs`) and verify normal responses.
+
+### CDN cache header verification
+1. Call `GET /api/analytics/overview` with auth and inspect `Cache-Control` + `Vary: Authorization`.
+2. Build frontend and verify static assets return long-lived cache headers from `next.config.js`.
+
+### Autoscaling / process split verification
+1. Heroku: scale `web=2` and `worker=2` dynos using updated `Procfile`.
+2. Kubernetes: apply manifests in `backend/ops/deploy/kubernetes/` and confirm HPA targets.
+3. Confirm API dyno runs with `PROCESS_TYPE=api` and worker dyno runs `worker-process.js`.
 
 
