@@ -1,17 +1,14 @@
 const express = require('express');
 const Post = require('../models/Post');
-const User = require('../models/User');
-const AccountService = require('../services/account.service');
 const auth = require('../middleware/auth');
-const { getPageInsights, getPostMetrics } = require('../services/facebook');
-const { getIgUserInsights, getIgFeed, getIgMediaInsights } = require('../services/instagram');
-const youtubeService = require('../services/youtube');
-const tiktokService = require('../services/tiktok');
 const { buildDeepAnalytics } = require('../services/analytics/platformDeepAnalytics');
+const { computeAnalyticsOverview } = require('../services/analytics/computeOverview');
+const { getMaterializedOverview } = require('../services/analytics/overviewStore');
 const { log, withTrace, serializeError } = require('../utils/logger');
 const analyticsRefreshQueue = require('../services/queue/analyticsRefresh.queue');
 const AnalyticsRefreshJob = require('../models/AnalyticsRefreshJob');
 const { refreshAnalyticsForUser } = require('../services/analytics/refreshAnalytics');
+const { materializeAnalyticsOverview } = require('../services/analytics/overviewStore');
 const { rejectWhenQueueBacklogged } = require('../utils/queueAdmission');
 const { v4: uuidv4 } = require('uuid');
 
@@ -19,182 +16,21 @@ const router = express.Router();
 
 // GET /api/analytics/overview - Dashboard overview stats
 router.get('/overview', auth, async (req, res) => {
-    const _t0 = Date.now();
     try {
-        const startDate = req.query.startDate ? new Date(req.query.startDate) : new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
-        const endDate = req.query.endDate ? new Date(req.query.endDate) : new Date();
-
-        const posts = await Post.find({
-            user: req.user.id,
-            createdAt: { $gte: startDate, $lte: endDate }
-        });
-
-        // Calculate aggregated metrics from POSTS
-        const totalPosts = posts.length;
-        const publishedPosts = posts.filter(p => p.isPublished).length;
-        const scheduledPosts = posts.filter(p => p.isScheduled).length;
-        const draftPosts = posts.filter(p => p.isDraft).length;
-        const failedPosts = posts.filter(p => (p.platforms || []).some(pl => pl.status === 'failed')).length;
-
-        // Aggregate engagement metrics from platforms
-        let totalLikes = 0;
-        let totalComments = 0;
-        let totalShares = 0;
-        let totalViews = 0;
-        let totalReach = 0;
-        let totalEngagement = 0;
-
-        posts.forEach(post => {
-            post.platforms.forEach(platform => {
-                if (platform.engagement) {
-                    totalLikes += platform.engagement.likes || 0;
-                    totalComments += platform.engagement.comments || 0;
-                    totalShares += platform.engagement.shares || 0;
-                    totalViews += platform.engagement.views || 0;
-                }
-            });
-            totalReach += post.analytics.totalReach || 0;
-            totalEngagement += post.analytics.totalEngagement || 0;
-        });
-
-        // Calculate Followers / Subscribers
-        let totalFollowers = 0;
-        // Fetch fresh account data with tokens
-        const connectedAccounts = await AccountService.getAccountsWithTokens(req.user.id);
-        const user = await User.findById(req.user.id).lean(); // For FB pages which might be in settings
-
-        // 1. YouTube & TikTok (via SocialAccount)
-        for (const account of connectedAccounts) {
-            try {
-                if (account.platform === 'youtube' && account.accessToken) {
-                    // Fetch fresh channel info
-                    const channelInfo = await youtubeService.getChannelInfo(account.accessToken);
-                    if (channelInfo.subscriberCount) {
-                        totalFollowers += parseInt(channelInfo.subscriberCount, 10);
-                    }
-                } else if (account.platform === 'tiktok') {
-                    // TikTok Basic Display API doesn't easily give followers without advanced permissions
-                    // We skip it or assume stored value if we have one in future
-                    if (account.followerCount) totalFollowers += account.followerCount;
-                } else if (account.platform === 'instagram') {
-                    // Direct Instagram OAuth
-                    try {
-                        const axios = require('axios');
-                        const response = await axios.get(`https://graph.instagram.com/${account.platformAccountId}`, {
-                            params: {
-                                fields: 'followers_count',
-                                access_token: account.accessToken
-                            }
-                        });
-                        totalFollowers += response.data?.followers_count || 0;
-                    } catch (_) { /* ignore */ }
-                }
-            } catch (e) {
-                console.warn(`Failed to fetch followers for ${account.platform}:`, e.message);
+        const hasCustomRange = Boolean(req.query.startDate || req.query.endDate);
+        if (!hasCustomRange) {
+            const materialized = await getMaterializedOverview(req.user.id);
+            if (materialized) {
+                const { source, computedAt, ...payload } = materialized;
+                return res.json({ ...payload, source, computedAt: computedAt || null });
             }
         }
 
-        // 2. Facebook (and Legacy Instagram) via Settings
-        const pages = user?.settings?.facebookPages || [];
-        for (const pg of pages) {
-            const token = pg.accessToken || pg.access_token;
-            if (!token) continue;
-            try {
-                // Facebook Page Fans
-                const ins = await getPageInsights(pg.id, token, 'page_fans');
-                const fansSeries = Array.isArray(ins) ? ins.find(x => x.name === 'page_fans')?.values : [];
-                const fans = Array.isArray(fansSeries) && fansSeries.length ? (fansSeries[fansSeries.length - 1].value || 0) : 0;
-                totalFollowers += fans;
-            } catch (_) { /* ignore */ }
-
-            // Instagram (via FB)
-            if (pg.instagramId && token) {
-                try {
-                    const ig = await require('../services/instagram').getIgUser(pg.instagramId, token);
-                    totalFollowers += ig?.followers_count || 0;
-                } catch (_) { /* ignore */ }
-            }
-        }
-
-        // Calculate engagement rate
-        const engagementRate = totalViews > 0 ? ((totalLikes + totalComments + totalShares) / totalViews * 100) : 0;
-
-        // Platform + per-account breakdown
-        const platformBreakdown = {};
-        const accountBreakdown = {};
-
-        const ensureBucket = (bucket) => {
-            if (!bucket.engagement) {
-                bucket.engagement = { likes: 0, comments: 0, shares: 0, views: 0 };
-            }
-            return bucket;
-        };
-
-        const addPlatformStats = (bucket, platform) => {
-            const b = ensureBucket(bucket);
-            b.posts++;
-            b[platform.status]++;
-            if (platform.engagement) {
-                b.engagement.likes += platform.engagement.likes || 0;
-                b.engagement.comments += platform.engagement.comments || 0;
-                b.engagement.shares += platform.engagement.shares || 0;
-                b.engagement.views += platform.engagement.views || 0;
-            }
-        };
-
-        posts.forEach(post => {
-            post.platforms.forEach(platform => {
-                if (!platformBreakdown[platform.name]) {
-                    platformBreakdown[platform.name] = {
-                        posts: 0,
-                        published: 0,
-                        scheduled: 0,
-                        draft: 0,
-                        failed: 0,
-                        engagement: { likes: 0, comments: 0, shares: 0, views: 0 }
-                    };
-                }
-                addPlatformStats(platformBreakdown[platform.name], platform);
-
-                const accKey = `${platform.name}:${platform.accountId}`;
-                if (!accountBreakdown[accKey]) {
-                    accountBreakdown[accKey] = {
-                        platform: platform.name,
-                        accountId: platform.accountId,
-                        posts: 0,
-                        published: 0,
-                        scheduled: 0,
-                        draft: 0,
-                        failed: 0,
-                        engagement: { likes: 0, comments: 0, shares: 0, views: 0 }
-                    };
-                }
-                addPlatformStats(accountBreakdown[accKey], platform);
-            });
+        const payload = await computeAnalyticsOverview(req.user.id, {
+            startDate: req.query.startDate,
+            endDate: req.query.endDate,
         });
-
-        const payload = {
-            overview: {
-                totalPosts,
-                publishedPosts,
-                scheduledPosts,
-                draftPosts,
-                failedPosts,
-                totalLikes,
-                totalComments,
-                totalShares,
-                totalViews,
-                totalReach,
-                totalFollowers,
-                totalEngagement,
-                engagementRate: Math.round(engagementRate * 100) / 100
-            },
-            platformBreakdown,
-            accountBreakdown,
-            dateRange: { startDate, endDate }
-        };
-
-        res.json(payload);
+        return res.json({ ...payload, source: 'live' });
     } catch (error) {
         log('error', 'analytics overview failed', withTrace({
             userId: req.user?.id,
@@ -209,6 +45,7 @@ router.post('/refresh', auth, async (req, res) => {
     try {
         if (req.query.sync === '1') {
             const result = await refreshAnalyticsForUser(req.user.id);
+            await materializeAnalyticsOverview(req.user.id);
             return res.json({ ok: true, mode: 'sync', updated: result.updated });
         }
 

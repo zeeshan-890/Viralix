@@ -1,6 +1,7 @@
 const AnalyticsRefreshJob = require('../../models/AnalyticsRefreshJob');
 const analyticsRefreshQueue = require('./analyticsRefresh.queue');
 const { refreshAnalyticsForUser } = require('../analytics/refreshAnalytics');
+const { materializeAnalyticsOverview } = require('../analytics/overviewStore');
 const { log, withTrace, serializeError } = require('../../utils/logger');
 const { observeQueueJobDuration } = require('../../config/metrics');
 
@@ -23,6 +24,7 @@ analyticsRefreshQueue.process(analyticsRefreshWorkerConcurrency, async (job) => 
 
     try {
         const result = await refreshAnalyticsForUser(userId);
+        await materializeAnalyticsOverview(userId);
         await AnalyticsRefreshJob.updateOne(
             { _id: refreshJob._id },
             {
