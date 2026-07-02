@@ -16,6 +16,11 @@ const PublishJobSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Post'
     },
+    idempotencyKey: {
+        type: String,
+        index: true,
+        sparse: true
+    },
     platforms: [{
         name: { type: String, required: true },
         accountId: { type: String, required: true },

@@ -4,6 +4,7 @@ const Post = require('../models/Post');
 const User = require('../models/User');
 const auth = require('../middleware/auth');
 const { buildPublishQueuePayload } = require('../utils/publishPayload');
+const { parseIdempotencyKey } = require('../utils/httpIdempotency');
 // const { publishPostById } = require('../services/publisher'); // Legacy removed
 
 const router = express.Router();
@@ -241,6 +242,26 @@ router.post('/:id/publish', auth, async (req, res) => {
         const post = await Post.findById(req.params.id);
         if (!post) return res.status(404).json({ message: 'Post not found' });
         if (post.user.toString() !== req.user.id) return res.status(401).json({ message: 'Not authorized' });
+        const idempotencyKey = parseIdempotencyKey(req);
+
+        if (idempotencyKey) {
+            const PublishJob = require('../models/PublishJob');
+            const existing = await PublishJob.findOne({
+                userId: req.user.id,
+                postId: post._id,
+                idempotencyKey,
+                status: { $in: ['queued', 'processing', 'completed', 'partially_failed'] },
+            }).sort({ createdAt: -1 });
+
+            if (existing) {
+                return res.json({
+                    message: 'Publishing already requested with this idempotency key',
+                    jobId: existing.jobId,
+                    status: existing.status,
+                    deduped: true,
+                });
+            }
+        }
 
         const jobId = uuidv4();
 
@@ -261,6 +282,7 @@ router.post('/:id/publish', auth, async (req, res) => {
                 media: post.media,
                 tiktokSettings: post.tiktokSettings
             },
+            idempotencyKey,
             status: 'queued'
         });
         await job.save();
