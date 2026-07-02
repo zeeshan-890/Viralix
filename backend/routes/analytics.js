@@ -11,6 +11,7 @@ const AnalyticsRefreshJob = require('../models/AnalyticsRefreshJob');
 const { refreshAnalyticsForUser } = require('../services/analytics/refreshAnalytics');
 const { materializeAnalyticsOverview } = require('../services/analytics/overviewStore');
 const { rejectWhenQueueBacklogged } = require('../utils/queueAdmission');
+const { enforceTenantQuota } = require('../middleware/tenantQuota');
 const { v4: uuidv4 } = require('uuid');
 
 const router = express.Router();
@@ -42,7 +43,7 @@ router.get('/overview', auth, cacheHeaders({ maxAge: 30, sMaxAge: 120, privateCa
 });
 
 // POST /api/analytics/refresh - Fetch latest metrics from platforms
-router.post('/refresh', auth, async (req, res) => {
+router.post('/refresh', auth, enforceTenantQuota('analytics_refresh_hourly'), async (req, res) => {
     try {
         if (req.query.sync === '1') {
             const result = await refreshAnalyticsForUser(req.user.id);

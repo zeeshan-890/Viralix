@@ -12,6 +12,67 @@ const router = express.Router();
 
 // ─── Static sub-routes MUST be registered before parameterized /:id routes ───
 
+// GET /api/posts/dlq - list dead-lettered publish jobs for current user
+router.get('/dlq', auth, async (req, res) => {
+    try {
+        const PublishDlqJob = require('../models/PublishDlqJob');
+        const jobs = await PublishDlqJob.find({
+            userId: req.user.id,
+            status: 'dead_lettered',
+        }).sort({ createdAt: -1 }).limit(50).lean();
+        res.json({ count: jobs.length, jobs });
+    } catch {
+        res.status(500).json({ message: 'Failed to load DLQ jobs' });
+    }
+});
+
+// POST /api/posts/dlq/:dlqJobId/replay - replay a dead-lettered publish job
+router.post('/dlq/:dlqJobId/replay', auth, async (req, res) => {
+    try {
+        const PublishDlqJob = require('../models/PublishDlqJob');
+        const dlqJob = await PublishDlqJob.findOne({ dlqJobId: req.params.dlqJobId });
+        if (!dlqJob) return res.status(404).json({ message: 'DLQ job not found' });
+        if (dlqJob.userId.toString() !== req.user.id) {
+            return res.status(401).json({ message: 'Not authorized' });
+        }
+        if (dlqJob.status !== 'dead_lettered') {
+            return res.status(400).json({ message: 'Only dead-lettered jobs can be replayed' });
+        }
+
+        const quota = await checkTenantQuota(req.user.id, 'publish_daily');
+        if (!quota.allowed) {
+            return res.status(429).json({
+                message: 'Daily publish quota exceeded',
+                quota,
+            });
+        }
+
+        await publishQueue.add({
+            ...dlqJob.payload,
+            traceId: req.traceId,
+        });
+
+        dlqJob.status = 'replayed';
+        dlqJob.replayedAt = new Date();
+        await dlqJob.save();
+
+        await recordAuditEvent({
+            actorId: req.user.id,
+            userId: req.user.id,
+            action: 'publish.dlq_replayed',
+            resourceType: 'publish_dlq_job',
+            resourceId: dlqJob.dlqJobId,
+            traceId: req.traceId,
+            metadata: { publishJobId: dlqJob.publishJobId },
+            ip: req.ip,
+        });
+
+        res.json({ ok: true, dlqJobId: dlqJob.dlqJobId, publishJobId: dlqJob.publishJobId, status: 'replayed' });
+    } catch {
+        res.status(500).json({ message: 'Failed to replay DLQ job' });
+    }
+});
+
 // GET /api/posts/status/:jobId
 router.get('/status/:jobId', auth, async (req, res) => {
     try {
@@ -236,6 +297,7 @@ router.delete('/:id', auth, async (req, res) => {
 const publishQueue = require('../services/queue/publish.queue');
 const PublishJob = require('../models/PublishJob');
 const { rejectWhenQueueBacklogged } = require('../utils/queueAdmission');
+const { checkTenantQuota } = require('../utils/tenantQuota');
 const { v4: uuidv4 } = require('uuid');
 
 // POST /api/posts/:id/publish - publish async via queue
@@ -263,6 +325,14 @@ router.post('/:id/publish', auth, async (req, res) => {
                     deduped: true,
                 });
             }
+        }
+
+        const quota = await checkTenantQuota(req.user.id, 'publish_daily');
+        if (!quota.allowed) {
+            return res.status(429).json({
+                message: 'Daily publish quota exceeded',
+                quota,
+            });
         }
 
         const jobId = uuidv4();

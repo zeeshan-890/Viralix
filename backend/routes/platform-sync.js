@@ -9,6 +9,7 @@ const platformSyncQueue = require('../services/queue/platformSync.queue');
 const PlatformSyncJob = require('../models/PlatformSyncJob');
 const { executePlatformSync } = require('../services/platformSync.service');
 const { rejectWhenQueueBacklogged } = require('../utils/queueAdmission');
+const { enforceTenantQuota } = require('../middleware/tenantQuota');
 const { parseIdempotencyKey } = require('../utils/httpIdempotency');
 const { recordAuditEvent } = require('../services/audit.service');
 const { v4: uuidv4 } = require('uuid');
@@ -29,7 +30,7 @@ async function findExistingSyncJob(userId, platform, idempotencyKey) {
 }
 
 // Sync all platforms for a user
-router.post('/sync-all', auth, async (req, res) => {
+router.post('/sync-all', auth, enforceTenantQuota('sync_hourly'), async (req, res) => {
     try {
         const idempotencyKey = parseIdempotencyKey(req);
         if (idempotencyKey) {
@@ -97,7 +98,7 @@ router.post('/sync-all', auth, async (req, res) => {
 });
 
 // Sync specific platform
-router.post('/sync/:platform', auth, async (req, res) => {
+router.post('/sync/:platform', auth, enforceTenantQuota('sync_hourly'), async (req, res) => {
     const { platform } = req.params;
     try {
         const idempotencyKey = parseIdempotencyKey(req);
