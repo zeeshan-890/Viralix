@@ -437,4 +437,33 @@ Use this mapping to execute each phase incrementally without a risky rewrite.
 2. Auth read load: set `LOAD_TEST_AUTH_TOKEN` then run `npm run load:read`
 3. Circuit chaos drill: `npm run chaos:circuit` and confirm `circuitOpened: true`
 
+---
+
+## 13) Phase 3 Operations Runbook (Implemented)
+
+### Domain events (outbox-lite)
+- Events are persisted to `DomainEvent` on publish completion/failure, platform sync completion, and analytics materialization.
+- Optional Redis fan-out: set `DOMAIN_EVENTS_REDIS_PUBLISH=1` and optionally `DOMAIN_EVENTS_CHANNEL=viralix:domain-events`.
+- Query recent events in Mongo: `db.domainevents.find({ userId: ObjectId("...") }).sort({ createdAt: -1 }).limit(20)`.
+- Event types: `publish.completed`, `publish.failed`, `publish.partially_failed`, `platform_sync.completed`, `analytics.materialized`.
+
+### Analytics daily rollups + trends API
+- Each successful `materializeAnalyticsOverview` upserts `AnalyticsDailyRollup` for the current UTC date.
+- Long-range reads: `GET /api/analytics/trends?days=90` (7–365 days, rollup-backed).
+- Rollup documents are keyed by `{ userId, dateKey }` with compound index for timeline queries.
+
+### Publishing module boundary
+- Module entry: `backend/modules/publishing/index.js` groups queue, DLQ, models, and worker entry for future extraction.
+- No runtime behavior change; use as the seam when splitting publish into a dedicated service.
+
+### Phase 3 verification
+1. Publish a post and confirm a `DomainEvent` row with `eventType: publish.completed` (or failed variant).
+2. Run platform sync and confirm `platform_sync.completed` event.
+3. Trigger analytics refresh/materialize and confirm both `analytics.materialized` event and today's rollup row.
+4. Call `GET /api/analytics/trends?days=30` and verify `source: rollup` with ascending `timeline`.
+5. Run `npm run ensure-indexes` and confirm `DomainEvent` + `AnalyticsDailyRollup` indexes are ensured.
+
+### Analytical DB (document only — not implemented)
+- When rollup volume exceeds Mongo aggregation comfort (~millions of rows/day globally), export `AnalyticsDailyRollup` to ClickHouse/BigQuery via nightly ETL or change stream.
+- Keep API contract (`/api/analytics/trends`) stable; swap read adapter behind `getAnalyticsTrends`.
 
