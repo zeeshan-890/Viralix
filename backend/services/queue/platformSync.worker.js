@@ -2,6 +2,7 @@ const PlatformSyncJob = require('../../models/PlatformSyncJob');
 const platformSyncQueue = require('./platformSync.queue');
 const { executePlatformSync } = require('../platformSync.service');
 const { recordAuditEvent } = require('../audit.service');
+const { emitDomainEvent } = require('../domainEvents.service');
 const { log, withTrace, serializeError } = require('../../utils/logger');
 const { observeQueueJobDuration } = require('../../config/metrics');
 
@@ -46,6 +47,14 @@ platformSyncQueue.process(platformSyncWorkerConcurrency, async (job) => {
             resourceId: syncJobId,
             traceId,
             metadata: { platform, synced: result.synced },
+        });
+        await emitDomainEvent({
+            eventType: 'platform_sync.completed',
+            userId,
+            traceId,
+            aggregateType: 'platform_sync_job',
+            aggregateId: syncJobId,
+            payload: { platform, synced: result.synced },
         });
         log('info', 'platform sync worker completed', withTrace({ syncJobId, userId, platform, synced: result.synced }, traceId));
     } catch (error) {

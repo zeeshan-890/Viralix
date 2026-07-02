@@ -6,6 +6,7 @@ const { log, withTrace, serializeError } = require('../../utils/logger');
 const { observeQueueJobDuration } = require('../../config/metrics');
 const { recordAuditEvent } = require('../audit.service');
 const { runWithCircuitBreaker } = require('../../utils/circuitBreaker');
+const { emitDomainEvent } = require('../domainEvents.service');
 // Note: PublisherFactory is required dynamically below in the processing loop
 
 const publishWorkerConcurrency = Number(process.env.PUBLISH_WORKER_CONCURRENCY || 6);
@@ -265,6 +266,14 @@ publishQueue.process(publishWorkerConcurrency, async (job) => {
         resourceId: jobId,
         traceId,
         metadata: { postId: String(postId || ''), successCount, failCount },
+    });
+    await emitDomainEvent({
+        eventType: failCount === 0 ? 'publish.completed' : (successCount === 0 ? 'publish.failed' : 'publish.partially_failed'),
+        userId,
+        traceId,
+        aggregateType: 'publish_job',
+        aggregateId: jobId,
+        payload: { postId: String(postId || ''), successCount, failCount },
     });
     log('info', 'publish worker completed', withTrace({
         publishJobId: jobId,
