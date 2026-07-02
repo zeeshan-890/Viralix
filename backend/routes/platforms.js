@@ -3,6 +3,9 @@ const router = express.Router();
 const AccountService = require('../services/account.service');
 const User = require('../models/User');
 const auth = require('../middleware/auth');
+const { cacheGet, cacheSet } = require('../utils/cache');
+
+const PLATFORMS_CONNECTED_CACHE_TTL_SEC = Number(process.env.ACCOUNTS_CACHE_TTL_SEC || 300);
 
 // Apply auth middleware to all routes
 router.use(auth);
@@ -14,6 +17,12 @@ router.use(auth);
  */
 router.get('/connected', async (req, res) => {
     try {
+        const cacheKey = AccountService.platformsCacheKey(req.user.id);
+        const cached = await cacheGet(cacheKey);
+        if (cached) {
+            return res.json({ ...cached, source: 'cache' });
+        }
+
         const accounts = await AccountService.getAccounts(req.user.id);
 
         // Fetch user settings to get Facebook Pages
@@ -46,7 +55,7 @@ router.get('/connected', async (req, res) => {
         console.log('[platforms/connected] userId:', req.user.id);
         console.log('[platforms/connected] final count:', finalAccounts.length);
 
-        res.json({
+        const response = {
             success: true,
             count: finalAccounts.length,
             accounts: finalAccounts,
@@ -58,8 +67,12 @@ router.get('/connected', async (req, res) => {
                 youtube: finalAccounts.filter(a => a.platform === 'youtube'),
                 twitter: finalAccounts.filter(a => a.platform === 'twitter'),
                 linkedin: finalAccounts.filter(a => a.platform === 'linkedin')
-            }
-        });
+            },
+            source: 'live',
+        };
+
+        await cacheSet(cacheKey, response, PLATFORMS_CONNECTED_CACHE_TTL_SEC);
+        res.json(response);
     } catch (err) {
         console.error('Error fetching connected accounts:', err);
         res.status(500).json({ success: false, message: 'Server error' });

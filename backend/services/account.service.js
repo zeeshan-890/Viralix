@@ -1,14 +1,34 @@
 const SocialAccount = require('../models/SocialAccount');
 const User = require('../models/User');
 const { encrypt, decrypt } = require('../utils/encryption');
+const { buildCacheKey, cacheGet, cacheSet, cacheDel } = require('../utils/cache');
+
+const ACCOUNTS_CACHE_TTL_SEC = Number(process.env.ACCOUNTS_CACHE_TTL_SEC || 300);
 
 class AccountService {
+
+    static accountsCacheKey(userId) {
+        return buildCacheKey('accounts', 'connected', String(userId));
+    }
+
+    static platformsCacheKey(userId) {
+        return buildCacheKey('platforms', 'connected', String(userId));
+    }
+
+    static async invalidateAccountsCache(userId) {
+        await cacheDel(AccountService.accountsCacheKey(userId));
+        await cacheDel(AccountService.platformsCacheKey(userId));
+    }
 
     /**
      * Get all connected accounts for a user
      * Merges accounts from SocialAccount collection AND legacy User.socialAccounts
      */
     static async getAccounts(userId) {
+        const cacheKey = AccountService.accountsCacheKey(userId);
+        const cached = await cacheGet(cacheKey);
+        if (cached) return cached;
+
         // Get accounts from new SocialAccount collection
         const socialAccounts = await SocialAccount.find({ userId, isActive: true });
 
@@ -41,7 +61,9 @@ class AccountService {
         }
 
         // Merge and return all accounts
-        return [...socialAccounts, ...legacyAccounts];
+        const merged = [...socialAccounts, ...legacyAccounts];
+        await cacheSet(cacheKey, merged, ACCOUNTS_CACHE_TTL_SEC);
+        return merged;
     }
 
     /**
@@ -121,6 +143,8 @@ class AccountService {
             setDefaultsOnInsert: true
         });
 
+        await AccountService.invalidateAccountsCache(userId);
+
         // Return the saved account (tokens are encrypted in DB)
         // If caller needs decrypted, they should use getAccount or use the input they provided
         return account;
@@ -150,11 +174,13 @@ class AccountService {
      * Disconnect an account (soft delete)
      */
     static async disconnectAccount(userId, accountId) {
-        return await SocialAccount.findOneAndUpdate(
+        const result = await SocialAccount.findOneAndUpdate(
             { userId, _id: accountId },
             { isActive: false },
             { new: true }
         );
+        await AccountService.invalidateAccountsCache(userId);
+        return result;
     }
 
     /**
