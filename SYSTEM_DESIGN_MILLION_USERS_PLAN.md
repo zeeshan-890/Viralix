@@ -473,4 +473,26 @@ Use this mapping to execute each phase incrementally without a risky rewrite.
 ### Analytical DB (document only — not implemented)
 - When rollup volume exceeds Mongo aggregation comfort (~millions of rows/day globally), export `AnalyticsDailyRollup` to ClickHouse/BigQuery via nightly ETL or change stream.
 - Keep API contract (`/api/analytics/trends`) stable; swap read adapter behind `getAnalyticsTrends`.
+- Rollup export CLI: `npm run export:rollups -- --days=1` (set `ANALYTICS_ROLLUP_EXPORT_URL` to POST batch to external sink).
+
+---
+
+## 14) Phase 4 Operations Runbook (Implemented)
+
+### Module boundaries
+- Registry: `backend/modules/index.js`
+- Domains: `publishing`, `analytics`, `platformSync` — each exposes queue/models/services and worker/route entry paths for future extraction.
+
+### OpenTelemetry tracing hooks
+- `OTEL_ENABLED=1` — attempt SDK init (requires optional `@opentelemetry/sdk-trace-node` + exporter packages)
+- `OTEL_SERVICE_NAME=viralix-backend` (default)
+- `OTEL_EXPORTER_OTLP_ENDPOINT` — OTLP HTTP exporter URL when SDK packages installed
+- API propagates W3C `traceparent` + `x-trace-id` on every request
+- Queue workers wrap jobs with `withWorkerSpan()` for span correlation
+
+### Phase 4 verification
+1. Call any API route and confirm response includes `traceparent` and `x-trace-id` headers.
+2. Trigger publish/sync/refresh jobs and confirm structured logs include matching `traceId`.
+3. Run `npm run export:rollups -- --days=7` and confirm JSON summary with rollup `count`.
+4. Import `require('./modules')` and verify `analytics`, `platformSync`, `publishing` surfaces load.
 
