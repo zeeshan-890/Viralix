@@ -1,0 +1,59 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: viralix-api
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: viralix-api
+  template:
+    metadata:
+      labels:
+        app: viralix-api
+    spec:
+      containers:
+        - name: api
+          image: viralix/backend:latest
+          ports:
+            - containerPort: 5000
+          env:
+            - name: PROCESS_TYPE
+              value: api
+            - name: PORT
+              value: '5000'
+            - name: MONGODB_URI
+              valueFrom:
+                secretKeyRef:
+                  name: viralix-secrets
+                  key: mongodb-uri
+            - name: MONGODB_READ_URI
+              valueFrom:
+                secretKeyRef:
+                  name: viralix-secrets
+                  key: mongodb-read-uri
+                  optional: true
+            - name: REDIS_URL
+              valueFrom:
+                secretKeyRef:
+                  name: viralix-secrets
+                  key: redis-url
+          readinessProbe:
+            httpGet:
+              path: /api/health
+              port: 5000
+            initialDelaySeconds: 10
+            periodSeconds: 15
+          livenessProbe:
+            httpGet:
+              path: /api/health
+              port: 5000
+            initialDelaySeconds: 20
+            periodSeconds: 30
+          resources:
+            requests:
+              cpu: 250m
+              memory: 512Mi
+            limits:
+              cpu: 1000m
+              memory: 1Gi

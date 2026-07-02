@@ -1,0 +1,44 @@
+# Render blueprint for API + worker autoscaling split
+services:
+  - type: web
+    name: viralix-api
+    runtime: node
+    buildCommand: cd backend && npm ci --omit=dev
+    startCommand: cd backend && PROCESS_TYPE=api node server.js
+    healthCheckPath: /api/health
+    envVars:
+      - key: PROCESS_TYPE
+        value: api
+      - key: MONGODB_URI
+        sync: false
+      - key: MONGODB_READ_URI
+        sync: false
+      - key: REDIS_URL
+        sync: false
+    scaling:
+      minInstances: 2
+      maxInstances: 8
+      targetCPUPercent: 70
+
+  - type: worker
+    name: viralix-worker
+    runtime: node
+    buildCommand: cd backend && npm ci --omit=dev
+    startCommand: cd backend && node worker-process.js
+    envVars:
+      - key: PROCESS_TYPE
+        value: worker
+      - key: MONGODB_URI
+        sync: false
+      - key: REDIS_URL
+        sync: false
+      - key: PUBLISH_WORKER_CONCURRENCY
+        value: '6'
+      - key: ANALYTICS_REFRESH_WORKER_CONCURRENCY
+        value: '2'
+      - key: PLATFORM_SYNC_WORKER_CONCURRENCY
+        value: '3'
+    scaling:
+      minInstances: 2
+      maxInstances: 6
+      targetCPUPercent: 75

@@ -1,0 +1,44 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: viralix-worker
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: viralix-worker
+  template:
+    metadata:
+      labels:
+        app: viralix-worker
+    spec:
+      containers:
+        - name: worker
+          image: viralix/backend:latest
+          command: ['node', 'backend/worker-process.js']
+          env:
+            - name: PROCESS_TYPE
+              value: worker
+            - name: MONGODB_URI
+              valueFrom:
+                secretKeyRef:
+                  name: viralix-secrets
+                  key: mongodb-uri
+            - name: REDIS_URL
+              valueFrom:
+                secretKeyRef:
+                  name: viralix-secrets
+                  key: redis-url
+            - name: PUBLISH_WORKER_CONCURRENCY
+              value: '6'
+            - name: ANALYTICS_REFRESH_WORKER_CONCURRENCY
+              value: '2'
+            - name: PLATFORM_SYNC_WORKER_CONCURRENCY
+              value: '3'
+          resources:
+            requests:
+              cpu: 300m
+              memory: 512Mi
+            limits:
+              cpu: 1200m
+              memory: 1536Mi

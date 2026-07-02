@@ -317,14 +317,17 @@ try {
 // app.use('/api/upload', require('./routes/upload'));
 
 // Health check endpoint
-const { getDbStatus } = require('./config/database');
+const { getDbStatus, getReadDbStatus } = require('./config/database');
 app.get('/api/health', (req, res) => {
     const dbStatus = getDbStatus();
+    const readDbStatus = getReadDbStatus();
     const isProd = process.env.NODE_ENV === 'production';
     const ok = dbStatus === 'connected' || (!isProd && dbStatus === 'not_configured');
     res.status(ok ? 200 : 503).json({
         status: ok ? 'OK' : 'DEGRADED',
         db: dbStatus,
+        readDb: readDbStatus,
+        processType: process.env.PROCESS_TYPE || 'all',
         message: ok ? 'AutoReach AI Backend is running' : 'Backend up but database unavailable',
         timestamp: new Date().toISOString()
     });
@@ -400,12 +403,14 @@ app.use((err, req, res, next) => {
 
 // Database connection
 const connectDB = require('./config/database');
+const { startBackgroundServices, shouldRunApi } = require('./bootstrap/workers');
 connectDB();
 
 // Start server with optional Socket.io
 const http = require('http');
 const server = http.createServer(app);
 
+if (shouldRunApi()) {
 try {
     const { Server } = require('socket.io');
     const io = new Server(server, {
@@ -444,38 +449,12 @@ server.listen(PORT, () => {
     console.log(`🚀 AutoReach AI Backend running on port ${PORT}`);
     console.log(`📊 Environment: ${process.env.NODE_ENV || 'development'}`);
     console.log(`🌐 Client URL: ${process.env.CLIENT_URL || 'http://localhost:3000'}`);
+    console.log(`🧩 Process type: ${process.env.PROCESS_TYPE || 'all'}`);
 });
-
-if (process.env.REDIS_URL) {
-    try {
-        require('./services/queue/publish.worker');
-        require('./services/queue/analyticsRefresh.worker');
-        require('./services/queue/platformSync.worker');
-        console.log('👷 Background workers started');
-    } catch (error) {
-        console.error('⚠️ Failed to start background workers:', error.message);
-    }
 } else {
-    console.warn('⚠️ REDIS_URL not set — publish queue worker skipped (add Heroku Redis for scheduled publishing)');
+    console.log('🧩 API server disabled (PROCESS_TYPE=worker)');
 }
 
-// Start lightweight scheduler using node-cron to publish due posts
-try {
-    const cron = require('node-cron');
-    const { runScheduleWithLock } = require('./services/scheduler');
-    cron.schedule('* * * * *', async () => {
-        try {
-            const result = await runScheduleWithLock(new Date());
-            if (result.acquired && result.enqueued > 0) {
-                log('info', 'scheduler enqueued due posts', { enqueued: result.enqueued });
-            }
-        } catch (e) {
-            log('error', 'scheduler cycle failed', { error: serializeError(e) });
-        }
-    });
-    console.log('⏱️  Scheduler started: running every minute');
-} catch (e) {
-    console.warn('Scheduler not started:', e.message);
-}
+startBackgroundServices();
 
 module.exports = app;

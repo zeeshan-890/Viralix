@@ -1,0 +1,47 @@
+version: '3.9'
+
+services:
+  api:
+    build:
+      context: ../../..
+      dockerfile: backend/ops/deploy/Dockerfile
+    environment:
+      PROCESS_TYPE: api
+      PORT: 5000
+      MONGODB_URI: ${MONGODB_URI}
+      MONGODB_READ_URI: ${MONGODB_READ_URI:-}
+      REDIS_URL: ${REDIS_URL}
+      JWT_SECRET: ${JWT_SECRET}
+    ports:
+      - '5000:5000'
+    deploy:
+      replicas: 2
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1024M
+
+  worker:
+    build:
+      context: ../../..
+      dockerfile: backend/ops/deploy/Dockerfile
+    command: ['node', 'backend/worker-process.js']
+    environment:
+      PROCESS_TYPE: worker
+      MONGODB_URI: ${MONGODB_URI}
+      REDIS_URL: ${REDIS_URL}
+      JWT_SECRET: ${JWT_SECRET}
+      PUBLISH_WORKER_CONCURRENCY: ${PUBLISH_WORKER_CONCURRENCY:-6}
+      ANALYTICS_REFRESH_WORKER_CONCURRENCY: ${ANALYTICS_REFRESH_WORKER_CONCURRENCY:-2}
+      PLATFORM_SYNC_WORKER_CONCURRENCY: ${PLATFORM_SYNC_WORKER_CONCURRENCY:-3}
+    deploy:
+      replicas: 2
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1024M
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - '6379:6379'
