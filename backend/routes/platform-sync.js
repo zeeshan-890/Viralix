@@ -8,6 +8,7 @@ const youtubeService = require('../services/youtube');
 const platformSyncQueue = require('../services/queue/platformSync.queue');
 const PlatformSyncJob = require('../models/PlatformSyncJob');
 const { executePlatformSync } = require('../services/platformSync.service');
+const { rejectWhenQueueBacklogged } = require('../utils/queueAdmission');
 const { v4: uuidv4 } = require('uuid');
 const axios = require('axios');
 
@@ -24,6 +25,16 @@ router.post('/sync-all', auth, async (req, res) => {
         }
 
         const syncJobId = uuidv4();
+        const admission = await rejectWhenQueueBacklogged(platformSyncQueue, {
+            waitingLimit: Number(process.env.PLATFORM_SYNC_QUEUE_WAITING_LIMIT || 120),
+            delayedLimit: Number(process.env.PLATFORM_SYNC_QUEUE_DELAYED_LIMIT || 120),
+        });
+        if (admission.shouldReject) {
+            return res.status(429).json({
+                message: 'Platform sync queue is busy. Please try again shortly.',
+                queue: admission.counts,
+            });
+        }
         await new PlatformSyncJob({
             jobId: syncJobId,
             userId: req.user.id,
@@ -63,6 +74,16 @@ router.post('/sync/:platform', auth, async (req, res) => {
         }
 
         const syncJobId = uuidv4();
+        const admission = await rejectWhenQueueBacklogged(platformSyncQueue, {
+            waitingLimit: Number(process.env.PLATFORM_SYNC_QUEUE_WAITING_LIMIT || 120),
+            delayedLimit: Number(process.env.PLATFORM_SYNC_QUEUE_DELAYED_LIMIT || 120),
+        });
+        if (admission.shouldReject) {
+            return res.status(429).json({
+                message: 'Platform sync queue is busy. Please try again shortly.',
+                queue: admission.counts,
+            });
+        }
         await new PlatformSyncJob({
             jobId: syncJobId,
             userId: req.user.id,
