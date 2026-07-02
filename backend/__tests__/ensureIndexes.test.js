@@ -9,6 +9,8 @@ describe('ensure database indexes', () => {
             'AuditLog',
             'PlatformSyncJob',
             'AnalyticsOverviewSnapshot',
+            'AnalyticsDailyRollup',
+            'DomainEvent',
         ]));
     });
 });

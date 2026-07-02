@@ -2,6 +2,8 @@ const AnalyticsOverviewSnapshot = require('../../models/AnalyticsOverviewSnapsho
 const { computeAnalyticsOverview } = require('./computeOverview');
 const { buildCacheKey, cacheGet, cacheSet, cacheDelByPrefix } = require('../../utils/cache');
 const { applyReadPreference, getModelForReads } = require('../../utils/readDb');
+const { upsertDailyRollup } = require('./dailyRollup');
+const { emitDomainEvent } = require('../domainEvents.service');
 
 const DEFAULT_PERIOD_KEY = '30d';
 const OVERVIEW_CACHE_TTL_SEC = Number(process.env.ANALYTICS_OVERVIEW_CACHE_TTL_SEC || 180);
@@ -39,6 +41,14 @@ async function materializeAnalyticsOverview(userId, options = {}) {
 
     await cacheDelByPrefix(buildCacheKey('analytics', 'overview', String(userId)));
     await cacheSet(overviewCacheKey(userId, periodKey), payload, OVERVIEW_CACHE_TTL_SEC);
+    await upsertDailyRollup(userId, payload);
+    await emitDomainEvent({
+        eventType: 'analytics.materialized',
+        userId,
+        aggregateType: 'analytics_overview',
+        aggregateId: `${userId}:${periodKey}`,
+        payload: { periodKey, computedAt },
+    });
 
     return { periodKey, computedAt, payload };
 }

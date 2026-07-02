@@ -4,6 +4,8 @@ const PublishDlqJob = require('../models/PublishDlqJob');
 const PlatformSyncJob = require('../models/PlatformSyncJob');
 const AnalyticsRefreshJob = require('../models/AnalyticsRefreshJob');
 const AnalyticsOverviewSnapshot = require('../models/AnalyticsOverviewSnapshot');
+const AnalyticsDailyRollup = require('../models/AnalyticsDailyRollup');
+const DomainEvent = require('../models/DomainEvent');
 const AuditLog = require('../models/AuditLog');
 const PlatformContent = require('../models/PlatformContent');
 const SocialAccount = require('../models/SocialAccount');
@@ -17,6 +19,8 @@ const INDEXED_MODELS = [
     PlatformSyncJob,
     AnalyticsRefreshJob,
     AnalyticsOverviewSnapshot,
+    AnalyticsDailyRollup,
+    DomainEvent,
     AuditLog,
     PlatformContent,
     SocialAccount,

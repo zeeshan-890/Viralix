@@ -10,6 +10,7 @@ const analyticsRefreshQueue = require('../services/queue/analyticsRefresh.queue'
 const AnalyticsRefreshJob = require('../models/AnalyticsRefreshJob');
 const { refreshAnalyticsForUser } = require('../services/analytics/refreshAnalytics');
 const { materializeAnalyticsOverview } = require('../services/analytics/overviewStore');
+const { getAnalyticsTrends } = require('../services/analytics/dailyRollup');
 const { rejectWhenQueueBacklogged } = require('../utils/queueAdmission');
 const { enforceTenantQuota } = require('../middleware/tenantQuota');
 const { v4: uuidv4 } = require('uuid');
@@ -39,6 +40,21 @@ router.get('/overview', auth, cacheHeaders({ maxAge: 30, sMaxAge: 120, privateCa
             error: serializeError(error),
         }, req.traceId));
         res.status(500).json({ message: 'Server error' });
+    }
+});
+
+// GET /api/analytics/trends - long-range rollup timeline (analytical read model)
+router.get('/trends', auth, cacheHeaders({ maxAge: 60, sMaxAge: 300, privateCache: true }), async (req, res) => {
+    try {
+        const days = req.query.days || 90;
+        const data = await getAnalyticsTrends(req.user.id, days);
+        return res.json(data);
+    } catch (error) {
+        log('error', 'analytics trends failed', withTrace({
+            userId: req.user?.id,
+            error: serializeError(error),
+        }, req.traceId));
+        return res.status(500).json({ message: 'Failed to load analytics trends' });
     }
 });
 
