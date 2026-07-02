@@ -1,6 +1,7 @@
 const AnalyticsOverviewSnapshot = require('../../models/AnalyticsOverviewSnapshot');
 const { computeAnalyticsOverview } = require('./computeOverview');
 const { buildCacheKey, cacheGet, cacheSet, cacheDelByPrefix } = require('../../utils/cache');
+const { applyReadPreference, getModelForReads } = require('../../utils/readDb');
 
 const DEFAULT_PERIOD_KEY = '30d';
 const OVERVIEW_CACHE_TTL_SEC = Number(process.env.ANALYTICS_OVERVIEW_CACHE_TTL_SEC || 180);
@@ -13,7 +14,10 @@ async function getMaterializedOverview(userId, periodKey = DEFAULT_PERIOD_KEY) {
     const cached = await cacheGet(overviewCacheKey(userId, periodKey));
     if (cached) return { ...cached, source: 'cache' };
 
-    const snapshot = await AnalyticsOverviewSnapshot.findOne({ userId, periodKey }).lean();
+    const SnapshotModel = getModelForReads(AnalyticsOverviewSnapshot);
+    const snapshot = await applyReadPreference(
+        SnapshotModel.findOne({ userId, periodKey })
+    ).lean();
     if (snapshot?.payload) {
         await cacheSet(overviewCacheKey(userId, periodKey), snapshot.payload, OVERVIEW_CACHE_TTL_SEC);
         return { ...snapshot.payload, source: 'materialized', computedAt: snapshot.computedAt };

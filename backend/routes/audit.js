@@ -1,7 +1,9 @@
 const express = require('express');
 const auth = require('../middleware/auth');
 const requireRole = require('../middleware/requireRole');
+const { cacheHeaders } = require('../middleware/cacheHeaders');
 const AuditLog = require('../models/AuditLog');
+const { applyReadPreference, getModelForReads } = require('../utils/readDb');
 
 const router = express.Router();
 
@@ -9,7 +11,7 @@ const router = express.Router();
  * GET /api/audit/logs
  * Admin-only audit trail query endpoint.
  */
-router.get('/logs', auth, requireRole('admin'), async (req, res) => {
+router.get('/logs', auth, requireRole('admin'), cacheHeaders({ maxAge: 15, sMaxAge: 30, privateCache: true }), async (req, res) => {
     try {
         const limit = Math.min(parseInt(req.query.limit, 10) || 50, 200);
         const filter = {};
@@ -24,7 +26,10 @@ router.get('/logs', auth, requireRole('admin'), async (req, res) => {
             filter.createdAt = { $gte: new Date(req.query.since) };
         }
 
-        const logs = await AuditLog.find(filter)
+        const AuditLogRead = getModelForReads(AuditLog);
+        const logs = await applyReadPreference(
+            AuditLogRead.find(filter)
+        )
             .sort({ createdAt: -1 })
             .limit(limit)
             .lean();

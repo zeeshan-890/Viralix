@@ -1,6 +1,11 @@
 const mongoose = require('mongoose');
 
 let isConnected = false;
+let readConnection = null;
+
+const baseOptions = {
+    serverSelectionTimeoutMS: 10000,
+};
 
 const connectDB = async () => {
     if (!process.env.MONGODB_URI) {
@@ -14,12 +19,10 @@ const connectDB = async () => {
     const maxAttempts = 5;
     for (let attempt = 1; attempt <= maxAttempts; attempt++) {
         try {
-            const conn = await mongoose.connect(process.env.MONGODB_URI, {
-                serverSelectionTimeoutMS: 10000,
-            });
+            const conn = await mongoose.connect(process.env.MONGODB_URI, baseOptions);
             isConnected = true;
             console.log(`📅 MongoDB Connected: ${conn.connection.host}`);
-            return;
+            break;
         } catch (error) {
             console.error(`❌ Database connection attempt ${attempt}/${maxAttempts} failed:`, error.message);
             if (attempt < maxAttempts) {
@@ -30,10 +33,32 @@ const connectDB = async () => {
         }
     }
 
-    console.error('❌ Could not connect to MongoDB after multiple attempts.');
-    console.error('   Check MONGODB_URI, Atlas IP allowlist (0.0.0.0/0), and cluster status.');
-    // Do not exit — keep the HTTP server alive so Heroku health checks and logs work.
+    if (!isConnected) {
+        console.error('❌ Could not connect to MongoDB after multiple attempts.');
+        console.error('   Check MONGODB_URI, Atlas IP allowlist (0.0.0.0/0), and cluster status.');
+        return;
+    }
+
+    if (process.env.MONGODB_READ_URI) {
+        try {
+            readConnection = mongoose.createConnection(process.env.MONGODB_READ_URI, baseOptions);
+            readConnection.on('connected', () => {
+                console.log(`📖 MongoDB Read Replica Connected: ${readConnection.host}`);
+            });
+            readConnection.on('error', (error) => {
+                console.error('❌ MongoDB read replica connection error:', error.message);
+            });
+            await readConnection.asPromise();
+        } catch (error) {
+            console.error('❌ MongoDB read replica connection failed:', error.message);
+            readConnection = null;
+        }
+    }
 };
+
+function getReadConnection() {
+    return readConnection || mongoose.connection;
+}
 
 function getDbStatus() {
     if (!process.env.MONGODB_URI) return 'not_configured';
@@ -41,5 +66,14 @@ function getDbStatus() {
     return 'disconnected';
 }
 
+function getReadDbStatus() {
+    if (!process.env.MONGODB_READ_URI) return 'not_configured';
+    if (readConnection && readConnection.readyState === 1) return 'connected';
+    if (readConnection) return 'disconnected';
+    return 'not_configured';
+}
+
 module.exports = connectDB;
 module.exports.getDbStatus = getDbStatus;
+module.exports.getReadConnection = getReadConnection;
+module.exports.getReadDbStatus = getReadDbStatus;
