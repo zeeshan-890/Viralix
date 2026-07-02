@@ -16,4 +16,6 @@ const PublishDlqJobSchema = new mongoose.Schema({
     replayedAt: Date,
 }, { timestamps: true });
 
+PublishDlqJobSchema.index({ userId: 1, status: 1, createdAt: -1 });
+
 module.exports = mongoose.model('PublishDlqJob', PublishDlqJobSchema);

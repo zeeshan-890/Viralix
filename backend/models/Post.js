@@ -119,7 +119,11 @@ const PostSchema = new mongoose.Schema({
 
 // Indexes for performance
 PostSchema.index({ user: 1, createdAt: -1 });
+PostSchema.index({ user: 1, createdAt: 1 });
+PostSchema.index({ user: 1, 'platforms.status': 1, updatedAt: -1 });
+PostSchema.index({ user: 1, isPublished: 1, 'analytics.totalEngagement': -1 });
 PostSchema.index({ scheduledDate: 1 });
+PostSchema.index({ user: 1, scheduledDate: 1 });
 PostSchema.index({ 'platforms.status': 1 });
 PostSchema.index({ hashtags: 1 });
 

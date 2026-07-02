@@ -27,5 +27,8 @@ const PlatformSyncJobSchema = new mongoose.Schema({
     completedAt: Date,
 }, { timestamps: true });
 
+PlatformSyncJobSchema.index({ userId: 1, platform: 1, idempotencyKey: 1 });
+PlatformSyncJobSchema.index({ userId: 1, status: 1, createdAt: -1 });
+
 module.exports = mongoose.model('PlatformSyncJob', PlatformSyncJobSchema);
 

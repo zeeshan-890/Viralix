@@ -22,6 +22,16 @@ const connectDB = async () => {
             const conn = await mongoose.connect(process.env.MONGODB_URI, baseOptions);
             isConnected = true;
             console.log(`📅 MongoDB Connected: ${conn.connection.host}`);
+            if (process.env.SKIP_INDEX_ENSURE !== '1') {
+                const { ensureDatabaseIndexes } = require('./ensureIndexes');
+                const indexResults = await ensureDatabaseIndexes();
+                const failed = indexResults.filter((item) => !item.ok);
+                if (failed.length > 0) {
+                    console.warn('⚠️ Some MongoDB indexes failed to ensure:', failed.map((f) => f.model).join(', '));
+                } else {
+                    console.log(`📇 MongoDB indexes ensured for ${indexResults.length} models`);
+                }
+            }
             break;
         } catch (error) {
             console.error(`❌ Database connection attempt ${attempt}/${maxAttempts} failed:`, error.message);

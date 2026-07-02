@@ -74,4 +74,8 @@ const PublishJobSchema = new mongoose.Schema({
     error: String
 });
 
+PublishJobSchema.index({ userId: 1, status: 1, createdAt: -1 });
+PublishJobSchema.index({ userId: 1, postId: 1, idempotencyKey: 1 });
+PublishJobSchema.index({ userId: 1, jobId: 1 });
+
 module.exports = mongoose.model('PublishJob', PublishJobSchema);
