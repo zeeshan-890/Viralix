@@ -12,6 +12,7 @@ const { log, withTrace, serializeError } = require('../utils/logger');
 const analyticsRefreshQueue = require('../services/queue/analyticsRefresh.queue');
 const AnalyticsRefreshJob = require('../models/AnalyticsRefreshJob');
 const { refreshAnalyticsForUser } = require('../services/analytics/refreshAnalytics');
+const { rejectWhenQueueBacklogged } = require('../utils/queueAdmission');
 const { v4: uuidv4 } = require('uuid');
 
 const router = express.Router();
@@ -209,6 +210,17 @@ router.post('/refresh', auth, async (req, res) => {
         if (req.query.sync === '1') {
             const result = await refreshAnalyticsForUser(req.user.id);
             return res.json({ ok: true, mode: 'sync', updated: result.updated });
+        }
+
+        const admission = await rejectWhenQueueBacklogged(analyticsRefreshQueue, {
+            waitingLimit: Number(process.env.ANALYTICS_REFRESH_QUEUE_WAITING_LIMIT || 200),
+            delayedLimit: Number(process.env.ANALYTICS_REFRESH_QUEUE_DELAYED_LIMIT || 200),
+        });
+        if (admission.shouldReject) {
+            return res.status(429).json({
+                message: 'Analytics refresh queue is busy. Please try again shortly.',
+                queue: admission.counts,
+            });
         }
 
         const refreshJobId = uuidv4();
