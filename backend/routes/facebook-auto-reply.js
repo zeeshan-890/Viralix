@@ -7,6 +7,7 @@ const Comment = require('../models/Comment');
 const { analyzeSentiment } = require('../services/ai');
 const { checkKeywordAlerts } = require('./keyword-alerts');
 const { ingestInboundMessage } = require('./inbox');
+const { claimWebhookEvent } = require('../utils/webhookIdempotency');
 
 const router = express.Router();
 const FB_GRAPH_URL = 'https://graph.facebook.com/v19.0';
@@ -147,6 +148,16 @@ router.post('/webhook', async (req, res) => {
                 if (change.field === 'feed' && change.value.item === 'comment' && change.value.verb === 'add') {
                     // New comment on page post
                     const val = change.value;
+                    const eventId = `comment:${pageId}:${val.comment_id}`;
+                    const claimed = await claimWebhookEvent('facebook', eventId, {
+                        pageId,
+                        commentId: val.comment_id,
+                        postId: val.post_id,
+                    });
+                    if (!claimed) {
+                        console.log(`[FB Webhook] Duplicate comment event skipped: ${eventId}`);
+                        continue;
+                    }
                     // Fire and forget
                     tasks.push(processComment({
                         postId: val.post_id,

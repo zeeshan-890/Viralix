@@ -9,6 +9,7 @@ const Comment = require('../models/Comment');
 const { analyzeSentiment } = require('../services/ai');
 const { checkKeywordAlerts } = require('./keyword-alerts');
 const { ingestInboundMessage } = require('./inbox');
+const { claimWebhookEvent } = require('../utils/webhookIdempotency');
 
 const router = express.Router();
 const INSTAGRAM_GRAPH_URL = 'https://graph.instagram.com';
@@ -326,6 +327,16 @@ router.post('/webhook', async (req, res) => {
             if (change.field === 'comments') {
                 const { media, id, text, from } = change.value;
                 const mediaId = media?.id; // Extract from nested object
+                const eventId = `comment:${accountId}:${id}`;
+                const claimed = await claimWebhookEvent('instagram', eventId, {
+                    accountId,
+                    commentId: id,
+                    mediaId,
+                });
+                if (!claimed) {
+                    console.log(`[Webhook] Duplicate Instagram comment event skipped: ${eventId}`);
+                    continue;
+                }
 
                 // Get access token for this account
                 try {
