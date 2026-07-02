@@ -69,6 +69,16 @@ export const NAV_SECTIONS = [
                 href: '/dashboard/analytics?platform=instagram',
                 match: (path, sp) => path.startsWith('/dashboard/analytics') && sp.get('platform') === 'instagram',
             },
+            {
+                name: 'YouTube',
+                href: '/dashboard/analytics?platform=youtube',
+                match: (path, sp) => path.startsWith('/dashboard/analytics') && sp.get('platform') === 'youtube',
+            },
+            {
+                name: 'Facebook',
+                href: '/dashboard/analytics?platform=facebook',
+                match: (path, sp) => path.startsWith('/dashboard/analytics') && sp.get('platform') === 'facebook',
+            },
         ],
         match: (path) => path.startsWith('/dashboard/analytics'),
     },

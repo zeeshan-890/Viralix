@@ -199,7 +199,7 @@ export async function handleMockRequest(config) {
 
     // ─── Analytics ───
     if (method === 'get' && path === '/analytics/overview') return buildAnalyticsOverview();
-    if (method === 'get' && path.match(/^\/analytics\/deep\/(tiktok|instagram)$/)) {
+    if (method === 'get' && path.match(/^\/analytics\/deep\/(tiktok|instagram|youtube|facebook)$/)) {
         const platform = path.split('/')[3];
         return buildDeepAnalyticsMock(platform, params);
     }

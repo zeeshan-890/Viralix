@@ -59,7 +59,13 @@ export default function PlatformAnalyticsBanner({
                             )}
                             <div className={cn(
                                 'absolute -bottom-1 -right-1 h-6 w-6 rounded-md border shadow-sm flex items-center justify-center',
-                                platform === 'instagram' ? 'bg-[#833AB4] border-white/30' : 'bg-black border-[#00F2EA]/30'
+                                platform === 'instagram'
+                                    ? 'bg-[#833AB4] border-white/30'
+                                    : platform === 'tiktok'
+                                        ? 'bg-black border-[#00F2EA]/30'
+                                        : platform === 'youtube'
+                                            ? 'bg-[#FF0000] border-white/30'
+                                            : 'bg-[#1877F2] border-white/30'
                             )}>
                                 <PlatformIcon platform={platform} size={14} />
                             </div>

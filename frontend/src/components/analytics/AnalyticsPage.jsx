@@ -20,7 +20,7 @@ export default function AnalyticsPage() {
     const accountFilter = searchParams.get('account') || '';
     const demoOverview = searchParams.get('demo') === 'overview';
 
-    const activeTab = ['tiktok', 'instagram'].includes(platformParam) ? platformParam : 'overview';
+    const activeTab = ['tiktok', 'instagram', 'youtube', 'facebook'].includes(platformParam) ? platformParam : 'overview';
     const useDemoOverview = demoOverview || (isMockMode() && activeTab === 'overview');
 
     const [loading, setLoading] = useState(true);
@@ -114,6 +114,14 @@ export default function AnalyticsPage() {
 
                 {activeTab === 'instagram' && (
                     <PlatformDeepAnalytics platform="instagram" accountId={accountFilter} />
+                )}
+
+                {activeTab === 'youtube' && (
+                    <PlatformDeepAnalytics platform="youtube" accountId={accountFilter} />
+                )}
+
+                {activeTab === 'facebook' && (
+                    <PlatformDeepAnalytics platform="facebook" accountId={accountFilter} />
                 )}
             </div>
         </div>

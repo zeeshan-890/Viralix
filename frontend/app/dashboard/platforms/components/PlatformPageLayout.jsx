@@ -83,7 +83,7 @@ export default function PlatformPageLayout({
                     </div>
                     {hasAccounts && (
                         <div className="flex items-center gap-2">
-                            {(platform === 'tiktok' || platform === 'instagram') && (
+                            {['tiktok', 'instagram', 'youtube', 'facebook'].includes(platform) && (
                                 <Link
                                     href={`/dashboard/analytics?platform=${platform}`}
                                     className="px-5 py-2.5 dash-card rounded-xl border border-[var(--viralix-border)] hover:bg-gray-50 transition-all flex items-center gap-2 shadow-sm text-sm font-medium"
@@ -133,7 +133,7 @@ export default function PlatformPageLayout({
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
                         {accounts.map((account) => {
                             const accountKey = account.platformAccountId || account._id;
-                            const analyticsHref = (platform === 'tiktok' || platform === 'instagram')
+                            const analyticsHref = ['tiktok', 'instagram', 'youtube', 'facebook'].includes(platform)
                                 ? `/dashboard/analytics?platform=${platform}&account=${account.platformAccountId || ''}`
                                 : null;
                             const cardInner = (

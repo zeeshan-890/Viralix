@@ -208,6 +208,16 @@ const DEEP_MOCK_POSTS = {
         { id: 'ig-p-002', accountId: 'ig-user-202', title: 'Reel: Quick tips', views: 12400, likes: 1840, comments: 92, shares: 48, saves: 86, mediaType: 'reel' },
         { id: 'ig-p-003', accountId: 'ig-user-201', title: 'Behind the scenes', views: 5200, likes: 680, comments: 45, shares: 22, saves: 40, mediaType: 'image' },
     ],
+    youtube: [
+        { id: 'yt-v-001', accountId: 'yt-channel-401', title: 'How we grew 10x in 30 days', views: 18900, likes: 1450, comments: 210, shares: 65, mediaType: 'video' },
+        { id: 'yt-v-002', accountId: 'yt-channel-401', title: 'Creator workflow setup', views: 12400, likes: 940, comments: 132, shares: 44, mediaType: 'video' },
+        { id: 'yt-v-003', accountId: 'yt-channel-401', title: 'Short: 3 growth hacks', views: 22100, likes: 2100, comments: 188, shares: 96, mediaType: 'short' },
+    ],
+    facebook: [
+        { id: 'fb-p-001', accountId: 'fb-page-101', title: 'Community update', views: 6400, likes: 510, comments: 74, shares: 42, mediaType: 'post' },
+        { id: 'fb-p-002', accountId: 'fb-page-101', title: 'Behind the brand video', views: 9100, likes: 720, comments: 88, shares: 69, mediaType: 'video' },
+        { id: 'fb-p-003', accountId: 'fb-page-101', title: 'Weekly offer highlight', views: 7200, likes: 590, comments: 63, shares: 55, mediaType: 'post' },
+    ],
 };
 
 function engagementRate(views, engagement) {
@@ -215,12 +225,12 @@ function engagementRate(views, engagement) {
     return Math.round((engagement / views) * 10000) / 100;
 }
 
-/** Mock deep analytics for TikTok / Instagram (matches backend shape) */
+/** Mock deep analytics for supported platforms (matches backend shape) */
 export function buildDeepAnalyticsMock(platform, params = {}) {
     const store = getMockStore();
     const { period = '30d', accountId } = params;
 
-    if (!['tiktok', 'instagram'].includes(platform)) {
+    if (!['tiktok', 'instagram', 'youtube', 'facebook'].includes(platform)) {
         throw new Error('Unsupported platform');
     }
 
@@ -249,7 +259,7 @@ export function buildDeepAnalyticsMock(platform, params = {}) {
             comments: 0,
             shares: 0,
             saves: 0,
-            mediaType: platform === 'tiktok' ? 'video' : 'image',
+            mediaType: platform === 'tiktok' || platform === 'youtube' ? 'video' : 'image',
         }];
     }
 
@@ -353,11 +363,25 @@ export function buildDeepAnalyticsMock(platform, params = {}) {
         if (platform === 'tiktok') {
             return { ...base, videoCount: stats.posts + 12, following: 120, likes: 45000 };
         }
+        if (platform === 'instagram') {
+            return {
+                ...base,
+                following: 890,
+                mediaCount: stats.posts + 8,
+                accountInsights: { reach: 4200, profile_views: 890, accounts_engaged: 312, total_interactions: stats.engagement },
+            };
+        }
+        if (platform === 'youtube') {
+            return {
+                ...base,
+                following: 15,
+                mediaCount: stats.posts + 20,
+            };
+        }
         return {
             ...base,
-            following: 890,
-            mediaCount: stats.posts + 8,
-            accountInsights: { reach: 4200, profile_views: 890, accounts_engaged: 312, total_interactions: stats.engagement },
+            following: 340,
+            mediaCount: stats.posts + 16,
         };
     });
 

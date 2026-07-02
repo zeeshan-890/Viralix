@@ -1,4 +1,4 @@
-/** Platform-branded themes for TikTok / Instagram deep analytics pages */
+/** Platform-branded themes for deep analytics pages */
 
 export const PLATFORM_ANALYTICS_THEMES = {
     instagram: {
@@ -22,6 +22,28 @@ export const PLATFORM_ANALYTICS_THEMES = {
         gridStroke: 'rgba(255, 255, 255, 0.08)',
         axisTick: 'rgba(255, 255, 255, 0.45)',
         legendColor: 'rgba(255, 255, 255, 0.65)',
+    },
+    youtube: {
+        pageShell: 'platform-analytics-page platform-analytics-youtube',
+        bannerShell: 'platform-analytics-banner-youtube',
+        chartColors: ['#FF0000', '#FF4D4D', '#0F0F0F', '#FF8080', '#CC0000', '#7A7A7A'],
+        chartPrimary: '#FF0000',
+        chartSecondary: '#0F0F0F',
+        chartTertiary: '#FF4D4D',
+        gridStroke: 'rgba(15, 15, 15, 0.1)',
+        axisTick: '#7a2626',
+        legendColor: '#5b2d2d',
+    },
+    facebook: {
+        pageShell: 'platform-analytics-page platform-analytics-facebook',
+        bannerShell: 'platform-analytics-banner-facebook',
+        chartColors: ['#1877F2', '#42A5F5', '#0A3D91', '#90CAF9', '#1A73E8', '#6B93D6'],
+        chartPrimary: '#1877F2',
+        chartSecondary: '#0A3D91',
+        chartTertiary: '#42A5F5',
+        gridStroke: 'rgba(24, 119, 242, 0.14)',
+        axisTick: '#365d99',
+        legendColor: '#2a4f86',
     },
 };
 

@@ -468,6 +468,172 @@ body {
     color: #fff;
 }
 
+/* YouTube — light page with red/charcoal accents */
+.platform-analytics-youtube {
+    background: linear-gradient(160deg, #fff5f5 0%, #fef2f2 40%, #ffffff 100%);
+    border: 1px solid rgba(255, 0, 0, 0.12);
+    box-shadow: 0 8px 24px rgba(220, 38, 38, 0.08);
+}
+
+.platform-analytics-banner-youtube {
+    background: linear-gradient(135deg, #0f0f0f 0%, #1f1f1f 45%, #ff0000 100%);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 0.75rem;
+    box-shadow: 0 10px 30px rgba(15, 15, 15, 0.35);
+    color: #fff;
+}
+
+.platform-analytics-youtube .analytics-metric-tile-dark {
+    background: rgba(255, 255, 255, 0.14);
+    border-color: rgba(255, 255, 255, 0.25);
+}
+
+.platform-analytics-youtube .analytics-metric-tile-dark:hover {
+    background: rgba(255, 255, 255, 0.22);
+}
+
+.platform-analytics-youtube .pa-panel,
+.platform-analytics-youtube .analytics-panel {
+    background: rgba(255, 255, 255, 0.95);
+    border: 1px solid rgba(255, 0, 0, 0.14);
+    color: #2f1d1d;
+}
+
+.platform-analytics-youtube .pa-title,
+.platform-analytics-youtube .analytics-panel h2,
+.platform-analytics-youtube .analytics-panel h3 {
+    color: #b91c1c;
+}
+
+.platform-analytics-youtube .pa-muted {
+    color: #7f3a3a;
+}
+
+.platform-analytics-youtube .pa-inset,
+.platform-analytics-youtube .analytics-inset {
+    background: linear-gradient(180deg, #fff1f2 0%, #fee2e2 100%);
+    border: 1px solid rgba(255, 0, 0, 0.12);
+}
+
+.platform-analytics-youtube .pa-table-head,
+.platform-analytics-youtube .analytics-table-head {
+    background: #fff1f2;
+    border-color: rgba(255, 0, 0, 0.12);
+}
+
+.platform-analytics-youtube .pa-border {
+    border-color: rgba(255, 0, 0, 0.12);
+}
+
+.platform-analytics-youtube .pa-btn {
+    background: #fff;
+    border: 1px solid rgba(255, 0, 0, 0.2);
+    color: #b91c1c;
+}
+
+.platform-analytics-youtube .pa-btn:hover {
+    background: #fff1f2;
+}
+
+.platform-analytics-youtube .pa-period-active {
+    background: #ff0000;
+    color: #fff;
+}
+
+.platform-analytics-youtube .pa-period-track {
+    background: #fff;
+    border: 1px solid rgba(255, 0, 0, 0.15);
+}
+
+.platform-analytics-youtube .pa-select {
+    background: #fff;
+    border: 1px solid rgba(255, 0, 0, 0.2);
+    color: #2f1d1d;
+}
+
+/* Facebook — blue branded page */
+.platform-analytics-facebook {
+    background: linear-gradient(160deg, #eff6ff 0%, #dbeafe 42%, #f8fbff 100%);
+    border: 1px solid rgba(24, 119, 242, 0.12);
+    box-shadow: 0 8px 24px rgba(24, 119, 242, 0.08);
+}
+
+.platform-analytics-banner-facebook {
+    background: linear-gradient(135deg, #0a3d91 0%, #1877f2 55%, #42a5f5 100%);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 0.75rem;
+    box-shadow: 0 10px 30px rgba(24, 119, 242, 0.28);
+    color: #fff;
+}
+
+.platform-analytics-facebook .analytics-metric-tile-dark {
+    background: rgba(255, 255, 255, 0.14);
+    border-color: rgba(255, 255, 255, 0.24);
+}
+
+.platform-analytics-facebook .analytics-metric-tile-dark:hover {
+    background: rgba(255, 255, 255, 0.22);
+}
+
+.platform-analytics-facebook .pa-panel,
+.platform-analytics-facebook .analytics-panel {
+    background: rgba(255, 255, 255, 0.96);
+    border: 1px solid rgba(24, 119, 242, 0.14);
+    color: #1f3558;
+}
+
+.platform-analytics-facebook .pa-title,
+.platform-analytics-facebook .analytics-panel h2,
+.platform-analytics-facebook .analytics-panel h3 {
+    color: #0a3d91;
+}
+
+.platform-analytics-facebook .pa-muted {
+    color: #466791;
+}
+
+.platform-analytics-facebook .pa-inset,
+.platform-analytics-facebook .analytics-inset {
+    background: linear-gradient(180deg, #eff6ff 0%, #dbeafe 100%);
+    border: 1px solid rgba(24, 119, 242, 0.12);
+}
+
+.platform-analytics-facebook .pa-table-head,
+.platform-analytics-facebook .analytics-table-head {
+    background: #eff6ff;
+    border-color: rgba(24, 119, 242, 0.12);
+}
+
+.platform-analytics-facebook .pa-border {
+    border-color: rgba(24, 119, 242, 0.12);
+}
+
+.platform-analytics-facebook .pa-btn {
+    background: #fff;
+    border: 1px solid rgba(24, 119, 242, 0.2);
+    color: #0a3d91;
+}
+
+.platform-analytics-facebook .pa-btn:hover {
+    background: #eff6ff;
+}
+
+.platform-analytics-facebook .pa-period-active {
+    background: #1877f2;
+    color: #fff;
+}
+
+.platform-analytics-facebook .pa-period-track {
+    background: #fff;
+    border: 1px solid rgba(24, 119, 242, 0.15);
+}
+
+.platform-analytics-facebook .pa-select {
+    background: #fff;
+    border: 1px solid rgba(24, 119, 242, 0.2);
+    color: #1f3558;
+}
+
 .platform-analytics-instagram .pa-row-hover:hover {
     background: rgba(253, 242, 248, 0.8);
 }

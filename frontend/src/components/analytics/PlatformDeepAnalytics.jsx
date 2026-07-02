@@ -30,6 +30,10 @@ const PERIODS = [
 
 export default function PlatformDeepAnalytics({ platform, accountId: initialAccountId }) {
     const config = getPlatform(platform);
+    const isInstagram = platform === 'instagram';
+    const isTikTok = platform === 'tiktok';
+    const isYouTube = platform === 'youtube';
+    const isFacebook = platform === 'facebook';
     const [period, setPeriod] = useState('30d');
     const [accountId, setAccountId] = useState(initialAccountId || '');
     const [data, setData] = useState(null);
@@ -74,7 +78,12 @@ export default function PlatformDeepAnalytics({ platform, accountId: initialAcco
             <PlatformAnalyticsThemeProvider platform={platform}>
                 <div className={theme.pageShell}>
                     <div className="analytics-panel pa-panel flex flex-col items-center justify-center gap-3 py-20">
-                        <Loader2 className={cn('h-8 w-8 animate-spin', platform === 'tiktok' ? 'text-[#00F2EA]' : 'text-[#E4405F]')} />
+                        <Loader2
+                            className={cn(
+                                'h-8 w-8 animate-spin',
+                                isTikTok ? 'text-[#00F2EA]' : isInstagram ? 'text-[#E4405F]' : isYouTube ? 'text-[#FF0000]' : 'text-[#1877F2]'
+                            )}
+                        />
                         <p className="text-sm pa-muted">Loading {config.label} analytics…</p>
                     </div>
                 </div>
@@ -109,9 +118,11 @@ export default function PlatformDeepAnalytics({ platform, accountId: initialAcco
                 <div className="flex items-center gap-3">
                     <div className={cn(
                         'flex h-11 w-11 items-center justify-center rounded-xl border shadow-sm',
-                        platform === 'instagram'
+                        isInstagram
                             ? 'border-pink-200/60 bg-white/80'
-                            : 'border-white/10 bg-white/5'
+                            : isTikTok
+                                ? 'border-white/10 bg-white/5'
+                                : 'border-[var(--viralix-border)] bg-white/70'
                     )}>
                         <PlatformIcon platform={platform} size={28} />
                     </div>
@@ -190,9 +201,14 @@ export default function PlatformDeepAnalytics({ platform, accountId: initialAcco
                 <div className="analytics-panel pa-panel px-4 py-3 flex items-center gap-2">
                     <div className={cn(
                         'flex h-8 w-8 items-center justify-center rounded-lg',
-                        platform === 'instagram' ? 'bg-pink-100' : 'bg-white/10'
+                        isInstagram ? 'bg-pink-100' : isTikTok ? 'bg-white/10' : 'bg-[var(--viralix-inset)]'
                     )}>
-                        <BarChart3 className={cn('h-4 w-4', platform === 'instagram' ? 'text-[#833AB4]' : 'text-[#00F2EA]')} />
+                        <BarChart3
+                            className={cn(
+                                'h-4 w-4',
+                                isInstagram ? 'text-[#833AB4]' : isTikTok ? 'text-[#00F2EA]' : isYouTube ? 'text-[#FF0000]' : 'text-[#1877F2]'
+                            )}
+                        />
                     </div>
                     <h3 className="text-sm font-semibold pa-title">Visual analytics</h3>
                 </div>
@@ -217,7 +233,7 @@ export default function PlatformDeepAnalytics({ platform, accountId: initialAcco
                         timeline={data?.timeline || []}
                         title="Daily metrics breakdown"
                         subtitle="Views, likes, and comments per day"
-                        metrics={['views', 'likes', 'comments', ...(platform === 'tiktok' ? ['shares'] : [])]}
+                        metrics={['views', 'likes', 'comments', ...((isTikTok || isYouTube || isFacebook) ? ['shares'] : [])]}
                     />
                     <PostsActivityBarChart timeline={data?.timeline || []} />
                 </div>
@@ -230,7 +246,7 @@ export default function PlatformDeepAnalytics({ platform, accountId: initialAcco
                         saves={s.totalSaves}
                         title="Engagement composition"
                     />
-                    {platform === 'instagram' && (data?.mediaTypeBreakdown?.length > 0) ? (
+                    {isInstagram && (data?.mediaTypeBreakdown?.length > 0) ? (
                         <DistributionPieChart
                             title="Content mix by type"
                             subtitle="Posts distribution across media types"
@@ -275,14 +291,16 @@ export default function PlatformDeepAnalytics({ platform, accountId: initialAcco
             </div>
 
             {/* Media type breakdown cards (Instagram) */}
-            {platform === 'instagram' && (data?.mediaTypeBreakdown?.length > 0) && (
+            {(isInstagram || isYouTube || isFacebook) && (data?.mediaTypeBreakdown?.length > 0) && (
                 <div className="analytics-panel pa-panel p-4 sm:p-5">
                     <h3 className="text-sm font-semibold pa-title mb-4 pb-3 border-b pa-border">Content by type</h3>
                     <div className="grid gap-3 sm:grid-cols-3">
                         {data.mediaTypeBreakdown.map((mt) => (
                             <div key={mt.type} className="analytics-inset pa-inset p-4">
                                 <div className="flex items-center gap-2 mb-2">
-                                    {mt.type === 'video' ? <Video className="h-4 w-4 text-[#E4405F]" /> : <ImageIcon className="h-4 w-4 text-[#833AB4]" />}
+                                    {mt.type === 'video' || mt.type === 'short'
+                                        ? <Video className={cn('h-4 w-4', isYouTube ? 'text-[#FF0000]' : isFacebook ? 'text-[#1877F2]' : 'text-[#E4405F]')} />
+                                        : <ImageIcon className={cn('h-4 w-4', isYouTube ? 'text-[#7a1f1f]' : isFacebook ? 'text-[#0A3D91]' : 'text-[#833AB4]')} />}
                                     <span className="text-sm font-medium capitalize pa-text">{mt.type}</span>
                                     <span className="text-xs pa-muted">({mt.count})</span>
                                 </div>
@@ -320,9 +338,11 @@ export default function PlatformDeepAnalytics({ platform, accountId: initialAcco
                                 href={post.detailUrl}
                                 className={cn(
                                     'group relative aspect-square overflow-hidden rounded-xl border shadow-sm transition-shadow hover:shadow-md',
-                                    platform === 'instagram'
+                                    isInstagram
                                         ? 'border-pink-200/50 bg-pink-50'
-                                        : 'border-white/10 bg-[#1e1e1e]'
+                                        : isTikTok
+                                            ? 'border-white/10 bg-[#1e1e1e]'
+                                            : 'border-[var(--viralix-border)] bg-[var(--viralix-bg)]'
                                 )}
                             >
                                 {post.thumbnail ? (

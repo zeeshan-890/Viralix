@@ -126,8 +126,20 @@ async function fetchInstagramAccountMeta(account) {
     }
 }
 
+function fetchGenericAccountMeta(account) {
+    const resolvedAccountId = account.platformAccountId || account.accountId;
+    return {
+        accountId: resolvedAccountId,
+        accountName: account.accountName || account.username || 'Account',
+        username: account.username,
+        avatarUrl: account.metadata?.avatarUrl || account.avatarUrl || account.profilePicture || null,
+        followers: account.followerCount || 0,
+        following: account.metadata?.following || 0,
+    };
+}
+
 async function buildDeepAnalytics(userId, platform, { period = '30d', accountId } = {}) {
-    if (!['tiktok', 'instagram'].includes(platform)) {
+    if (!['tiktok', 'instagram', 'youtube', 'facebook'].includes(platform)) {
         throw new Error('Unsupported platform');
     }
 
@@ -209,11 +221,14 @@ async function buildDeepAnalytics(userId, platform, { period = '30d', accountId 
     const platformAccounts = accounts.filter((a) => a.platform === platform);
     const accountMeta = [];
     for (const acc of platformAccounts) {
-        if (accountId && acc.platformAccountId !== accountId) continue;
+        const resolvedAccountId = acc.platformAccountId || acc.accountId;
+        if (accountId && resolvedAccountId !== accountId) continue;
         const meta = platform === 'tiktok'
             ? await fetchTikTokAccountMeta(acc)
-            : await fetchInstagramAccountMeta(acc);
-        const stats = byAccount[acc.platformAccountId];
+            : platform === 'instagram'
+                ? await fetchInstagramAccountMeta(acc)
+                : fetchGenericAccountMeta(acc);
+        const stats = byAccount[resolvedAccountId];
         accountMeta.push({
             ...meta,
             contentStats: stats || { posts: 0, views: 0, likes: 0, comments: 0, shares: 0, saves: 0, engagement: 0 },
