@@ -226,6 +226,7 @@ router.post('/refresh', auth, async (req, res) => {
         const refreshJobId = uuidv4();
         await new AnalyticsRefreshJob({
             jobId: refreshJobId,
+            traceId: req.traceId,
             userId: req.user.id,
             status: 'queued',
             logs: [{ level: 'info', message: 'Queued analytics refresh' }],
@@ -256,6 +257,7 @@ router.get('/refresh/:jobId', auth, async (req, res) => {
         if (!job) return res.status(404).json({ message: 'Refresh job not found' });
         return res.json({
             jobId: job.jobId,
+            traceId: job.traceId || null,
             status: job.status,
             progress: job.progress || 0,
             result: job.result || null,

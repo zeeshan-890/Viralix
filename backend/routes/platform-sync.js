@@ -37,6 +37,7 @@ router.post('/sync-all', auth, async (req, res) => {
         }
         await new PlatformSyncJob({
             jobId: syncJobId,
+            traceId: req.traceId,
             userId: req.user.id,
             platform: 'all',
             status: 'queued',
@@ -86,6 +87,7 @@ router.post('/sync/:platform', auth, async (req, res) => {
         }
         await new PlatformSyncJob({
             jobId: syncJobId,
+            traceId: req.traceId,
             userId: req.user.id,
             platform,
             status: 'queued',
@@ -115,6 +117,7 @@ router.get('/sync/status/:jobId', auth, async (req, res) => {
         if (!job) return res.status(404).json({ message: 'Sync job not found' });
         return res.json({
             jobId: job.jobId,
+            traceId: job.traceId || null,
             platform: job.platform,
             status: job.status,
             progress: job.progress || 0,

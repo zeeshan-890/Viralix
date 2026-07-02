@@ -2,6 +2,7 @@ const mongoose = require('mongoose');
 
 const AnalyticsRefreshJobSchema = new mongoose.Schema({
     jobId: { type: String, required: true, unique: true, index: true },
+    traceId: { type: String, index: true },
     userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true, index: true },
     status: {
         type: String,
