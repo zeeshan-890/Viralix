@@ -8,37 +8,45 @@ const redisConfig = {
     maxRetriesPerRequest: null, // Required for Bull
     enableReadyCheck: false,
     // Heroku Key-Value Store uses rediss:// with a self-signed cert chain
-    ...(useTls ? { tls: { rejectUnauthorized: false } } : {}),
+    ...(useTls
+        ? {
+            tls: { rejectUnauthorized: false },
+            // Prefer IPv4 — Heroku Redis DNS can fail on IPv6-first lookups
+            family: 4,
+        }
+        : {}),
     retryStrategy(times) {
         const delay = Math.min(times * 50, 2000);
         return delay;
-    }
+    },
 };
 
 let client;
 let subscriber;
 let defaultClient;
+let bclient;
+
+function createConnection(label) {
+    const conn = new Redis(redisUrl, redisConfig);
+    conn.on('error', (err) => console.error(`Redis ${label} Error:`, err.message || err));
+    conn.on('connect', () => console.log(`Redis ${label} Connected`));
+    return conn;
+}
 
 function getRedisClient(type) {
     switch (type) {
         case 'client':
-            if (!client) {
-                client = new Redis(redisUrl, redisConfig);
-                client.on('error', (err) => console.error('Redis Client Error:', err));
-                client.on('connect', () => console.log('Redis Client Connected'));
-            }
+            if (!client) client = createConnection('Client');
             return client;
         case 'subscriber':
-            if (!subscriber) {
-                subscriber = new Redis(redisUrl, redisConfig);
-                subscriber.on('error', (err) => console.error('Redis Subscriber Error:', err));
-            }
+            if (!subscriber) subscriber = createConnection('Subscriber');
             return subscriber;
+        case 'bclient':
+            // Bull blocking client must be a dedicated connection
+            if (!bclient) bclient = createConnection('BClient');
+            return bclient;
         default:
-            if (!defaultClient) {
-                defaultClient = new Redis(redisUrl, redisConfig);
-                defaultClient.on('error', (err) => console.error('Redis Default Error:', err));
-            }
+            if (!defaultClient) defaultClient = createConnection('Default');
             return defaultClient;
     }
 }
@@ -49,9 +57,10 @@ module.exports = {
     async pingRedis() {
         if (!process.env.REDIS_URL) return 'not_configured';
         try {
+            const redis = getRedisClient('client');
             const pong = await Promise.race([
-                getRedisClient().ping(),
-                new Promise((_, reject) => setTimeout(() => reject(new Error('redis ping timeout')), 2000)),
+                redis.ping(),
+                new Promise((_, reject) => setTimeout(() => reject(new Error('redis ping timeout')), 2500)),
             ]);
             return pong === 'PONG' ? 'connected' : 'degraded';
         } catch {

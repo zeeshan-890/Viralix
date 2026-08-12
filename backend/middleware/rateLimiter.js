@@ -9,10 +9,14 @@ function shouldUseRedisStore() {
 function createRedisStore(prefix) {
     if (!shouldUseRedisStore()) return undefined;
     try {
-        const redis = getRedisClient();
+        const redis = getRedisClient('client');
         return new RedisStore({
             prefix,
-            sendCommand: (...args) => redis.call(...args),
+            // rate-limit-redis may pass [cmd, ...args] or (cmd, ...args)
+            sendCommand: (...args) => {
+                const commandArgs = Array.isArray(args[0]) ? args[0] : args;
+                return redis.call(...commandArgs);
+            },
         });
     } catch (error) {
         console.warn('[RateLimiter] Falling back to memory store:', error.message);
