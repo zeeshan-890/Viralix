@@ -2,10 +2,13 @@ const Redis = require('ioredis');
 
 // Parse REDIS_URL or use defaults
 const redisUrl = process.env.REDIS_URL || 'redis://localhost:6379';
+const useTls = typeof redisUrl === 'string' && redisUrl.startsWith('rediss://');
 
 const redisConfig = {
     maxRetriesPerRequest: null, // Required for Bull
     enableReadyCheck: false,
+    // Heroku Key-Value Store uses rediss:// with a self-signed cert chain
+    ...(useTls ? { tls: { rejectUnauthorized: false } } : {}),
     retryStrategy(times) {
         const delay = Math.min(times * 50, 2000);
         return delay;
@@ -44,8 +47,12 @@ module.exports = {
     getRedisClient,
     redisUrl,
     async pingRedis() {
+        if (!process.env.REDIS_URL) return 'not_configured';
         try {
-            const pong = await getRedisClient().ping();
+            const pong = await Promise.race([
+                getRedisClient().ping(),
+                new Promise((_, reject) => setTimeout(() => reject(new Error('redis ping timeout')), 2000)),
+            ]);
             return pong === 'PONG' ? 'connected' : 'degraded';
         } catch {
             return 'disconnected';
