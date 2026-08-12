@@ -1,5 +1,5 @@
 const AuditLog = require('../models/AuditLog');
-const { log } = require('./logger');
+const { log } = require('../utils/logger');
 
 async function recordAuditEvent({
     actorId,
